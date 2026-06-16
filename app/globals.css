@@ -1,26 +1,139 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─────────────────────────────────────────────
+   Design Tokens — Tailwind v4 @theme
+   All custom classes (bg-primary, text-text-primary,
+   px-margin-mobile, etc.) are generated from these.
+───────────────────────────────────────────── */
+@theme {
+  /* Brand Colors */
+  --color-primary:          #C26B60;
+  --color-primary-hover:    #A8564C;
+  --color-secondary:        #D9A89A;
+  --color-tertiary:         #EED5CC;
+  --color-neutral-canvas:   #FDF6F4;
+  --color-neutral-surface:  #F9EEE9;
+  --color-neutral-raised:   #F4E3DC;
+  --color-neutral-border:   #E8D0C9;
+  --color-accent-sage:      #7A8C72;
+  --color-accent-sage-light:#C8D4C2;
+
+  /* Text Colors */
+  --color-text-primary:     #2E1A16;
+  --color-text-secondary:   #6B4039;
+  --color-text-muted:       #9C6B62;
+  --color-text-on-primary:  #FFFFFF;
+
+  /* Fonts — variables injected by next/font/google on <html> */
+  --font-sans:  var(--font-karla),   'Karla',       sans-serif;
+  --font-serif: var(--font-garamond),'EB Garamond', serif;
+
+  /* Spacing scale extensions */
+  --spacing-section:       80px;
+  --spacing-gutter:        24px;
+  --spacing-margin-mobile: 20px;
+
+  /* ── Semantic Type Scale ──────────────────────
+     Use the token name, not the pixel value.
+     Rule: headings/names → font-serif (EB Garamond)
+           everything else → font-sans  (Karla)
+  ────────────────────────────────────────────── */
+
+  /* h1 — one per page, hero headline only */
+  --text-display:     2.5rem;     /* 40px */
+
+  /* h2 — major section titles, wordmark */
+  --text-heading-lg:  2rem;       /* 32px */
+
+  /* h2/h3 — mid-level section titles, grid product names */
+  --text-heading-md:  1.5rem;     /* 24px */
+
+  /* h3 — compact product names in carousel cards */
+  --text-heading-sm:  1.125rem;   /* 18px */
+
+  /* p — hero subtext, trust section body */
+  --text-body-lg:     1rem;       /* 16px */
+
+  /* p — standard descriptions, footer address */
+  --text-body:        0.9375rem;  /* 15px */
+
+  /* p/span — materials, secondary info, sale prices */
+  --text-body-sm:     0.8125rem;  /* 13px */
+
+  /* span — tab pills, badges, "see more", footer labels */
+  --text-label:       0.6875rem;  /* 11px */
+
+  /* span — micro discount badges inside carousel */
+  --text-micro:       0.625rem;   /* 10px */
+
+  /* ── Semantic Letter-spacing ─────────────────
+     Replace tracking-[-0.01em] / tracking-[0.05em] etc.
+  ────────────────────────────────────────────── */
+
+  /* Headings and wordmark — tight but not squeezed */
+  --tracking-heading: -0.01em;
+
+  /* CTA buttons */
+  --tracking-button:  0.05em;
+
+  /* Badge and tab labels */
+  --tracking-badge:   0.1em;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ─────────────────────────────────────────────
+   Animations
+───────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0);    }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.animate-fade-in {
+  animation: fadeIn 1s ease-out forwards;
+}
+
+/* Staggered delay helpers for hero text */
+.delay-100 { animation-delay: 120ms; }
+.delay-200 { animation-delay: 240ms; }
+.delay-300 { animation-delay: 360ms; }
+
+@keyframes gentle-pulse {
+  0%, 100% { transform: scale(1);    }
+  50%       { transform: scale(1.08); }
+}
+
+/* Plays exactly twice, then stops */
+.animate-pulse-gentle {
+  animation: gentle-pulse 1.2s ease-in-out 2;
+}
+
+/* ─────────────────────────────────────────────
+   Material Symbols icon font settings
+───────────────────────────────────────────── */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ─────────────────────────────────────────────
+   Utility: hide scrollbar (used on tab row)
+───────────────────────────────────────────── */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─────────────────────────────────────────────
+   Base
+───────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: max(884px, 100dvh);
 }
