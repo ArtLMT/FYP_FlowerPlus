@@ -9,6 +9,9 @@
   /* Brand Colors */
   --color-primary:          #C26B60;
   --color-primary-hover:    #A8564C;
+  /* DESIGN.md names #92453C "primary"; we keep #C26B60 as the action colour
+     and expose the deeper plum-rose as primary-deep for headings/prices/icons. */
+  --color-primary-deep:     #92453C;
   --color-secondary:        #D9A89A;
   --color-tertiary:         #EED5CC;
   --color-neutral-canvas:   #FDF6F4;
@@ -24,9 +27,10 @@
   --color-text-muted:       #9C6B62;
   --color-text-on-primary:  #FFFFFF;
 
-  /* Fonts — variables injected by next/font/google on <html> */
-  --font-sans:  var(--font-karla),   'Karla',       sans-serif;
-  --font-serif: var(--font-garamond),'EB Garamond', serif;
+  /* Fonts — fed by next/font in app/layout.tsx (the single swap point).
+     Change the font THERE; these just map the source vars onto the utilities. */
+  --font-sans:  var(--font-sans-src),  'Karla',       sans-serif;
+  --font-serif: var(--font-serif-src), 'EB Garamond', serif;
 
   /* Spacing scale extensions */
   --spacing-section:       80px;

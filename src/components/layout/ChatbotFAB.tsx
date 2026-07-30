@@ -17,7 +17,7 @@ export default function ChatbotFAB() {
   return (
     <div
       id="chatbot-fab"
-      className={`fixed bottom-24 right-6 z-[100] ${pulsing ? "animate-pulse-gentle" : ""}`}
+      className={`fixed bottom-24 right-6 md:bottom-8 md:right-8 z-[100] ${pulsing ? "animate-pulse-gentle" : ""}`}
     >
       <button
         onClick={() => setPulsing(false)}
