@@ -2,8 +2,8 @@ import Hero from "@/features/home/components/Hero";
 import QuickActions from "@/features/home/components/QuickActions";
 import Container from "@/components/ui/Container";
 import SaleSection from "@/features/home/components/SaleSection";
-import OccasionsTabs from "@/features/home/components/OccasionsTabs";
 import FeaturedCollections from "@/features/home/components/FeaturedCollections";
+import CuratedSections from "@/features/home/components/CuratedSections";
 import ProductsGrid from "@/features/home/components/ProductsGrid";
 import CustomOrderBanner from "@/features/home/components/CustomOrderBanner";
 import TrustStrip from "@/features/home/components/TrustStrip";
@@ -33,8 +33,8 @@ export default function HomePage() {
       </Container>
 
       <SaleSection />
-      <OccasionsTabs />
       <FeaturedCollections />
+      <CuratedSections />
       <ProductsGrid />
       <CustomOrderBanner />
       <TrustStrip />
