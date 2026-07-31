@@ -37,13 +37,29 @@ const IMG = {
 
 /* ── Catalog ─────────────────────────────────────── */
 
+/**
+ * Build a small detail-page gallery: the product's hero shot plus two supporting
+ * shots from the shared pool. Keeps the PDP thumbnail strip populated without
+ * sourcing a unique set of photos per product (mock data).
+ */
+const gallery = (hero: string): string[] => {
+  const rest = Object.values(IMG).filter((u) => u !== hero).slice(0, 2);
+  return [hero, ...rest];
+};
+
 export const products: Product[] = [
-  { id: "1", name: "Sương Đông", materials: "Thu mẫu đơn, Bạch đàn, Bông", price: 450000, originalPrice: 600000, discountPercent: 25, imageUrl: IMG.anemone, stock: "IN STOCK", occasion: "Everyday" },
-  { id: "2", name: "Hoàng Hôn San Hô", materials: "Hồng san hô, Dương xỉ, Kế", price: 680000, originalPrice: 850000, discountPercent: 20, imageUrl: IMG.peony, stock: "LOW STOCK", occasion: "Birthdays" },
-  { id: "3", name: "Mây Trắng", materials: "Hồng trắng, Baby, Bạch đàn", price: 560000, originalPrice: 700000, discountPercent: 20, imageUrl: IMG.white, stock: "IN STOCK", occasion: "Weddings" },
-  { id: "4", name: "Giờ Vàng", materials: "Hướng dương, Cúc La Mã, Hoàng anh", price: 520000, originalPrice: 650000, discountPercent: 20, imageUrl: IMG.sun, stock: "IN STOCK", occasion: "Birthdays" },
-  { id: "5", name: "Nắng Sớm", materials: "Cúc vàng, Cẩm chướng, Lá nho", price: 450000, originalPrice: 580000, discountPercent: 22, imageUrl: IMG.anemone, stock: "LOW STOCK", occasion: "Weddings" },
-  { id: "6", name: "Mẫu Đơn Lụa", materials: "Mẫu đơn, Ngải bạc, Bạch đàn", price: 720000, originalPrice: 900000, discountPercent: 20, imageUrl: IMG.peony, stock: "IN STOCK", occasion: "Everyday" },
+  { id: "1", name: "Sương Đông", materials: "Thu mẫu đơn, Bạch đàn, Bông", flowerTypes: ["Mẫu đơn"], decorationType: "bouquet", price: 450000, originalPrice: 600000, discountPercent: 25, imageUrl: IMG.anemone, images: gallery(IMG.anemone), stock: "IN STOCK", occasion: "Everyday" },
+  { id: "2", name: "Hoàng Hôn San Hô", materials: "Hồng san hô, Dương xỉ, Kế", flowerTypes: ["Hồng"], decorationType: "box", price: 680000, originalPrice: 850000, discountPercent: 20, imageUrl: IMG.peony, images: gallery(IMG.peony), stock: "LOW STOCK", occasion: "Birthdays" },
+  { id: "3", name: "Mây Trắng", materials: "Hồng trắng, Baby, Bạch đàn", flowerTypes: ["Hồng", "Baby"], decorationType: "vase", price: 560000, originalPrice: 700000, discountPercent: 20, imageUrl: IMG.white, images: gallery(IMG.white), stock: "IN STOCK", occasion: "Weddings" },
+  { id: "4", name: "Giờ Vàng", materials: "Hướng dương, Cúc La Mã, Hoàng anh", flowerTypes: ["Hướng dương", "Cúc"], decorationType: "basket", price: 520000, originalPrice: 650000, discountPercent: 20, imageUrl: IMG.sun, images: gallery(IMG.sun), stock: "IN STOCK", occasion: "Birthdays" },
+  { id: "5", name: "Nắng Sớm", materials: "Cúc vàng, Cẩm chướng, Lá nho", flowerTypes: ["Cúc", "Cẩm chướng"], decorationType: "bouquet", price: 450000, originalPrice: 580000, discountPercent: 22, imageUrl: IMG.anemone, images: gallery(IMG.anemone), stock: "LOW STOCK", occasion: "Weddings" },
+  { id: "6", name: "Mẫu Đơn Lụa", materials: "Mẫu đơn, Ngải bạc, Bạch đàn", flowerTypes: ["Mẫu đơn"], decorationType: "stand", price: 720000, originalPrice: 900000, discountPercent: 20, imageUrl: IMG.peony, images: gallery(IMG.peony), stock: "IN STOCK", occasion: "Everyday" },
+  { id: "7", name: "Thanh Tịnh", materials: "Hồng trắng, Cúc trắng, Bạch đàn", flowerTypes: ["Hồng", "Cúc"], decorationType: "stand", price: 640000, originalPrice: 800000, discountPercent: 20, imageUrl: IMG.white, images: gallery(IMG.white), stock: "IN STOCK", occasion: "Sympathy" },
+  { id: "8", name: "Vĩnh Cửu", materials: "Cúc vàng, Lá bạc", flowerTypes: ["Cúc"], decorationType: "basket", price: 520000, originalPrice: 680000, discountPercent: 24, imageUrl: IMG.sun, images: gallery(IMG.sun), stock: "IN STOCK", occasion: "Sympathy" },
+  { id: "9", name: "Ngọc Bích", materials: "Mẫu đơn hồng, Baby", flowerTypes: ["Mẫu đơn", "Baby"], decorationType: "vase", price: 780000, originalPrice: 950000, discountPercent: 18, imageUrl: IMG.peony, images: gallery(IMG.peony), stock: "LOW STOCK", occasion: "Birthdays" },
+  { id: "10", name: "Bình Minh", materials: "Hướng dương, Cẩm chướng", flowerTypes: ["Hướng dương", "Cẩm chướng"], decorationType: "box", price: 480000, originalPrice: 600000, discountPercent: 20, imageUrl: IMG.sun, images: gallery(IMG.sun), stock: "IN STOCK", occasion: "Everyday" },
+  { id: "11", name: "Duyên Dáng", materials: "Hồng phấn, Baby trắng", flowerTypes: ["Hồng", "Baby"], decorationType: "box", price: 700000, originalPrice: 880000, discountPercent: 20, imageUrl: IMG.rose, images: gallery(IMG.rose), stock: "IN STOCK", occasion: "Weddings" },
+  { id: "12", name: "Hạ Trắng", materials: "Baby, Cúc trắng", flowerTypes: ["Baby", "Cúc"], decorationType: "bouquet", price: 420000, originalPrice: 540000, discountPercent: 22, imageUrl: IMG.white, images: gallery(IMG.white), stock: "IN STOCK", occasion: "Everyday" },
 ];
 
 const byId = (id: string) => products.find((p) => p.id === id)!;
@@ -144,9 +160,9 @@ export const liveOrder: LiveOrder = {
 /* ── Vouchers & notifications ────────────────────── */
 
 export const vouchers: Voucher[] = [
-  { code: "FLOWER50", amount: "Giảm 50%", tag: "THEO MÙA", desc: "Đơn tối thiểu 500.000đ", validUntil: "25/10/2026", state: "active" },
-  { code: "FREEDEL", amount: "Miễn phí giao", tag: "ƯU ĐÃI", desc: "Cho mọi đơn đặt riêng", validUntil: "01/11/2026", state: "active" },
-  { code: "WELCOME15", amount: "Giảm 150.000đ", tag: "CHÀO MỪNG", desc: "Cho lần mua đầu tiên", validUntil: "31/12/2026", state: "active" },
+  { code: "FLOWER50", amount: "Giảm 50%", tag: "THEO MÙA", desc: "Đơn tối thiểu 500.000đ", validUntil: "25/10/2026", state: "active", kind: "percent", value: 50, minSubtotal: 500000 },
+  { code: "FREEDEL", amount: "Miễn phí giao", tag: "ƯU ĐÃI", desc: "Cho mọi đơn đặt riêng", validUntil: "01/11/2026", state: "active", kind: "shipping", value: 0 },
+  { code: "WELCOME15", amount: "Giảm 150.000đ", tag: "CHÀO MỪNG", desc: "Cho lần mua đầu tiên", validUntil: "31/12/2026", state: "active", kind: "fixed", value: 150000 },
 ];
 
 export const notifications: Notification[] = [

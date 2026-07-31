@@ -11,16 +11,28 @@
 export type StockStatus = "IN STOCK" | "LOW STOCK" | "OUT OF STOCK";
 export type Occasion = "Birthdays" | "Weddings" | "Everyday" | "Sympathy";
 
+/**
+ * How the arrangement is presented. Stored as a stable key (clean URLs /
+ * backend-friendly); the Vietnamese label lives in the catalog filter config.
+ */
+export type DecorationType = "bouquet" | "basket" | "box" | "vase" | "stand";
+
 /** A product in the catalog / grids. */
 export interface Product {
   id: string;
   name: string;
-  /** Comma-separated list of floral materials */
+  /** Comma-separated list of floral materials (display copy) */
   materials: string;
+  /** Structured flower types for filtering, e.g. ["Hồng", "Mẫu đơn"] */
+  flowerTypes: string[];
+  /** How the arrangement is presented (bouquet, box, …) */
+  decorationType: DecorationType;
   price: number;
   originalPrice?: number;
   discountPercent?: number;
   imageUrl: string;
+  /** Gallery for the detail page; the PDP falls back to [imageUrl] if absent. */
+  images?: string[];
   stock: StockStatus;
   occasion?: Occasion;
 }
@@ -129,6 +141,15 @@ export interface LiveOrder {
 /* ── Vouchers & notifications ────────────────────── */
 
 export type VoucherState = "active" | "used" | "expired";
+
+/**
+ * How a voucher reduces the bill:
+ * - "percent"  → `value`% off the subtotal
+ * - "fixed"    → `value` VND off the subtotal
+ * - "shipping" → free delivery (`value` ignored)
+ */
+export type VoucherKind = "percent" | "fixed" | "shipping";
+
 export interface Voucher {
   code: string;
   /** Headline, e.g. "Giảm 50%" */
@@ -137,6 +158,12 @@ export interface Voucher {
   desc: string;
   validUntil: string;
   state: VoucherState;
+  /** How the discount is computed. */
+  kind: VoucherKind;
+  /** Percent (0–100) for "percent", VND off for "fixed"; ignored for "shipping". */
+  value: number;
+  /** Minimum subtotal (VND) required to apply the voucher. */
+  minSubtotal?: number;
 }
 
 export type NotificationKind = "order" | "voucher" | "account";
