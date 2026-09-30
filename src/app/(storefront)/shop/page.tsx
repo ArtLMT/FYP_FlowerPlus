@@ -21,7 +21,9 @@ export default async function ShopPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const products = await getProducts();
-  const initial = filtersFromParams(await searchParams);
+  const sp = await searchParams;
+  const initial = filtersFromParams(sp);
+  const query = typeof sp.q === "string" ? sp.q : "";
 
   return (
     <main className="pt-6 md:pt-10 pb-section bg-neutral-canvas min-h-dvh">
@@ -32,7 +34,7 @@ export default async function ShopPage({
         <p className="font-sans text-body text-text-muted mt-1 mb-5 md:mb-6">
           Khám phá toàn bộ các mẫu hoa của chúng tôi.
         </p>
-        <ShopBrowser products={products} initial={initial} />
+        <ShopBrowser products={products} initial={initial} query={query} />
       </Container>
     </main>
   );

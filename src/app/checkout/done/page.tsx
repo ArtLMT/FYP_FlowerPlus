@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Header from "@/components/layout/Header";
 import { formatVND } from "@/lib/utils";
 
 /**
@@ -21,8 +22,13 @@ const ROWS = [
 export default function DonePage() {
   return (
     <div className="min-h-dvh flex flex-col bg-neutral-canvas">
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col items-center px-7">
-        <div className="mt-16 w-24 h-24 rounded-full bg-accent-sage-light flex items-center justify-center text-accent-sage">
+      {/* Desktop: shared storefront chrome */}
+      <div className="hidden md:block">
+        <Header />
+      </div>
+
+      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col items-center px-7 md:justify-center md:py-16">
+        <div className="mt-16 w-24 h-24 rounded-full bg-accent-sage-light flex items-center justify-center text-accent-sage md:mt-0">
           <span className="material-symbols-outlined" style={{ fontSize: 46 }}>check</span>
         </div>
 
@@ -36,7 +42,7 @@ export default function DonePage() {
           <span className="font-sans font-bold text-[17px]">Giao hôm nay, 12:00 – 15:00</span>
         </div>
 
-        <div className="w-full mt-[30px] bg-neutral-raised border border-neutral-border rounded-2xl px-[22px]">
+        <div className="w-full mt-[30px] bg-neutral-raised border border-neutral-border rounded-2xl px-[22px] md:max-w-md">
           {ROWS.map((r, i) => (
             <div
               key={r.k}
@@ -59,7 +65,7 @@ export default function DonePage() {
         </div>
       </div>
 
-      <div className="px-[22px] pt-[14px] pb-[26px] flex flex-col gap-3">
+      <div className="px-[22px] pt-[14px] pb-[26px] flex flex-col gap-3 md:max-w-md md:mx-auto md:w-full md:pb-16">
         {/* TODO(logic): link to a real order-tracking screen */}
         <button className="w-full bg-primary text-white rounded-full py-[18px] font-sans font-bold text-body-sm tracking-[0.1em] hover:bg-primary-hover transition-colors">
           THEO DÕI ĐƠN

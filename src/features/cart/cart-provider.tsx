@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useContext, useState, type ReactNode } from "react";
-import type { CartItem, Product } from "@/lib/types";
+import type { CartItem, Product, Voucher } from "@/lib/types";
 import { cartItems as seed } from "@/lib/mock-data";
+import { computeVoucher, findVoucher, voucherError } from "./voucher";
 
 /**
  * Cart store — a client Context seeded from the mock cart.
@@ -28,12 +29,25 @@ interface CartContextValue {
   selectedCount: number;
   /** sum of price×qty over ticked lines */
   subtotal: number;
+  /* ── Voucher ── */
+  /** The currently applied voucher, or null. */
+  appliedVoucher: Voucher | null;
+  /** Try to apply a code against the current subtotal. */
+  applyVoucher: (code: string) => { ok: boolean; error?: string };
+  /** Remove any applied voucher. */
+  removeVoucher: () => void;
+  /** VND off the subtotal from the applied voucher (0 if none / invalid). */
+  discount: number;
+  /** Whether the applied voucher makes delivery free. */
+  freeShipping: boolean;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(seed);
+  /** Stored as a code; the Voucher object is resolved from the catalog below. */
+  const [voucherCode, setVoucherCode] = useState<string | null>(null);
 
   const add = (product: Product, qty = 1) =>
     setItems((prev) => {
@@ -57,9 +71,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
       prev.map((i) => (i.product.id === productId ? { ...i, selected: !i.selected } : i))
     );
 
-  const clear = () => setItems([]);
+  const clear = () => {
+    setItems([]);
+    setVoucherCode(null);
+  };
 
   const selected = items.filter((i) => i.selected);
+  const subtotal = selected.reduce((s, i) => s + i.product.price * i.qty, 0);
+
+  // Resolve + re-validate the voucher against the *current* subtotal every render,
+  // so a code that no longer qualifies (items removed/unticked) simply stops
+  // discounting instead of going stale.
+  const appliedVoucher = voucherCode ? findVoucher(voucherCode) ?? null : null;
+  const { discount, freeShipping } = computeVoucher(appliedVoucher, subtotal);
+
+  const applyVoucher = (code: string): { ok: boolean; error?: string } => {
+    const voucher = findVoucher(code);
+    if (!voucher) return { ok: false, error: "Mã giảm giá không hợp lệ." };
+    const err = voucherError(voucher, subtotal);
+    if (err) return { ok: false, error: err };
+    setVoucherCode(voucher.code);
+    return { ok: true };
+  };
+
+  const removeVoucher = () => setVoucherCode(null);
+
   const value: CartContextValue = {
     items,
     add,
@@ -69,7 +105,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     clear,
     count: items.reduce((s, i) => s + i.qty, 0),
     selectedCount: selected.length,
-    subtotal: selected.reduce((s, i) => s + i.product.price * i.qty, 0),
+    subtotal,
+    appliedVoucher,
+    applyVoucher,
+    removeVoucher,
+    discount,
+    freeShipping,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

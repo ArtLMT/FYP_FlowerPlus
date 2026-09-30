@@ -12,12 +12,11 @@ interface ProductCardProps {
  *
  * The whole card is a link to the product detail page, so both the homepage
  * grid and the /shop grid navigate on tap.
- * TODO(routing): point at /product/[id] once the PDP is a dynamic route.
  */
 export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
-      href="/product"
+      href={`/product/${product.id}`}
       aria-label={product.name}
       className="group flex flex-col bg-neutral-surface border border-neutral-border rounded-[4px] p-[14px] hover:border-secondary transition-colors">
       {/* Image */}

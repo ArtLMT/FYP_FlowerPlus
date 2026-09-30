@@ -2,19 +2,21 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import Header from "@/components/layout/Header";
 import { formatVND } from "@/lib/utils";
 import { useCart } from "@/features/cart/cart-provider";
+import VoucherField from "@/features/cart/VoucherField";
 
 /**
  * Cart — /cart
  *
  * Now a consumer of the shared cart store: the same items the PDP adds to and
- * checkout reads. Checkbox / stepper / delete all mutate the store.
+ * checkout reads. Checkbox / stepper / delete all mutate the store; the voucher
+ * field and discount come from the store too.
  *
- * TODO(logic): apply a voucher; checkout only the selected items.
+ * TODO(logic): checkout only the selected items.
  */
 
-const DISCOUNT = 200000; // TODO(logic): from an applied voucher
 const DELIVERY = 150000; // TODO(logic): from the delivery service
 
 function SummaryRow({ label, value, deep }: { label: string; value: string; deep?: boolean }) {
@@ -28,16 +30,20 @@ function SummaryRow({ label, value, deep }: { label: string; value: string; deep
 }
 
 export default function CartPage() {
-  const { items, setQty, toggle, remove, selectedCount, subtotal } = useCart();
+  const { items, setQty, toggle, remove, selectedCount, subtotal, discount, freeShipping } = useCart();
 
-  const discount = selectedCount ? DISCOUNT : 0;
-  const delivery = selectedCount ? DELIVERY : 0;
-  const total = subtotal - discount + delivery;
+  const delivery = selectedCount ? (freeShipping ? 0 : DELIVERY) : 0;
+  const total = Math.max(0, subtotal - discount + delivery);
 
   return (
-    <div className="min-h-dvh bg-neutral-canvas pb-32">
-      {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center px-3 py-4 bg-neutral-canvas border-b border-neutral-border">
+    <div className="min-h-dvh bg-neutral-canvas pb-32 lg:pb-0">
+      {/* Desktop: shared storefront chrome */}
+      <div className="hidden md:block">
+        <Header />
+      </div>
+
+      {/* Mobile: back + title */}
+      <header className="md:hidden sticky top-0 z-20 flex items-center px-3 py-4 bg-neutral-canvas border-b border-neutral-border">
         <Link
           href="/"
           className="w-10 h-10 rounded-full flex items-center justify-center text-text-secondary hover:bg-neutral-surface transition-colors"
@@ -49,6 +55,13 @@ export default function CartPage() {
           Giỏ hàng
         </h1>
       </header>
+
+      {/* Desktop page heading (mobile shows it in the header above) */}
+      <div className="hidden md:block mx-auto w-full max-w-[1240px] px-10 pt-8">
+        <h1 className="font-serif font-medium text-[40px] text-primary leading-none m-0">
+          Giỏ hàng
+        </h1>
+      </div>
 
       {items.length === 0 ? (
         <div className="text-center py-24 px-6">
@@ -63,7 +76,7 @@ export default function CartPage() {
           </Link>
         </div>
       ) : (
-        <>
+        <div className="md:mx-auto md:w-full md:max-w-[1240px] md:px-10 md:pt-6 lg:grid lg:grid-cols-[1fr_360px] lg:gap-8 lg:items-start">
           {/* Item list */}
           <div className="flex flex-col gap-4">
             {items.map(({ product, qty, selected }) => (
@@ -147,25 +160,17 @@ export default function CartPage() {
             ))}
           </div>
 
-          {/* Voucher + summary */}
-          <div className="px-5 pt-6 flex flex-col gap-6">
-            {/* TODO(logic): open a voucher picker */}
-            <button className="flex items-center justify-between bg-neutral-surface border border-neutral-border rounded-lg p-4">
-              <span className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary-deep" style={{ fontSize: 20 }}>
-                  local_offer
-                </span>
-                <span className="font-sans font-medium text-body text-primary-deep">Áp dụng voucher</span>
-              </span>
-              <span className="material-symbols-outlined text-text-secondary" style={{ fontSize: 18 }}>
-                chevron_right
-              </span>
-            </button>
+          {/* Voucher + summary — right sidebar on desktop, sticky card */}
+          <aside className="px-5 pt-6 flex flex-col gap-6 lg:mt-0 lg:px-5 lg:pt-5 lg:pb-6 lg:border lg:border-neutral-border lg:rounded-2xl lg:bg-neutral-surface lg:sticky lg:top-24">
+            <VoucherField />
 
             <div className="border-t border-neutral-border pt-4 flex flex-col gap-2">
               <SummaryRow label="Tạm tính" value={formatVND(subtotal)} />
               <SummaryRow label="Giảm giá" value={"-" + formatVND(discount)} deep />
-              <SummaryRow label="Phí giao hàng" value={formatVND(delivery)} />
+              <SummaryRow
+                label="Phí giao hàng"
+                value={freeShipping && selectedCount ? "Miễn phí" : formatVND(delivery)}
+              />
               <div className="border-t border-dashed border-neutral-border pt-2 mt-1 flex items-end justify-between">
                 <span className="font-sans font-bold text-[18px] text-text-primary">Tổng cộng</span>
                 <span className="font-serif font-medium text-[32px] leading-none text-text-primary">
@@ -173,12 +178,24 @@ export default function CartPage() {
                 </span>
               </div>
             </div>
-          </div>
-        </>
+
+            {/* Desktop checkout button (mobile uses the sticky bottom bar) */}
+            <Link
+              href="/checkout/delivery"
+              aria-disabled={selectedCount === 0}
+              className={`hidden lg:flex items-center justify-between rounded-full px-6 py-4 font-sans font-semibold text-[12px] uppercase tracking-[0.09em] text-white transition-colors ${
+                selectedCount === 0 ? "bg-secondary pointer-events-none" : "bg-primary hover:bg-primary-hover"
+              }`}
+            >
+              <span>Thanh toán</span>
+              <span>({selectedCount} món)</span>
+            </Link>
+          </aside>
+        </div>
       )}
 
-      {/* Sticky checkout bar */}
-      <div className="fixed bottom-0 left-0 w-full px-5 pt-8 pb-5 bg-gradient-to-t from-neutral-canvas from-50% to-transparent pointer-events-none">
+      {/* Sticky checkout bar — mobile / tablet only (desktop uses the sidebar button) */}
+      <div className="fixed bottom-0 left-0 w-full px-5 pt-8 pb-5 bg-gradient-to-t from-neutral-canvas from-50% to-transparent pointer-events-none lg:hidden">
         {/* TODO(logic): only checkout the selected items */}
         <Link
           href="/checkout/delivery"

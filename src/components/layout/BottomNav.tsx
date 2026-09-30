@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/features/cart/cart-provider";
 
 type NavKey = "home" | "browse" | "cart" | "profile";
@@ -15,12 +16,21 @@ const NAV_ITEMS: { key: NavKey; label: string; icon: string; href: string }[] = 
 /**
  * BottomNav — mobile-only fixed bottom tab bar (md:hidden).
  *
- * Reused on every "tab" screen. The caller passes `active` to mark the current
- * tab — this is why it's ONE component, not four copies. Detail screens
- * (notifications, account info, vouchers) simply don't render it.
+ * Reused on every "tab" screen. The active tab is derived from the URL via
+ * usePathname (so it can't drift); the `active` prop is only a fallback for
+ * routes that aren't one of the tabs. This is why it's ONE component, not four
+ * copies. Detail screens (notifications, account info, vouchers) simply don't
+ * render it.
  */
 export default function BottomNav({ active = "home" }: { active?: NavKey }) {
   const { count } = useCart();
+  const pathname = usePathname();
+
+  // Which tab does the current path fall under? (exact match for "/")
+  const current =
+    NAV_ITEMS.find(({ href }) =>
+      href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/")
+    )?.key ?? active;
   return (
     <>
       <nav
@@ -28,7 +38,7 @@ export default function BottomNav({ active = "home" }: { active?: NavKey }) {
         aria-label="Điều hướng chính"
       >
         {NAV_ITEMS.map(({ key, label, icon, href }) => {
-          const isActive = key === active;
+          const isActive = key === current;
           return (
             <Link
               key={key}

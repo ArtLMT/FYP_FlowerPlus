@@ -42,6 +42,18 @@ export function flowerOptions(products: Product[]): { key: string; label: string
   return [...set].sort((a, b) => a.localeCompare(b, "vi")).map((f) => ({ key: f, label: f }));
 }
 
+/** Free-text search over name / materials / flower types (accent-insensitive-ish). */
+export function searchProducts(products: Product[], q: string): Product[] {
+  const needle = q.trim().toLowerCase();
+  if (!needle) return products;
+  return products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(needle) ||
+      p.materials.toLowerCase().includes(needle) ||
+      p.flowerTypes.some((f) => f.toLowerCase().includes(needle))
+  );
+}
+
 /** Apply all groups: OR within a group, AND across groups. */
 export function filterProducts(products: Product[], f: Filters): Product[] {
   return products.filter((p) => {

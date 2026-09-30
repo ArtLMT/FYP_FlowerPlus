@@ -22,14 +22,14 @@ export default function DeliveryPage() {
 
   return (
     <div className="min-h-dvh flex flex-col bg-neutral-canvas">
-      <CheckoutHeader title="Xác nhận đơn" backHref="/product" />
+      <CheckoutHeader title="Xác nhận đơn" backHref="/cart" />
 
-      <div className="flex-1 overflow-y-auto no-scrollbar">
+      <div className="flex-1 overflow-y-auto no-scrollbar md:flex-none md:overflow-visible md:max-w-3xl md:mx-auto md:w-full">
         <Stepper current={1} />
 
         {/* Address */}
         <h2 className="font-serif font-medium text-[27px] mt-8 mb-4 px-[22px]">Địa chỉ giao hàng</h2>
-        <div className="px-[22px] flex flex-col gap-[14px]">
+        <div className="px-[22px] flex flex-col gap-[14px] md:grid md:grid-cols-2">
           {addresses.map((a, i) => {
             const sel = addr === i;
             return (
@@ -80,7 +80,7 @@ export default function DeliveryPage() {
 
         {/* Date */}
         <h2 className="font-serif font-medium text-[27px] mt-[34px] mb-4 px-[22px]">Ngày giao</h2>
-        <div className="flex gap-3 px-[22px] overflow-x-auto no-scrollbar">
+        <div className="flex gap-3 px-[22px] overflow-x-auto no-scrollbar md:flex-wrap md:overflow-visible">
           {deliveryDates.map((d) => {
             const on = date === d.key;
             return (
@@ -101,7 +101,7 @@ export default function DeliveryPage() {
 
         {/* Time */}
         <h2 className="font-serif font-medium text-[27px] mt-[34px] mb-4 px-[22px]">Giờ giao</h2>
-        <div className="grid grid-cols-2 gap-[14px] px-[22px]">
+        <div className="grid grid-cols-2 gap-[14px] px-[22px] md:grid-cols-4">
           {deliveryTimeSlots.map((label, i) => {
             const on = slot === i;
             return (
@@ -127,11 +127,11 @@ export default function DeliveryPage() {
         </div>
       </div>
 
-      {/* Continue */}
-      <div className="px-[22px] pt-[14px] pb-[26px] border-t border-neutral-border">
+      {/* Continue — full-width pinned footer on mobile, right-aligned inline on desktop */}
+      <div className="px-[22px] pt-[14px] pb-[26px] border-t border-neutral-border md:max-w-3xl md:mx-auto md:w-full md:flex md:justify-end md:border-t-0 md:pt-2 md:pb-10">
         <Link
           href="/checkout/confirm"
-          className="block w-full text-center bg-primary text-white rounded-full py-[19px] font-sans font-bold text-body-sm tracking-[0.1em] hover:bg-primary-hover transition-colors"
+          className="block w-full text-center bg-primary text-white rounded-full py-[19px] font-sans font-bold text-body-sm tracking-[0.1em] hover:bg-primary-hover transition-colors md:w-auto md:px-16"
         >
           TIẾP TỤC XÁC NHẬN
         </Link>

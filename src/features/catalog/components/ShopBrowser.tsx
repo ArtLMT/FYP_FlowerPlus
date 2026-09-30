@@ -10,6 +10,7 @@ import {
   type FilterKey,
   EMPTY_FILTERS,
   filterProducts,
+  searchProducts,
   filtersToQuery,
   activeCount,
 } from "@/features/catalog/filters";
@@ -27,21 +28,39 @@ import {
 export default function ShopBrowser({
   products,
   initial,
+  query = "",
 }: {
   products: Product[];
   initial: Filters;
+  query?: string;
 }) {
   const router = useRouter();
   const [filters, setFilters] = useState<Filters>(initial);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const visible = useMemo(() => filterProducts(products, filters), [products, filters]);
+  const visible = useMemo(
+    () => filterProducts(searchProducts(products, query), filters),
+    [products, filters, query]
+  );
   const count = activeCount(filters);
+
+  /** Build /shop?… preserving the current search term alongside the filters. */
+  const urlFor = (f: Filters) => {
+    const params = new URLSearchParams(filtersToQuery(f));
+    if (query) params.set("q", query);
+    const qs = params.toString();
+    return qs ? `/shop?${qs}` : "/shop";
+  };
 
   const apply = (next: Filters) => {
     setFilters(next);
-    const qs = filtersToQuery(next);
-    router.replace(qs ? `/shop?${qs}` : "/shop", { scroll: false });
+    router.replace(urlFor(next), { scroll: false });
+  };
+
+  /** Drop the search term but keep the active filters. */
+  const clearQuery = () => {
+    const qs = filtersToQuery(filters);
+    router.push(qs ? `/shop?${qs}` : "/shop");
   };
 
   const toggle = (group: FilterKey, value: string) => {
@@ -61,6 +80,21 @@ export default function ShopBrowser({
 
       {/* Results */}
       <div className="min-w-0">
+        {/* Active search term — clearable, keeps filters */}
+        {query && (
+          <div className="mb-3 flex items-center gap-2">
+            <span className="font-sans text-body-sm text-text-muted">Kết quả cho</span>
+            <button
+              onClick={clearQuery}
+              className="inline-flex items-center gap-1 rounded-full bg-neutral-surface border border-neutral-border px-3 py-1 font-sans font-bold text-label text-primary hover:border-primary transition-colors"
+              aria-label={`Xóa tìm kiếm "${query}"`}
+            >
+              “{query}”
+              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>close</span>
+            </button>
+          </div>
+        )}
+
         {/* Toolbar: count + (mobile) filter button + (desktop) clear */}
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <p className="font-sans text-body-sm text-text-muted m-0">{visible.length} sản phẩm</p>
@@ -86,7 +120,7 @@ export default function ShopBrowser({
 
         {visible.length === 0 ? (
           <p className="text-center py-16 font-serif italic text-heading-sm text-text-muted">
-            Không có sản phẩm nào khớp bộ lọc.
+            {query ? `Không tìm thấy kết quả cho “${query}”.` : "Không có sản phẩm nào khớp bộ lọc."}
           </p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-[14px] md:gap-[22px]">

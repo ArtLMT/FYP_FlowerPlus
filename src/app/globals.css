@@ -141,3 +141,18 @@
 body {
   min-height: max(884px, 100dvh);
 }
+
+/* ─────────────────────────────────────────────
+   Accessibility: keyboard focus ring
+
+   Inputs/buttons across the app use Tailwind's `outline-none` (so a mouse
+   click leaves no ring). That also hides the ring from KEYBOARD users, which
+   fails a11y. This unlayered rule restores a visible ring on :focus-visible
+   only (keyboard / programmatic focus, never a plain mouse click) and, being
+   unlayered, overrides the `outline-none` utility in Tailwind v4's utilities
+   layer. Modern browsers round the outline to match each element's own radius.
+───────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
