@@ -1,161 +1,301 @@
 "use client";
 
-import { useState } from "react";
+import Button from "@/components/ui/Button";
+import ModalDialog from "@/components/ui/ModalDialog";
+import { useToast } from "@/components/ui/ToastProvider";
 import DetailHeader from "@/features/account/components/DetailHeader";
-import { user, addresses as seedAddresses } from "@/lib/mock-data";
+import { useAccount } from "@/features/account/account-context";
+import { RequestError, errorText, type ValidationFieldError } from "@/lib/api";
+import {
+  createAddress,
+  deleteAddress,
+  getAddresses,
+  setDefaultAddress,
+  updateAddress,
+  type AccountAddress,
+  type AddressInput,
+} from "@/lib/services/addresses";
+import { useCallback, useEffect, useState } from "react";
 
-/**
- * Account Info — /account/info
- *
- * User + address book from the central mock. Gender selection, "Xóa" (remove)
- * and "Đặt mặc định" (set default) mutate local state.
- *
- * TODO(api): load + persist. TODO(logic): Show / Edit / Add-address.
- */
+const maxAddresses = 20;
+const emptyAddress: AddressInput = {
+  receiverName: "",
+  phone: "",
+  address: "",
+  isDefault: false,
+};
 
-const INFO_ROWS = [
-  { label: "Tên đăng nhập", value: user.username, masked: false },
-  { label: "Họ và tên", value: user.fullName, masked: false },
-  { label: "Email", value: user.email, masked: true },
-  { label: "Số điện thoại", value: user.phone, masked: true },
-];
+const fieldLabels: Record<string, string> = {
+  receiverName: "Tên người nhận",
+  phone: "Số điện thoại",
+  address: "Địa chỉ",
+};
 
-const GENDERS = [
-  { key: "female", label: "Nữ" },
-  { key: "male", label: "Nam" },
-  { key: "other", label: "Khác" },
-];
+function validationMessage(field: ValidationFieldError) {
+  const label = fieldLabels[field.field] ?? "Thông tin";
+  if (field.rule === "NotBlank") return `${label} là bắt buộc.`;
+  if (field.rule === "Pattern") return `${label} không đúng định dạng.`;
+  if (field.rule === "Size") return `${label} vượt quá độ dài cho phép.`;
+  return `${label} chưa hợp lệ.`;
+}
 
-const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <p className="font-sans font-bold text-body-sm tracking-badge text-text-muted m-0">{children}</p>
-);
+function mapFieldErrors(fields: ValidationFieldError[] = []) {
+  const errorsByField = fields.reduce<Record<string, ValidationFieldError[]>>((errors, field) => {
+    errors[field.field] = [...(errors[field.field] ?? []), field];
+    return errors;
+  }, {});
+
+  return Object.fromEntries(Object.entries(errorsByField).map(([name, fieldErrors]) => {
+    const hasRequiredError = fieldErrors.some((field) => field.rule === "NotBlank");
+    const visibleErrors = hasRequiredError
+      ? fieldErrors.filter((field) => field.rule === "NotBlank")
+      : fieldErrors;
+    return [name, visibleErrors.map(validationMessage)];
+  }));
+}
+
+function AccountRow({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div className="flex justify-between gap-4 border-t border-neutral-border py-[18px]">
+      <span className="font-sans text-body-lg text-text-primary">{label}</span>
+      <span className="text-right font-sans text-body-lg text-text-secondary">{value || "—"}</span>
+    </div>
+  );
+}
+
+function AddressFieldError({ name, messages }: { name: string; messages?: string[] }) {
+  if (!messages?.length) return null;
+  return (
+    <div id={`${name}-error`} className="text-sm font-normal text-red-700">
+      {messages.map((message) => <p key={message}>{message}</p>)}
+    </div>
+  );
+}
 
 export default function AccountInfoPage() {
-  const [gender, setGender] = useState<string>(user.gender);
-  const [addresses, setAddresses] = useState(seedAddresses);
+  const user = useAccount();
+  const [addresses, setAddresses] = useState<AccountAddress[]>([]);
+  const [form, setForm] = useState<AddressInput>(emptyAddress);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [listError, setListError] = useState("");
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [actionError, setActionError] = useState("");
+  const { showToast } = useToast();
 
-  const removeAddress = (id: string) => setAddresses((prev) => prev.filter((a) => a.id !== id));
-  const setDefault = (id: string) =>
-    setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })));
+  const loadAddresses = useCallback(async () => {
+    setLoadingAddresses(true);
+    setListError("");
+    try {
+      setAddresses(await getAddresses());
+    } catch (cause) {
+      setListError(errorText(cause));
+    } finally {
+      setLoadingAddresses(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    getAddresses()
+      .then((result) => {
+        if (!active) return;
+        setAddresses(result);
+        setListError("");
+      })
+      .catch((cause) => {
+        if (active) setListError(errorText(cause));
+      })
+      .finally(() => {
+        if (active) setLoadingAddresses(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  function openCreate() {
+    if (formOpen) return;
+    setEditingId(null);
+    setForm(emptyAddress);
+    setFieldErrors({});
+    setFormError("");
+    setActionError("");
+    setFormOpen(true);
+  }
+
+  function openEdit(address: AccountAddress) {
+    setEditingId(address.id);
+    setForm({
+      receiverName: address.receiverName,
+      phone: address.phone,
+      address: address.address,
+      isDefault: address.isDefault,
+    });
+    setFieldErrors({});
+    setFormError("");
+    setActionError("");
+    setFormOpen(true);
+  }
+
+  async function saveAddress(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setFormError("");
+    setActionError("");
+    setFieldErrors({});
+
+    const input: AddressInput = {
+      ...form,
+      receiverName: form.receiverName.trim(),
+      phone: form.phone.trim(),
+      address: form.address.trim(),
+    };
+
+    try {
+      if (editingId) await updateAddress(editingId, input);
+      else await createAddress(input);
+
+      setFormOpen(false);
+      setEditingId(null);
+      setForm(emptyAddress);
+      showToast("success", editingId ? "Đã cập nhật địa chỉ." : "Đã thêm địa chỉ.");
+      await loadAddresses();
+    } catch (cause) {
+      if (cause instanceof RequestError && cause.errorCode === "VALIDATION_FAILED") {
+        const errors = mapFieldErrors(cause.details?.fields);
+        setFieldErrors(errors);
+        if (Object.keys(errors).length === 0) setFormError(errorText(cause));
+      } else {
+        setFormError(errorText(cause));
+      }
+      if (cause instanceof RequestError && (cause.errorCode === "ADDRESS_NOT_FOUND" || cause.errorCode === "ADDRESS_LIMIT_REACHED")) {
+        await loadAddresses();
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeAddress(id: string) {
+    setBusy(true);
+    setActionError("");
+    try {
+      await deleteAddress(id);
+      showToast("success", "Đã xóa địa chỉ.");
+      await loadAddresses();
+    } catch (cause) {
+      setActionError(errorText(cause));
+      if (cause instanceof RequestError && cause.errorCode === "ADDRESS_NOT_FOUND") {
+        await loadAddresses();
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function makeDefault(id: string) {
+    setBusy(true);
+    setActionError("");
+    try {
+      await setDefaultAddress(id);
+      showToast("success", "Đã đặt địa chỉ mặc định.");
+      await loadAddresses();
+    } catch (cause) {
+      setActionError(errorText(cause));
+      if (cause instanceof RequestError && cause.errorCode === "ADDRESS_NOT_FOUND") {
+        await loadAddresses();
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function updateField<K extends keyof AddressInput>(field: K, value: AddressInput[K]) {
+    setForm((current) => ({ ...current, [field]: value }));
+    setFieldErrors((current) => ({ ...current, [field]: [] }));
+    setFormError("");
+  }
+
+  const canAddAddress = !loadingAddresses && !listError && addresses.length < maxAddresses;
 
   return (
-    <div className="min-h-dvh flex flex-col bg-neutral-canvas md:min-h-0 md:block md:bg-transparent">
+    <div className="flex min-h-dvh flex-col bg-neutral-canvas md:min-h-0 md:block md:bg-transparent">
       <DetailHeader title="Thông tin tài khoản" />
+      <div className="flex-1 overflow-y-auto px-[22px] pb-8 md:px-0">
+        <p className="mt-6 font-sans text-body-sm font-bold tracking-badge text-text-muted">THÔNG TIN NGƯỜI DÙNG</p>
+        <AccountRow label="Tên đăng nhập" value={user.username} />
+        <AccountRow label="Họ và tên" value={user.fullName} />
+        <AccountRow label="Email" value={user.email} />
+        <AccountRow label="Số điện thoại" value={user.phone} />
 
-      <div className="flex-1 overflow-y-auto no-scrollbar px-[22px] pb-8 md:flex-none md:overflow-visible md:px-0 md:pb-0">
-        <div className="mt-6 mb-0">
-          <SectionLabel>THÔNG TIN NGƯỜI DÙNG</SectionLabel>
+        <div className="mt-8 flex items-center justify-between gap-3">
+          <p className="font-sans text-body-sm font-bold tracking-badge text-text-muted">SỔ ĐỊA CHỈ</p>
+          {!loadingAddresses && !listError && <span className="text-sm text-text-muted">{addresses.length}/{maxAddresses}</span>}
         </div>
 
-        {/* Info rows */}
-        {INFO_ROWS.map(({ label, value, masked }) => (
-          <div key={label} className="flex items-center gap-[14px] py-[18px] border-t border-neutral-border">
-            <span className="font-sans text-body-lg text-text-primary">{label}</span>
-            <span className="flex-1 text-right font-sans text-body-lg text-text-secondary">{value}</span>
-            {masked && (
-              <button className="font-sans text-body text-text-muted hover:text-text-primary transition-colors">
-                Hiện
-              </button>
-            )}
-            <button className="font-sans text-body text-primary underline hover:no-underline">Sửa</button>
-          </div>
-        ))}
+        {actionError && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{actionError}</p>}
 
-        {/* Gender */}
-        <div className="pt-[18px] border-t border-neutral-border">
-          <p className="font-sans text-body-lg text-text-primary mb-[14px] m-0">Giới tính</p>
-          <div className="flex gap-[10px]">
-            {GENDERS.map(({ key, label }) => {
-              const on = key === gender;
-              return (
-                <button
-                  key={key}
-                  onClick={() => setGender(key)}
-                  aria-pressed={on}
-                  className={`rounded-[9px] py-3 px-6 font-sans text-body-lg transition-colors ${
-                    on
-                      ? "border border-secondary bg-tertiary text-text-primary font-bold"
-                      : "border-none bg-transparent text-text-secondary hover:bg-neutral-surface"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        {loadingAddresses && <p className="py-8 text-center text-sm text-text-muted">Đang tải sổ địa chỉ…</p>}
+        {!loadingAddresses && listError && <div className="mt-3 rounded-xl border border-neutral-border bg-white p-5 text-center">
+          <p role="alert" className="text-sm text-red-700">{listError}</p>
+          <Button type="button" onClick={() => void loadAddresses()} className="mt-3 rounded-lg border border-neutral-border px-4 py-2 text-sm font-semibold text-text-secondary" disabled={busy}>Thử tải lại</Button>
+        </div>}
+        {!loadingAddresses && !listError && addresses.length === 0 && <p className="mt-3 rounded-xl border border-dashed border-neutral-border px-5 py-8 text-center text-sm text-text-muted">Bạn chưa lưu địa chỉ nào.</p>}
 
-        {/* Date of birth — from mock */}
-        <div className="flex items-center gap-[14px] py-5 mt-[18px] border-t border-neutral-border">
-          <span className="font-sans text-body-lg text-text-primary">Ngày sinh</span>
-          <div className="flex-1 flex items-center justify-end gap-2">
-            <span className="w-14 text-center border border-neutral-border rounded-lg py-[11px] font-sans text-body-lg">
-              {user.dob.day}
-            </span>
-            <span className="text-text-muted">/</span>
-            <span className="border border-neutral-border rounded-lg py-[11px] px-4 font-sans text-body-lg">
-              {user.dob.month}
-            </span>
-            <span className="text-text-muted">/</span>
-            <span className="w-16 text-center border border-neutral-border rounded-lg py-[11px] font-sans text-body-lg">
-              {user.dob.year}
-            </span>
-          </div>
-        </div>
-
-        {/* Address book */}
-        <div className="mt-[18px] mb-4">
-          <SectionLabel>SỔ ĐỊA CHỈ</SectionLabel>
-        </div>
-        <div className="flex flex-col gap-[18px]">
-          {addresses.map((a) => (
-            <div key={a.id} className="bg-neutral-raised border border-neutral-border rounded-2xl p-[22px]">
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-serif font-medium text-heading-md text-text-primary">{a.name}</span>
-                {a.isDefault && (
-                  <span className="px-3 py-[5px] rounded-[7px] font-sans font-bold text-label tracking-badge bg-tertiary text-primary">
-                    MẶC ĐỊNH
-                  </span>
-                )}
+        {!loadingAddresses && !listError && addresses.length > 0 && <div className="mt-4 flex flex-col gap-[18px]">
+          {addresses.map((address) => (
+            <article key={address.id} className="rounded-2xl border border-neutral-border bg-neutral-raised p-[22px]">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <h2 className="font-serif text-heading-md font-medium text-text-primary">{address.receiverName}</h2>
+                {address.isDefault && <span className="rounded-[7px] bg-tertiary px-3 py-[5px] font-sans text-label font-bold text-primary">MẶC ĐỊNH</span>}
               </div>
-              <p className="font-sans text-body-lg leading-[1.6] text-text-secondary m-0">
-                {a.line1}
-                <br />
-                {a.line2}
-              </p>
-              <div className="flex items-center gap-3 mt-[14px] font-sans text-body-lg text-text-secondary">
-                SĐT: {a.phone}
-                <button className="font-sans text-body text-text-muted underline hover:no-underline">Hiện</button>
+              <p className="break-words font-sans text-body-lg text-text-secondary">{address.address}</p>
+              <p className="mt-1 font-sans text-body-lg text-text-secondary">SĐT: {address.phone}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-neutral-border pt-4">
+                <Button type="button" disabled={busy} onClick={() => openEdit(address)} className="font-semibold text-primary">Sửa</Button>
+                <Button type="button" disabled={busy} onClick={() => void removeAddress(address.id)} className="font-semibold text-text-secondary">Xóa</Button>
+                {!address.isDefault && <Button type="button" disabled={busy} onClick={() => void makeDefault(address.id)} className="ml-auto font-semibold text-primary underline">Đặt mặc định</Button>}
               </div>
-              <div className="h-px bg-neutral-border my-5" />
-              <div className="flex items-center gap-4">
-                <button className="font-sans text-body text-primary">Sửa</button>
-                <span className="text-neutral-border">|</span>
-                <button
-                  onClick={() => removeAddress(a.id)}
-                  className="font-sans text-body text-text-secondary hover:text-primary transition-colors"
-                >
-                  Xóa
-                </button>
-                {!a.isDefault && (
-                  <button
-                    onClick={() => setDefault(a.id)}
-                    className="ml-auto font-sans text-body text-primary underline hover:no-underline"
-                  >
-                    Đặt mặc định
-                  </button>
-                )}
-              </div>
-            </div>
+            </article>
           ))}
-        </div>
+        </div>}
 
-        {/* Add address */}
-        {/* TODO(logic): open an add-address form */}
-        <button className="flex items-center justify-center gap-3 w-full mt-7 bg-primary text-text-on-primary border-none rounded-xl py-[18px] font-sans font-bold text-body-sm tracking-button hover:bg-primary-hover transition-colors">
-          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>add</span>
-          THÊM ĐỊA CHỈ MỚI
-        </button>
+        {formOpen && <ModalDialog
+          title={editingId ? "Sửa địa chỉ" : "Thêm địa chỉ"}
+          onClose={() => { if (!busy) setFormOpen(false); }}
+          footer={<div className="flex justify-end gap-3">
+            <Button type="button" disabled={busy} onClick={() => setFormOpen(false)} className="rounded-lg border border-neutral-border bg-white px-5 py-2.5 text-sm font-semibold text-text-secondary">Hủy</Button>
+            <Button type="submit" form="address-form" disabled={busy} className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover">{busy ? "Đang lưu…" : "Lưu"}</Button>
+          </div>}
+        >
+          <form id="address-form" onSubmit={saveAddress} className="flex flex-col gap-3">
+            {formError && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{formError}</p>}
+            <label className="flex flex-col gap-1 text-sm font-semibold text-text-secondary">
+              Tên người nhận
+              <input aria-invalid={Boolean(fieldErrors.receiverName?.length)} aria-describedby={fieldErrors.receiverName?.length ? "receiverName-error" : undefined} value={form.receiverName} onChange={(event) => updateField("receiverName", event.target.value)} className={`rounded-lg border bg-white p-3 font-normal outline-none focus:border-primary ${fieldErrors.receiverName?.length ? "border-red-500" : "border-neutral-border"}`} />
+              <AddressFieldError name="receiverName" messages={fieldErrors.receiverName} />
+            </label>
+            <label className="flex flex-col gap-1 text-sm font-semibold text-text-secondary">
+              Số điện thoại
+              <input aria-invalid={Boolean(fieldErrors.phone?.length)} aria-describedby={fieldErrors.phone?.length ? "phone-error" : undefined} value={form.phone} onChange={(event) => updateField("phone", event.target.value)} className={`rounded-lg border bg-white p-3 font-normal outline-none focus:border-primary ${fieldErrors.phone?.length ? "border-red-500" : "border-neutral-border"}`} />
+              <AddressFieldError name="phone" messages={fieldErrors.phone} />
+            </label>
+            <label className="flex flex-col gap-1 text-sm font-semibold text-text-secondary">
+              Địa chỉ
+              <textarea aria-invalid={Boolean(fieldErrors.address?.length)} aria-describedby={fieldErrors.address?.length ? "address-error" : undefined} value={form.address} onChange={(event) => updateField("address", event.target.value)} rows={3} className={`rounded-lg border bg-white p-3 font-normal outline-none focus:border-primary ${fieldErrors.address?.length ? "border-red-500" : "border-neutral-border"}`} />
+              <AddressFieldError name="address" messages={fieldErrors.address} />
+            </label>
+            <label className="flex items-center gap-2 text-sm text-text-secondary">
+              <input type="checkbox" checked={form.isDefault} onChange={(event) => updateField("isDefault", event.target.checked)} />
+              Đặt làm mặc định
+            </label>
+          </form>
+        </ModalDialog>}
+
+        {canAddAddress && !formOpen && <Button type="button" disabled={busy} onClick={openCreate} className="mt-7 w-full rounded-xl bg-primary py-[18px] font-bold text-white hover:bg-primary-hover">THÊM ĐỊA CHỈ MỚI</Button>}
+        {!loadingAddresses && !listError && addresses.length >= maxAddresses && <p className="mt-4 text-center text-sm text-text-muted">Bạn đã lưu tối đa 20 địa chỉ.</p>}
       </div>
     </div>
   );
