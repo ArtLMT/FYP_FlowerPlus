@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/components/ui/Button";
 
 import { useState } from "react";
 import DetailHeader from "@/features/account/components/DetailHeader";
@@ -39,7 +40,7 @@ export default function NotificationsPage() {
         {FILTERS.map(({ key, label }) => {
           const on = key === filter;
           return (
-            <button
+            <Button
               key={key}
               onClick={() => setFilter(key)}
               aria-pressed={on}
@@ -50,7 +51,7 @@ export default function NotificationsPage() {
               }`}
             >
               {label}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -58,7 +59,7 @@ export default function NotificationsPage() {
       {/* List */}
       <div className="flex-1 overflow-y-auto no-scrollbar md:flex-none md:overflow-hidden md:mt-2 md:border md:border-neutral-border md:rounded-2xl">
         {visible.map((n) => (
-          <button
+          <Button
             key={n.id}
             onClick={() => markRead(n.id)}
             className={`block w-full text-left px-[22px] py-6 border-b border-neutral-border last:border-b-0 ${
@@ -71,7 +72,7 @@ export default function NotificationsPage() {
             </h2>
             <p className="font-sans text-body text-text-secondary mt-2 m-0">{n.body}</p>
             <p className="font-sans text-body-sm text-text-muted text-right mt-[14px] m-0">{n.time}</p>
-          </button>
+          </Button>
         ))}
       </div>
     </div>

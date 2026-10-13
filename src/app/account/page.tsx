@@ -1,10 +1,12 @@
 "use client";
+import Button from "@/components/ui/Button";
 
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BottomNav from "@/components/layout/BottomNav";
-import { user } from "@/lib/mock-data";
+import { useAccount } from "@/features/account/account-context";
+import { logout } from "@/lib/services/auth";
 
 /**
  * Profile — /account
@@ -30,6 +32,12 @@ const MENU = [
 
 export default function ProfilePage() {
   const router = useRouter();
+  const user = useAccount();
+  const signOut = async () => {
+    await logout();
+    router.replace("/login");
+    router.refresh();
+  };
 
   // On desktop, /account/info is the base view — the sidebar handles navigation,
   // so redirect there. On mobile we stay and show the drill-in menu below.
@@ -47,21 +55,21 @@ export default function ProfilePage() {
     <div className="min-h-dvh flex flex-col bg-neutral-canvas md:min-h-0 md:block md:bg-transparent">
       {/* Header: menu · wordmark · bag — mobile only (desktop redirects to info) */}
       <header className="md:hidden flex items-center justify-between px-[22px] py-[18px] border-b border-neutral-border">
-        <button
+        <Button
           className="w-[34px] h-[34px] flex items-center text-text-primary"
           aria-label="Menu"
         >
           <span className="material-symbols-outlined">menu</span>
-        </button>
+        </Button>
         <span className="font-serif font-medium italic text-[28px] text-primary leading-none">
           FlowerPlus
         </span>
-        <button
+        <Button
           className="w-[34px] h-[34px] flex items-center justify-end text-text-primary"
           aria-label="Giỏ hàng"
         >
           <span className="material-symbols-outlined">shopping_bag</span>
-        </button>
+        </Button>
       </header>
 
       {/* Scrollable body — mobile only (desktop redirects to /account/info) */}
@@ -75,7 +83,7 @@ export default function ProfilePage() {
             </span>
           </div>
           <h1 className="font-serif font-medium text-[34px] text-text-primary mt-[30px] m-0">
-            {user.fullName}
+            {user.fullName ?? user.username}
           </h1>
         </div>
 
@@ -99,12 +107,12 @@ export default function ProfilePage() {
 
         {/* Sign out — stub: navigates to /login (TODO(logic): clear session first) */}
         <div className="flex justify-center py-[50px]">
-          <Link
-            href="/login"
+          <Button
+            onClick={signOut}
             className="bg-transparent text-primary border-[1.5px] border-secondary rounded-full py-[14px] px-[44px] font-sans font-bold text-body-sm tracking-badge hover:bg-neutral-surface transition-colors"
           >
             ĐĂNG XUẤT
-          </Link>
+          </Button>
         </div>
       </div>
 

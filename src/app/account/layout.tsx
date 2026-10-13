@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
 import AccountSidebar from "@/features/account/components/AccountSidebar";
+import { AccountGate } from "@/features/account/account-context";
 
 /**
  * Account layout — the desktop dashboard shell shared by every /account route.
@@ -18,6 +19,7 @@ import AccountSidebar from "@/features/account/components/AccountSidebar";
 
 const TITLES: Record<string, string> = {
   "/account/info": "Thông tin tài khoản",
+  "/account/info/password-reset": "Đặt lại mật khẩu",
   "/account/orders": "Quản lý đơn hàng",
   "/account/notifications": "Thông báo",
   "/account/vouchers": "Kho voucher",
@@ -28,7 +30,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const title = TITLES[pathname];
 
   return (
-    <>
+    <AccountGate>
       {/* Desktop: shared storefront chrome */}
       <div className="hidden md:block">
         <Header />
@@ -45,6 +47,6 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           {children}
         </div>
       </div>
-    </>
+    </AccountGate>
   );
 }

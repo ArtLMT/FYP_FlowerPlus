@@ -1,7 +1,8 @@
 "use client";
+import Button from "@/components/ui/Button";
 
 import { useState } from "react";
-import Image from "next/image";
+import ProductImage from "@/components/ui/ProductImage";
 import DetailHeader from "@/features/account/components/DetailHeader";
 import { formatVND } from "@/lib/utils";
 import { liveOrder, orders } from "@/lib/mock-data";
@@ -112,7 +113,7 @@ export default function OrdersPage() {
             {FILTERS.map((f) => {
               const on = f.key === filter;
               return (
-                <button
+                <Button
                   key={f.key}
                   onClick={() => setFilter(f.key)}
                   aria-pressed={on}
@@ -123,7 +124,7 @@ export default function OrdersPage() {
                   }`}
                 >
                   {f.label}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -162,7 +163,7 @@ export default function OrdersPage() {
 
                     <div className="flex gap-4">
                       <div className="relative w-20 h-24 flex-none rounded-[2px] overflow-hidden bg-neutral-raised">
-                        <Image src={item.imageUrl} alt={item.name} fill sizes="80px" style={{ objectFit: "cover" }} />
+                        <ProductImage src={item.imageUrl} alt={item.name} sizes="80px" />
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col gap-1">
                         <h3 className="font-serif font-medium text-heading-md text-primary-deep leading-[1.2] m-0">
@@ -190,9 +191,9 @@ export default function OrdersPage() {
                         </p>
                       </div>
                       {/* TODO(logic): re-add these items to the cart */}
-                      <button className="font-sans font-bold text-label uppercase tracking-badge underline text-text-secondary">
+                      <Button className="font-sans font-bold text-label uppercase tracking-badge underline text-text-secondary">
                         Mua lại
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 );

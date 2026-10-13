@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/components/ui/Button";
 
 import { useState } from "react";
 import DetailHeader from "@/features/account/components/DetailHeader";
@@ -42,7 +43,7 @@ export default function VouchersPage() {
         {TABS.map(({ key, label }) => {
           const on = key === tab;
           return (
-            <button
+            <Button
               key={key}
               onClick={() => setTab(key)}
               aria-pressed={on}
@@ -53,7 +54,7 @@ export default function VouchersPage() {
               }`}
             >
               {label}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -89,7 +90,7 @@ export default function VouchersPage() {
                         <span className="font-mono font-bold text-body-lg tracking-wide text-text-primary">
                           {v.code}
                         </span>
-                        <button
+                        <Button
                           onClick={() => copy(v.code)}
                           className="text-text-muted hover:text-text-primary transition-colors inline-flex"
                           aria-label="Sao chép mã"
@@ -97,15 +98,15 @@ export default function VouchersPage() {
                           <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
                             {copied === v.code ? "check" : "content_copy"}
                           </span>
-                        </button>
+                        </Button>
                       </div>
                       <p className="font-sans text-body-sm text-text-muted mt-2 m-0">
                         Hiệu lực đến {v.validUntil}
                       </p>
                     </div>
-                    <button className="bg-primary text-text-on-primary border-none rounded-full py-[14px] px-6 font-sans font-bold text-body-sm tracking-badge whitespace-nowrap hover:bg-primary-hover transition-colors">
+                    <Button className="bg-primary text-text-on-primary border-none rounded-full py-[14px] px-6 font-sans font-bold text-body-sm tracking-badge whitespace-nowrap hover:bg-primary-hover transition-colors">
                       DÙNG NGAY
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>

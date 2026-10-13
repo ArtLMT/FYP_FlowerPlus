@@ -1,17 +1,11 @@
 "use client";
+import Button from "@/components/ui/Button";
 
 import { useState } from "react";
 import Link from "next/link";
-
-/**
- * Auth — /login
- *
- * One card, two tab states (Đăng nhập / Đăng ký). UI-only: the active tab and
- * password visibility are interface state. Flows into /login/otp after submit.
- *
- * TODO(logic): LOGIN / CREATE ACCOUNT submit, Google OAuth, forgot-password.
- * TODO(api): validate credentials.
- */
+import { useRouter } from "next/navigation";
+import { errorText } from "@/lib/api";
+import { login, register } from "@/lib/services/auth";
 
 // Shared bottom-border field styling (DESIGN.md: transparent, 1.5px secondary,
 // deepens to primary on focus). Kept as a const rather than a component since
@@ -22,7 +16,38 @@ const FIELD =
 export default function LoginPage() {
   const [tab, setTab] = useState<"login" | "register">("login");
   const [showPw, setShowPw] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreed, setAgreed] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
   const pwType = showPw ? "text" : "password";
+
+  const submitLogin = async () => {
+    setError("");
+    setBusy(true);
+    try {
+      await login(email.trim(), password);
+      router.replace("/account");
+      router.refresh();
+    } catch (cause) { setError(errorText(cause)); }
+    finally { setBusy(false); }
+  };
+
+  const submitRegister = async () => {
+    setError("");
+    if (password !== confirmPassword) { setError("Mật khẩu xác nhận không khớp."); return; }
+    if (!agreed) { setError("Vui lòng đồng ý với điều khoản và chính sách bảo mật."); return; }
+    setBusy(true);
+    try {
+      await register(fullName.trim(), email.trim(), password);
+      router.push(`/login/otp?email=${encodeURIComponent(email.trim())}`);
+    } catch (cause) { setError(errorText(cause)); }
+    finally { setBusy(false); }
+  };
 
   const tabClass = (active: boolean) =>
     `py-[14px] font-serif text-[23px] transition-colors border-b-[2.5px] -mb-px ${
@@ -60,23 +85,23 @@ export default function LoginPage() {
 
         {/* Tabs */}
         <div className="grid grid-cols-2 border-b border-neutral-border mb-1">
-          <button onClick={() => setTab("login")} className={tabClass(tab === "login")}>
+          <Button onClick={() => { setTab("login"); setError(""); }} className={tabClass(tab === "login")}>
             Đăng nhập
-          </button>
-          <button onClick={() => setTab("register")} className={tabClass(tab === "register")}>
+          </Button>
+          <Button onClick={() => { setTab("register"); setError(""); }} className={tabClass(tab === "register")}>
             Đăng ký
-          </button>
+          </Button>
         </div>
 
         {/* LOGIN */}
         {tab === "login" && (
           <div className="pt-[30px]">
             <div className="mb-[30px]">
-              <input type="text" placeholder="Email hoặc tên đăng nhập" className={FIELD} aria-label="Email hoặc tên đăng nhập" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className={FIELD} aria-label="Email" />
             </div>
             <div className="mb-[14px] relative">
-              <input type={pwType} placeholder="Mật khẩu" className={`${FIELD} pr-8`} aria-label="Mật khẩu" />
-              <button
+              <input type={pwType} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mật khẩu" className={`${FIELD} pr-8`} aria-label="Mật khẩu" />
+              <Button
                 onClick={() => setShowPw((v) => !v)}
                 className="absolute right-0 top-1 p-1 text-text-secondary"
                 aria-label={showPw ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
@@ -84,21 +109,20 @@ export default function LoginPage() {
                 <span className="material-symbols-outlined" style={{ fontSize: 22 }}>
                   {showPw ? "visibility" : "visibility_off"}
                 </span>
-              </button>
+              </Button>
             </div>
             <div className="text-right mb-[30px]">
-              {/* TODO(logic): forgot-password flow */}
-              <Link href="#" className="font-sans text-[16px] text-text-muted no-underline hover:text-primary">
+              <Link href="/login/forgot-password" className="font-sans text-[16px] text-text-muted no-underline hover:text-primary">
                 Quên mật khẩu?
               </Link>
             </div>
-            {/* TODO(logic): submit credentials, then route to /login/otp */}
-            <Link
-              href="/login/otp"
+            <Button
+              onClick={submitLogin}
+              disabled={busy || !email || !password}
               className="block w-full text-center bg-primary text-white rounded-lg py-[17px] font-sans font-bold text-body-sm tracking-[0.1em] hover:bg-primary-hover transition-colors"
             >
               ĐĂNG NHẬP
-            </Link>
+            </Button>
           </div>
         )}
 
@@ -106,14 +130,14 @@ export default function LoginPage() {
         {tab === "register" && (
           <div className="pt-[30px]">
             <div className="mb-[26px]">
-              <input type="text" placeholder="Họ và tên" className={FIELD} aria-label="Họ và tên" />
+              <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Họ và tên" className={FIELD} aria-label="Họ và tên" />
             </div>
             <div className="mb-[26px]">
-              <input type="email" placeholder="Email" className={FIELD} aria-label="Email" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className={FIELD} aria-label="Email" />
             </div>
             <div className="mb-[26px] relative">
-              <input type={pwType} placeholder="Mật khẩu" className={`${FIELD} pr-8`} aria-label="Mật khẩu" />
-              <button
+              <input type={pwType} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mật khẩu" className={`${FIELD} pr-8`} aria-label="Mật khẩu" />
+              <Button
                 onClick={() => setShowPw((v) => !v)}
                 className="absolute right-0 top-1 p-1 text-text-secondary"
                 aria-label={showPw ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
@@ -121,28 +145,30 @@ export default function LoginPage() {
                 <span className="material-symbols-outlined" style={{ fontSize: 22 }}>
                   {showPw ? "visibility" : "visibility_off"}
                 </span>
-              </button>
+              </Button>
             </div>
             <div className="mb-[22px]">
-              <input type={pwType} placeholder="Xác nhận mật khẩu" className={FIELD} aria-label="Xác nhận mật khẩu" />
+              <input type={pwType} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Xác nhận mật khẩu" className={FIELD} aria-label="Xác nhận mật khẩu" />
             </div>
             <label className="flex items-start gap-[10px] mb-7 font-sans text-[14px] leading-[1.5] text-text-secondary cursor-pointer">
-              <input type="checkbox" className="mt-[2px] w-4 h-4 accent-[var(--color-primary)]" />
+              <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-[2px] w-4 h-4 accent-[var(--color-primary)]" />
               <span>
                 Tôi đồng ý với{" "}
                 <Link href="#" className="text-primary underline">Điều khoản</Link> và{" "}
                 <Link href="#" className="text-primary underline">Chính sách bảo mật</Link>.
               </span>
             </label>
-            {/* TODO(logic): create account, then route to /login/otp */}
-            <Link
-              href="/login/otp"
+            <Button
+              onClick={submitRegister}
+              disabled={busy || !fullName || !email || !password || !confirmPassword}
               className="block w-full text-center bg-primary text-white rounded-lg py-[17px] font-sans font-bold text-body-sm tracking-[0.1em] hover:bg-primary-hover transition-colors"
             >
               TẠO TÀI KHOẢN
-            </Link>
+            </Button>
           </div>
         )}
+
+        {error && <p role="alert" className="mt-4 text-red-700">{error}</p>}
 
         {/* OR divider */}
         <div className="flex items-center gap-4 my-[30px]">
@@ -153,7 +179,7 @@ export default function LoginPage() {
 
         {/* Google */}
         {/* TODO(logic): Google OAuth */}
-        <button className="w-full bg-transparent border-[1.5px] border-secondary rounded-lg py-[15px] flex items-center justify-center gap-3 hover:border-primary transition-colors">
+        <Button className="w-full bg-transparent border-[1.5px] border-secondary rounded-lg py-[15px] flex items-center justify-center gap-3 hover:border-primary transition-colors">
           <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
             <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
@@ -163,7 +189,7 @@ export default function LoginPage() {
           <span className="font-sans font-bold text-body-sm tracking-button text-text-primary">
             TIẾP TỤC VỚI GOOGLE
           </span>
-        </button>
+        </Button>
         </div>
         {/* end form column */}
       </div>

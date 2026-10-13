@@ -1,6 +1,7 @@
 "use client";
 
 import Button from "@/components/ui/Button";
+import Link from "next/link";
 import ModalDialog from "@/components/ui/ModalDialog";
 import { useToast } from "@/components/ui/ToastProvider";
 import DetailHeader from "@/features/account/components/DetailHeader";
@@ -229,6 +230,20 @@ export default function AccountInfoPage() {
         <AccountRow label="Họ và tên" value={user.fullName} />
         <AccountRow label="Email" value={user.email} />
         <AccountRow label="Số điện thoại" value={user.phone} />
+
+        <section className="mt-8 rounded-2xl border border-neutral-border bg-neutral-raised p-5 sm:p-6">
+          <p className="font-sans text-body-sm font-bold tracking-badge text-text-muted">BẢO MẬT TÀI KHOẢN</p>
+          <h2 className="mt-3 font-serif text-heading-md font-medium text-text-primary">Đặt lại mật khẩu</h2>
+          <p className="mt-2 max-w-2xl font-sans text-sm leading-relaxed text-text-secondary">
+            Xác nhận bằng mã gửi đến email tài khoản. Sau khi đặt lại, bạn cần đăng nhập lại trên thiết bị này và các thiết bị khác.
+          </p>
+          <Link
+            href="/account/info/password-reset"
+            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-5 py-3 font-sans text-sm font-bold text-white no-underline transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Đặt lại mật khẩu
+          </Link>
+        </section>
 
         <div className="mt-8 flex items-center justify-between gap-3">
           <p className="font-sans text-body-sm font-bold tracking-badge text-text-muted">SỔ ĐỊA CHỈ</p>

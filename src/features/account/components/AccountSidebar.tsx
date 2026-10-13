@@ -1,8 +1,11 @@
 "use client";
+import Button from "@/components/ui/Button";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { user } from "@/lib/mock-data";
+import { useAccount } from "@/features/account/account-context";
+import { logout } from "@/lib/services/auth";
+import { useRouter } from "next/navigation";
 
 /**
  * AccountSidebar — the persistent left rail of the desktop account dashboard.
@@ -21,6 +24,13 @@ const NAV = [
 
 export default function AccountSidebar() {
   const pathname = usePathname();
+  const user = useAccount();
+  const router = useRouter();
+  const signOut = async () => {
+    await logout();
+    router.replace("/login");
+    router.refresh();
+  };
 
   return (
     <aside className="hidden md:flex md:flex-col md:gap-6 md:sticky md:top-24">
@@ -31,7 +41,7 @@ export default function AccountSidebar() {
           <span className="material-symbols-outlined" style={{ fontSize: 40 }}>person</span>
         </div>
         <p className="w-full font-serif font-medium text-[19px] text-text-primary leading-tight mt-3 mb-0 truncate">
-          {user.fullName}
+          {user.fullName ?? user.username}
         </p>
         <p className="w-full font-sans text-body-sm text-text-muted mt-1 mb-0 truncate">{user.email}</p>
       </div>
@@ -39,7 +49,7 @@ export default function AccountSidebar() {
       {/* Nav */}
       <nav className="flex flex-col gap-1">
         {NAV.map(({ label, icon, href }) => {
-          const active = pathname === href;
+          const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href}
@@ -61,15 +71,15 @@ export default function AccountSidebar() {
       </nav>
 
       {/* Sign out — stub: navigates to /login (TODO(logic): clear session first) */}
-      <Link
-        href="/login"
+      <Button
+        onClick={signOut}
         className="flex items-center gap-3 rounded-xl px-4 py-3 font-sans text-[15px] text-text-secondary hover:bg-neutral-surface transition-colors"
       >
         <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
           logout
         </span>
         Đăng xuất
-      </Link>
+      </Button>
     </aside>
   );
 }

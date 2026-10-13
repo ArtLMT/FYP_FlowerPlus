@@ -11,11 +11,11 @@ import Link from "next/link";
  * The back arrow returns to /account because every screen is opened from the
  * Profile menu. Shared by all four so the chrome stays identical.
  */
-export default function DetailHeader({ title }: { title: string }) {
+export default function DetailHeader({ title, backHref = "/account" }: { title: string; backHref?: string }) {
   return (
     <header className="md:hidden flex items-center px-[18px] py-[18px] border-b border-neutral-border bg-neutral-canvas sticky top-0 z-20">
       <Link
-        href="/account"
+        href={backHref}
         className="w-10 h-10 rounded-full flex items-center justify-center text-text-primary hover:bg-neutral-surface transition-colors"
         aria-label="Quay lại"
       >

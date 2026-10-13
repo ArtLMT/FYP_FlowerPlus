@@ -1,7 +1,11 @@
 "use client";
+import Button from "@/components/ui/Button";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { errorText } from "@/lib/api";
+import { resendOtp, verifyEmail } from "@/lib/services/auth";
 
 /**
  * OTP verification — /login/otp
@@ -18,6 +22,35 @@ const CELLS = [0, 1, 2, 3, 4, 5];
 export default function OtpPage() {
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
   const [secs, setSecs] = useState(59);
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    Promise.resolve().then(() => setEmail(new URLSearchParams(window.location.search).get("email") ?? ""));
+  }, []);
+
+  const verify = async () => {
+    const code = inputs.current.map((input) => input?.value ?? "").join("");
+    if (code.length !== 6 || !email) { setError("Vui lòng nhập đủ sáu chữ số."); return; }
+    setBusy(true);
+    setError("");
+    try {
+      await verifyEmail(email, code);
+      router.replace("/account");
+      router.refresh();
+    } catch (cause) { setError(errorText(cause)); }
+    finally { setBusy(false); }
+  };
+
+  const resend = async () => {
+    setBusy(true);
+    setError("");
+    try { await resendOtp(email); setSecs(59); }
+    catch (cause) { setError(errorText(cause)); }
+    finally { setBusy(false); }
+  };
 
   // Resend countdown — one interval for the component's life (a functional
   // update clamps at 0). Deps MUST stay [] — using [secs] tore the interval
@@ -81,7 +114,7 @@ export default function OtpPage() {
           Kiểm tra hộp thư
         </h1>
         <p className="font-sans text-[18px] text-text-muted mt-3 m-0 text-center">
-          Chúng tôi đã gửi mã đến <span className="text-text-secondary">t****@email.com</span>
+          Chúng tôi đã gửi mã đến <span className="text-text-secondary">{email}</span>
         </p>
 
         {/* OTP cells */}
@@ -109,21 +142,23 @@ export default function OtpPage() {
             <span className="underline text-text-muted">Gửi lại mã</span>
           ) : (
             // TODO(logic): trigger a real resend
-            <button className="underline text-primary">Gửi lại mã</button>
+            <Button onClick={resend} disabled={busy || !email} className="underline text-primary">Gửi lại mã</Button>
           )}
           {secs > 0 && ` — sau ${countdown}`}
         </p>
+        {error && <p role="alert" className="mt-4 text-red-700">{error}</p>}
       </div>
 
       {/* Verify */}
       <div className="px-[22px] pt-4 pb-[30px]">
         {/* TODO(logic): validate the code before navigating */}
-        <Link
-          href="/account"
+        <Button
+          onClick={verify}
+          disabled={busy || !email}
           className="block w-full text-center bg-primary text-white rounded-[13px] py-[19px] font-sans font-bold text-body-sm tracking-[0.12em] hover:bg-primary-hover transition-colors"
         >
           XÁC THỰC
-        </Link>
+        </Button>
       </div>
       </div>
       {/* end card wrapper */}
