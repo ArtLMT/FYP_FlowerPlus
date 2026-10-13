@@ -1,26 +1,21 @@
 import Link from "next/link";
-import { getFeaturedCollections } from "@/lib/services/products";
-import FeaturedCarousel from "./FeaturedCarousel";
-import FeaturedCard from "@/features/catalog/components/FeaturedCard";
+import { getProducts } from "@/lib/services/products";
+import ProductCard from "@/features/catalog/components/ProductCard";
 import Container from "@/components/ui/Container";
 
 /**
- * FeaturedCollections — the featured items, presented two ways:
- *   • Mobile  (md:hidden)     → FeaturedCarousel (horizontal scroll)
- *   • Desktop (hidden md:grid) → 4-column static grid
- *
- * Owns the "Bộ sưu tập nổi bật" heading (previously supplied by OccasionsTabs,
- * now removed). Server Component: fetches once, hands the same data to both
- * presentations.
+ * A small preview of the newest Active Products returned by the backend.
  */
 export default async function FeaturedCollections() {
-  const items = await getFeaturedCollections();
+  const products = (await getProducts()).slice(0, 4);
+
+  if (products.length === 0) return null;
 
   return (
     <section className="pt-[30px] pb-12 md:pt-16 bg-neutral-canvas" aria-label="Bộ sưu tập nổi bật">
       <Container>
         <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h2 className="font-serif font-medium text-heading-md md:text-[36px] leading-[1.3] text-text-primary m-0">
+          <h2 className="m-0 font-serif text-heading-md font-medium leading-[1.3] text-text-primary md:text-[32px]">
             Bộ sưu tập nổi bật
           </h2>
           <Link
@@ -33,16 +28,10 @@ export default async function FeaturedCollections() {
         </div>
       </Container>
 
-      {/* Mobile carousel */}
-      <div className="md:hidden">
-        <FeaturedCarousel items={items} />
-      </div>
-
-      {/* Desktop grid */}
-      <Container className="hidden md:block">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-[22px]">
-          {items.map((item) => (
-            <FeaturedCard key={item.id} item={item} />
+      <Container>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-[14px] md:gap-[22px]">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </Container>

@@ -1,8 +1,9 @@
 "use client";
+import Button from "@/components/ui/Button";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Product } from "@/lib/types";
+import type { PublicProductSummary } from "@/lib/types";
 import ProductCard from "@/features/catalog/components/ProductCard";
 import FilterPanel from "@/features/catalog/components/FilterPanel";
 import {
@@ -21,8 +22,8 @@ import {
  *   • Desktop → sticky left filter sidebar + results grid.
  *   • Mobile  → a "Bộ lọc" button opens a bottom-sheet drawer with the same panel.
  *
- * Initial filter state comes from the URL (so home shortcuts like
- * /shop?occasion=Birthdays land pre-filtered); every change is synced back to
+ * Initial filter state comes from the URL (so home category links land
+ * pre-filtered); every change is synced back to
  * the URL via router.replace, making any filtered view shareable/bookmarkable.
  */
 export default function ShopBrowser({
@@ -30,7 +31,7 @@ export default function ShopBrowser({
   initial,
   query = "",
 }: {
-  products: Product[];
+  products: PublicProductSummary[];
   initial: Filters;
   query?: string;
 }) {
@@ -84,14 +85,14 @@ export default function ShopBrowser({
         {query && (
           <div className="mb-3 flex items-center gap-2">
             <span className="font-sans text-body-sm text-text-muted">Kết quả cho</span>
-            <button
+            <Button
               onClick={clearQuery}
               className="inline-flex items-center gap-1 rounded-full bg-neutral-surface border border-neutral-border px-3 py-1 font-sans font-bold text-label text-primary hover:border-primary transition-colors"
               aria-label={`Xóa tìm kiếm "${query}"`}
             >
               “{query}”
               <span className="material-symbols-outlined" style={{ fontSize: 15 }}>close</span>
-            </button>
+            </Button>
           </div>
         )}
 
@@ -99,22 +100,22 @@ export default function ShopBrowser({
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <p className="font-sans text-body-sm text-text-muted m-0">{visible.length} sản phẩm</p>
 
-          <button
+          <Button
             onClick={() => setDrawerOpen(true)}
             className="md:hidden inline-flex items-center gap-2 rounded-full border border-neutral-border px-4 py-2 font-sans font-bold text-label tracking-badge text-text-primary"
           >
             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>tune</span>
             Bộ lọc{count > 0 && ` (${count})`}
-          </button>
+          </Button>
 
           {count > 0 && (
-            <button
+            <Button
               onClick={clear}
               className="hidden md:inline-flex items-center gap-1 font-sans text-body-sm text-primary hover:underline"
             >
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
               Xóa lọc ({count})
-            </button>
+            </Button>
           )}
         </div>
 
@@ -138,13 +139,13 @@ export default function ShopBrowser({
           <div className="absolute bottom-0 left-0 w-full max-h-[85dvh] flex flex-col bg-neutral-canvas rounded-t-3xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-border">
               <h2 className="font-serif font-medium text-heading-md text-primary m-0">Bộ lọc</h2>
-              <button
+              <Button
                 onClick={() => setDrawerOpen(false)}
                 className="w-9 h-9 rounded-full flex items-center justify-center text-text-secondary hover:bg-neutral-surface"
                 aria-label="Đóng"
               >
                 <span className="material-symbols-outlined">close</span>
-              </button>
+              </Button>
             </div>
 
             <div className="flex-1 overflow-y-auto no-scrollbar px-5">
@@ -152,18 +153,18 @@ export default function ShopBrowser({
             </div>
 
             <div className="flex gap-3 px-5 py-4 border-t border-neutral-border">
-              <button
+              <Button
                 onClick={clear}
                 className="flex-none rounded-full border-[1.5px] border-secondary px-5 py-3 font-sans font-bold text-body-sm tracking-button text-primary"
               >
                 Xóa
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setDrawerOpen(false)}
                 className="flex-1 rounded-full bg-primary text-white py-3 font-sans font-bold text-body-sm tracking-button hover:bg-primary-hover transition-colors"
               >
                 Xem {visible.length} kết quả
-              </button>
+              </Button>
             </div>
           </div>
         </div>

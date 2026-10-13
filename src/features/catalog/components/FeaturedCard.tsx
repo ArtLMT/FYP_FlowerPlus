@@ -1,4 +1,4 @@
-import Image from "next/image";
+import ProductImage from "@/components/ui/ProductImage";
 import type { FeaturedItem } from "@/lib/types";
 import PriceBlock from "@/components/ui/PriceBlock";
 
@@ -18,12 +18,10 @@ export default function FeaturedCard({ item }: FeaturedCardProps) {
     <div className="w-full group flex flex-col bg-neutral-surface border border-neutral-border rounded-2xl overflow-hidden hover:border-secondary transition-colors">
       {/* Image */}
       <div className="relative aspect-square md:aspect-[4/3] overflow-hidden bg-neutral-raised">
-        <Image
+        <ProductImage
           src={item.imageUrl}
           alt={item.name}
-          fill
           sizes="(max-width: 768px) 50vw, 25vw"
-          style={{ objectFit: "cover" }}
           className="transition-transform duration-700 group-hover:scale-105"
         />
       </div>

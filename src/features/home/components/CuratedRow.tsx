@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Container from "@/components/ui/Container";
 import ProductCard from "@/features/catalog/components/ProductCard";
-import type { Product } from "@/lib/types";
+import type { PublicProductSummary } from "@/lib/types";
 
 /**
  * CuratedRow — a "shop by category" section: heading + a few real products +
@@ -20,7 +20,7 @@ export default function CuratedRow({
 }: {
   title: string;
   href: string;
-  products: Product[];
+  products: PublicProductSummary[];
 }) {
   if (products.length === 0) return null;
 
@@ -43,7 +43,7 @@ export default function CuratedRow({
         {/* Mobile: horizontal snap-scroll · Desktop: 4-col grid */}
         <div className="flex gap-[14px] overflow-x-auto no-scrollbar snap-x -mx-5 px-5 md:mx-0 md:px-0 md:grid md:grid-cols-4 md:gap-[22px] md:overflow-visible">
           {products.map((p) => (
-            <div key={p.id} className="w-[46%] flex-shrink-0 snap-start md:w-auto">
+            <div key={p.id} className="w-[calc((100%_-_14px)/2)] flex-shrink-0 snap-start md:w-auto">
               <ProductCard product={p} />
             </div>
           ))}

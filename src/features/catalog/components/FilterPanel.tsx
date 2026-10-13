@@ -1,13 +1,11 @@
 "use client";
 
-import type { Product } from "@/lib/types";
+import type { PublicProductSummary } from "@/lib/types";
 import {
   type Filters,
   type FilterKey,
-  OCCASIONS,
-  DECORATIONS,
   PRICE_BUCKETS,
-  flowerOptions,
+  categoryOptions,
 } from "@/features/catalog/filters";
 
 /**
@@ -78,17 +76,15 @@ export default function FilterPanel({
   filters,
   onToggle,
 }: {
-  products: Product[];
+  products: PublicProductSummary[];
   filters: Filters;
   onToggle: (group: FilterKey, value: string) => void;
 }) {
-  const flowers = flowerOptions(products);
+  const categories = categoryOptions(products);
 
   return (
     <div className="bg-neutral-surface border border-neutral-border rounded-2xl px-5">
-      <Group title="Dịp" group="occasion" options={OCCASIONS} filters={filters} onToggle={onToggle} />
-      <Group title="Kiểu trang trí" group="decor" options={DECORATIONS} filters={filters} onToggle={onToggle} />
-      <Group title="Loại hoa" group="flower" options={flowers} filters={filters} onToggle={onToggle} />
+      <Group title="Danh mục" group="category" options={categories} filters={filters} onToggle={onToggle} />
       <Group title="Khoảng giá" group="price" options={PRICE_BUCKETS} filters={filters} onToggle={onToggle} />
     </div>
   );

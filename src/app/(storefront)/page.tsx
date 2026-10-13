@@ -1,7 +1,6 @@
 import Hero from "@/features/home/components/Hero";
 import QuickActions from "@/features/home/components/QuickActions";
 import Container from "@/components/ui/Container";
-import SaleSection from "@/features/home/components/SaleSection";
 import FeaturedCollections from "@/features/home/components/FeaturedCollections";
 import CuratedSections from "@/features/home/components/CuratedSections";
 import ProductsGrid from "@/features/home/components/ProductsGrid";
@@ -32,7 +31,6 @@ export default function HomePage() {
         <QuickActions layout="row" />
       </Container>
 
-      <SaleSection />
       <FeaturedCollections />
       <CuratedSections />
       <ProductsGrid />

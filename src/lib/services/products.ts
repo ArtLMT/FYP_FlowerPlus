@@ -1,13 +1,29 @@
-import type { Product, FeaturedItem } from "@/lib/types";
-import { products, featuredCollections, saleItems } from "@/lib/mock-data";
+import { api, RequestError } from "@/lib/api";
+import type {
+  FeaturedItem,
+  PublicProductDetail,
+  PublicProductSummary,
+} from "@/lib/types";
+import { featuredCollections, saleItems } from "@/lib/mock-data";
 
 /**
- * Catalog service. Returns mock data from lib/mock-data.
- * TODO(api): replace each body with a fetch() when the backend is ready.
+ * Public Product catalog service. Product list/detail come from the backend;
+ * Promotion-owned showcase sections remain separate until Promotion is built.
  */
 
-export async function getProducts(): Promise<Product[]> {
-  return products;
+interface PageResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export async function getProducts(search?: string): Promise<PublicProductSummary[]> {
+  const params = new URLSearchParams({ page: "0", size: "100" });
+  if (search?.trim()) params.set("search", search.trim());
+  const page = await api<PageResponse<PublicProductSummary>>(`/api/products?${params.toString()}`);
+  return page.content;
 }
 
 export async function getFeaturedCollections(): Promise<FeaturedItem[]> {
@@ -18,6 +34,11 @@ export async function getSaleItems(): Promise<FeaturedItem[]> {
   return saleItems;
 }
 
-export async function getProduct(id: string): Promise<Product | undefined> {
-  return products.find((p) => p.id === id);
+export async function getProduct(id: string): Promise<PublicProductDetail | undefined> {
+  try {
+    return await api<PublicProductDetail>(`/api/products/${encodeURIComponent(id)}`);
+  } catch (error) {
+    if (error instanceof RequestError && error.status === 404) return undefined;
+    throw error;
+  }
 }

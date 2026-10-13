@@ -1,10 +1,10 @@
-import Image from "next/image";
+import ProductImage from "@/components/ui/ProductImage";
 import Link from "next/link";
-import type { Product } from "@/lib/types";
+import type { PublicProductSummary } from "@/lib/types";
 import PriceBlock from "@/components/ui/PriceBlock";
 
 interface ProductCardProps {
-  product: Product;
+  product: PublicProductSummary;
 }
 
 /**
@@ -18,34 +18,30 @@ export default function ProductCard({ product }: ProductCardProps) {
     <Link
       href={`/product/${product.id}`}
       aria-label={product.name}
-      className="group flex flex-col bg-neutral-surface border border-neutral-border rounded-[4px] p-[14px] hover:border-secondary transition-colors">
+      className="group flex h-full flex-col rounded-[4px] border border-neutral-border bg-neutral-surface p-[14px] transition-colors hover:border-secondary">
       {/* Image */}
       <div className="relative aspect-square overflow-hidden rounded-[4px] bg-neutral-raised mb-4">
-        <Image
-          src={product.imageUrl}
+        <ProductImage
+          src={product.mainImageUrl}
           alt={product.name}
-          fill
           sizes="(max-width: 768px) 50vw, 33vw"
-          style={{ objectFit: "cover" }}
           className="transition-transform duration-700 group-hover:scale-105"
         />
       </div>
 
       {/* Info */}
-      <div className="text-left">
-        <h3 className="font-serif text-heading-md font-medium leading-[1.4] text-text-primary tracking-heading">
+      <div className="flex flex-1 flex-col text-left">
+        <h3 className="line-clamp-2 min-h-[2.8em] font-serif text-heading-md font-medium leading-[1.4] tracking-heading text-text-primary">
           {product.name}
         </h3>
-        <p className="font-sans text-body-sm text-text-secondary mb-2 leading-[1.4]">
-          {product.materials}
+        <p className="mb-2 min-h-[1.4em] line-clamp-1 font-sans text-body-sm leading-[1.4] text-text-secondary">
+          {product.categories.map((category) => category.name).join(" · ")}
         </p>
 
         {/* Price block */}
-        <div className="flex items-center justify-between w-full mt-4">
+        <div className="mt-auto flex w-full items-center justify-between pt-4">
           <PriceBlock
-            price={product.price}
-            originalPrice={product.originalPrice}
-            discountPercent={product.discountPercent}
+            price={product.basePrice}
             priceSize="md"
           />
         </div>

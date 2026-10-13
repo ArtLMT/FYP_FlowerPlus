@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async rewrites() {
+    const backend = process.env.FLOWERPLUS_API_ORIGIN ?? "http://localhost:8080";
+    return [
+      { source: "/api/:path*", destination: `${backend}/api/:path*` },
+      { source: "/media/:path*", destination: `${backend}/media/:path*` },
+    ];
+  },
   images: {
     remotePatterns: [
       {

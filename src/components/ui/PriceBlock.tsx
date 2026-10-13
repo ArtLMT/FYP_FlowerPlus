@@ -19,8 +19,11 @@ export default function PriceBlock({
   layout = "column",
   priceSize = "md",
 }: PriceBlockProps) {
-  const currentPriceClass =
-    priceSize === "md" ? "text-body-sm" : priceSize === "lg" ? "text-body" : "text-body-sm";
+  const currentPriceClass = priceSize === "sm"
+    ? "text-body-sm"
+    : priceSize === "lg"
+      ? "text-heading-md"
+      : "text-heading-sm md:text-[20px]";
   const originalPriceClass = priceSize === "md" ? "text-body-sm" : "text-label";
 
   return (

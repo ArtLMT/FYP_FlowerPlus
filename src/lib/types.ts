@@ -8,6 +8,40 @@
 
 /* ── Catalog ─────────────────────────────────────── */
 
+export type PublicProductType = "PRE_ORDER" | "PRE_MADE";
+
+export interface PublicProductCategory {
+  id: string;
+  name: string;
+}
+
+export interface PublicProductImage {
+  id: string;
+  contentUrl: string;
+  displayOrder: number;
+}
+
+/** Public-safe card data returned by GET /api/products. */
+export interface PublicProductSummary {
+  id: string;
+  name: string;
+  type: PublicProductType;
+  basePrice: number;
+  categories: PublicProductCategory[];
+  mainImageUrl: string | null;
+}
+
+/** Public-safe detail data returned by GET /api/products/{id}. */
+export interface PublicProductDetail {
+  id: string;
+  name: string;
+  description: string;
+  type: PublicProductType;
+  basePrice: number;
+  categories: PublicProductCategory[];
+  images: PublicProductImage[];
+}
+
 export type StockStatus = "IN STOCK" | "LOW STOCK" | "OUT OF STOCK";
 export type Occasion = "Birthdays" | "Weddings" | "Everyday" | "Sympathy";
 

@@ -2,6 +2,7 @@ import { getProducts } from "@/lib/services/products";
 import Container from "@/components/ui/Container";
 import ShopBrowser from "@/features/catalog/components/ShopBrowser";
 import { filtersFromParams } from "@/features/catalog/filters";
+import CategoryStrip from "@/features/catalog/components/CategoryStrip";
 
 /**
  * Browse / Shop — /shop
@@ -12,8 +13,7 @@ import { filtersFromParams } from "@/features/catalog/filters";
  * ShopBrowser (which owns all filtering).
  *
  * The destination for the BottomNav "Khám phá", the Header "Bộ sưu tập", the
- * product-detail back arrow, and the homepage shortcuts (/shop?occasion=…,
- * /shop?decor=…) + "XEM THÊM" links.
+ * product-detail links, homepage category rows, and "XEM THÊM" links.
  */
 export default async function ShopPage({
   searchParams,
@@ -34,6 +34,7 @@ export default async function ShopPage({
         <p className="font-sans text-body text-text-muted mt-1 mb-5 md:mb-6">
           Khám phá toàn bộ các mẫu hoa của chúng tôi.
         </p>
+        <CategoryStrip />
         <ShopBrowser products={products} initial={initial} query={query} />
       </Container>
     </main>

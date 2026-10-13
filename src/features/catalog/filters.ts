@@ -1,32 +1,15 @@
-import type { Product, Occasion, DecorationType } from "@/lib/types";
+import type { PublicProductSummary } from "@/lib/types";
 
 /**
  * Catalog filter config + logic — the single source shared by the Shop filter
- * panel AND the home "mini-filter" shortcuts. The URL query is the contract
- * between the two pages: home links to /shop?occasion=…&decor=…, Shop reads it
- * back. Neither page needs to know about the other — only this module.
+ * panel and the category rows on the home page. The URL query is the contract
+ * between the two pages: home links to /shop?category=…, and Shop reads it back.
  */
 
-export type FilterKey = "occasion" | "decor" | "flower" | "price";
+export type FilterKey = "category" | "price";
 export type Filters = Record<FilterKey, string[]>;
 
-export const EMPTY_FILTERS: Filters = { occasion: [], decor: [], flower: [], price: [] };
-
-/** Static option lists (key = stored/URL value, label = VN display). */
-export const OCCASIONS: { key: Occasion; label: string }[] = [
-  { key: "Birthdays", label: "Sinh nhật" },
-  { key: "Weddings", label: "Đám cưới" },
-  { key: "Everyday", label: "Thường ngày" },
-  { key: "Sympathy", label: "Chia buồn" },
-];
-
-export const DECORATIONS: { key: DecorationType; label: string; icon: string }[] = [
-  { key: "bouquet", label: "Bó hoa", icon: "local_florist" },
-  { key: "basket", label: "Giỏ hoa", icon: "shopping_basket" },
-  { key: "box", label: "Hộp hoa", icon: "inventory_2" },
-  { key: "vase", label: "Bình hoa", icon: "emoji_nature" },
-  { key: "stand", label: "Kệ hoa", icon: "yard" },
-];
+export const EMPTY_FILTERS: Filters = { category: [], price: [] };
 
 export const PRICE_BUCKETS: { key: string; label: string; test: (p: number) => boolean }[] = [
   { key: "lt400", label: "Dưới 400.000đ", test: (p) => p < 400_000 },
@@ -35,41 +18,40 @@ export const PRICE_BUCKETS: { key: string; label: string; test: (p: number) => b
   { key: "gt800", label: "Trên 800.000đ", test: (p) => p >= 800_000 },
 ];
 
-/** Flower-type options are derived from the catalog (no hardcoded list to drift). */
-export function flowerOptions(products: Product[]): { key: string; label: string }[] {
-  const set = new Set<string>();
-  products.forEach((p) => p.flowerTypes.forEach((f) => set.add(f)));
-  return [...set].sort((a, b) => a.localeCompare(b, "vi")).map((f) => ({ key: f, label: f }));
+/** Category options are derived from the public Product responses. */
+export function categoryOptions(products: PublicProductSummary[]): { key: string; label: string }[] {
+  const categories = new Map<string, string>();
+  products.forEach((product) => product.categories.forEach((category) => categories.set(category.id, category.name)));
+  return [...categories]
+    .map(([key, label]) => ({ key, label }))
+    .sort((left, right) => left.label.localeCompare(right.label, "vi"));
 }
 
-/** Free-text search over name / materials / flower types (accent-insensitive-ish). */
-export function searchProducts(products: Product[], q: string): Product[] {
+/** Free-text search over the public name and category labels. */
+export function searchProducts(products: PublicProductSummary[], q: string): PublicProductSummary[] {
   const needle = q.trim().toLowerCase();
   if (!needle) return products;
   return products.filter(
     (p) =>
       p.name.toLowerCase().includes(needle) ||
-      p.materials.toLowerCase().includes(needle) ||
-      p.flowerTypes.some((f) => f.toLowerCase().includes(needle))
+      p.categories.some((category) => category.name.toLowerCase().includes(needle))
   );
 }
 
 /** Apply all groups: OR within a group, AND across groups. */
-export function filterProducts(products: Product[], f: Filters): Product[] {
+export function filterProducts(products: PublicProductSummary[], f: Filters): PublicProductSummary[] {
   return products.filter((p) => {
-    if (f.occasion.length && !(p.occasion && f.occasion.includes(p.occasion))) return false;
-    if (f.decor.length && !f.decor.includes(p.decorationType)) return false;
-    if (f.flower.length && !p.flowerTypes.some((ft) => f.flower.includes(ft))) return false;
-    if (f.price.length && !PRICE_BUCKETS.some((b) => f.price.includes(b.key) && b.test(p.price))) return false;
+    if (f.category.length && !p.categories.some((category) => f.category.includes(category.id))) return false;
+    if (f.price.length && !PRICE_BUCKETS.some((bucket) => f.price.includes(bucket.key) && bucket.test(p.basePrice))) return false;
     return true;
   });
 }
 
 export function activeCount(f: Filters): number {
-  return f.occasion.length + f.decor.length + f.flower.length + f.price.length;
+  return f.category.length + f.price.length;
 }
 
-/* ── URL <-> Filters ─────────────────────────────── */
+/* URL <-> Filters */
 
 export function filtersToQuery(f: Filters): string {
   const params = new URLSearchParams();
@@ -85,5 +67,5 @@ export function filtersFromParams(sp: Record<string, string | string[] | undefin
     const s = Array.isArray(v) ? v.join(",") : v;
     return s ? s.split(",").filter(Boolean) : [];
   };
-  return { occasion: get("occasion"), decor: get("decor"), flower: get("flower"), price: get("price") };
+  return { category: get("category"), price: get("price") };
 }
