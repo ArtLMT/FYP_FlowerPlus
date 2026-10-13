@@ -62,6 +62,52 @@ export interface MaterialInput {
   sellingPrice: number;
 }
 
+export type ManagedProductType = "PRE_ORDER" | "PRE_MADE";
+export type ManagedProductStatus = "DRAFT" | "ACTIVE" | "DEACTIVATED";
+
+export interface ManagedProduct {
+  id: string;
+  name: string;
+  description: string | null;
+  basePrice: number | null;
+  type: ManagedProductType;
+  status: ManagedProductStatus;
+  version: number;
+  recipe: Array<{
+    materialId: string;
+    materialName: string;
+    materialType: MaterialType;
+    materialUnit: MaterialUnit;
+    materialStatus: MaterialStatus;
+    quantityRequired: number;
+  }>;
+  categories: Array<{ id: string; name: string }>;
+  images: Array<{ id: string; contentUrl: string; displayOrder: number }>;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string | null;
+  updatedBy: string | null;
+}
+
+export interface ManagedProductQuery {
+  page?: number;
+  size?: number;
+  search?: string;
+}
+
+export interface CreateManagedProductInput {
+  name: string;
+  type: ManagedProductType;
+  description: string | null;
+  basePrice: number | null;
+  categoryIds: string[];
+  recipe: Array<{ materialId: string; quantityRequired: number }>;
+}
+
+export interface UpdateManagedProductInput extends CreateManagedProductInput {
+  version: number;
+}
+
 export interface MaterialQuery {
   page?: number;
   size?: number;
@@ -76,6 +122,66 @@ export const listStaff = (page = 0, size = 20) =>
 
 export const getAdminAddress = (id: string) =>
   api<AdminAddress>(`/api/admin/addresses/${encodeURIComponent(id)}`);
+
+export const listManagedProducts = ({ page = 0, size = 100, search }: ManagedProductQuery = {}) => {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  if (search?.trim()) params.set("search", search.trim());
+  return api<PageResponse<ManagedProduct>>(`/api/manage/products?${params.toString()}`);
+};
+
+export const createManagedProduct = (input: CreateManagedProductInput) =>
+  api<ManagedProduct>("/api/manage/products", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+
+export const getManagedProduct = (id: string) =>
+  api<ManagedProduct>(`/api/manage/products/${encodeURIComponent(id)}`);
+
+export const updateManagedProduct = (product: ManagedProduct, input: Omit<UpdateManagedProductInput, "version">) =>
+  api<ManagedProduct>(`/api/manage/products/${encodeURIComponent(product.id)}`, {
+    method: "PUT",
+    body: JSON.stringify({ ...input, version: product.version }),
+  });
+
+export const uploadManagedProductImage = (product: ManagedProduct, file: File) => {
+  const body = new FormData();
+  body.append("file", file);
+  return api<ManagedProduct>(
+    `/api/manage/products/${encodeURIComponent(product.id)}/images?version=${product.version}`,
+    { method: "POST", body },
+  );
+};
+
+export const reorderManagedProductImages = (product: ManagedProduct, imageIds: string[]) =>
+  api<ManagedProduct>(`/api/manage/products/${encodeURIComponent(product.id)}/images/order`, {
+    method: "PUT",
+    body: JSON.stringify({ version: product.version, imageIds }),
+  });
+
+export const removeManagedProductImage = (product: ManagedProduct, imageId: string) =>
+  api<ManagedProduct>(
+    `/api/manage/products/${encodeURIComponent(product.id)}/images/${encodeURIComponent(imageId)}?version=${product.version}`,
+    { method: "DELETE" },
+  );
+
+export const activateManagedProduct = (product: ManagedProduct) =>
+  api<ManagedProduct>(`/api/manage/products/${encodeURIComponent(product.id)}/activate`, {
+    method: "POST",
+    body: JSON.stringify({ version: product.version }),
+  });
+
+export const deactivateManagedProduct = (product: ManagedProduct) =>
+  api<ManagedProduct>(`/api/manage/products/${encodeURIComponent(product.id)}/deactivate`, {
+    method: "POST",
+    body: JSON.stringify({ version: product.version }),
+  });
+
+export const returnManagedProductToDraft = (product: ManagedProduct) =>
+  api<ManagedProduct>(`/api/manage/products/${encodeURIComponent(product.id)}/draft`, {
+    method: "POST",
+    body: JSON.stringify({ version: product.version }),
+  });
 
 export const listMaterials = ({
   page = 0,
