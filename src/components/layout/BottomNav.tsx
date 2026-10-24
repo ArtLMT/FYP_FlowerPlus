@@ -33,6 +33,7 @@ export default function BottomNav({ active = "home" }: { active?: NavKey }) {
     )?.key ?? active;
   return (
     <>
+      {/* Four tab links: Home, Browse, Cart (with item-count badge), Account. */}
       <nav
         className="md:hidden fixed bottom-0 left-0 w-full z-50 bg-neutral-canvas/95 backdrop-blur-md grid grid-cols-4 py-[10px] pb-[14px] border-t border-neutral-border"
         aria-label="Điều hướng chính"
@@ -54,6 +55,7 @@ export default function BottomNav({ active = "home" }: { active?: NavKey }) {
                 >
                   {icon}
                 </span>
+                {/* Cart item-count badge. */}
                 {key === "cart" && count > 0 && (
                   <span className="absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center">
                     {count}

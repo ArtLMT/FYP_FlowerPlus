@@ -11,11 +11,12 @@ interface ProductImageProps {
   priority?: boolean;
 }
 
-/** One fallback for missing image URLs and image requests that fail to load. */
+/** Product photo that fills its (relative) parent, with one fallback for missing image URLs and image requests that fail to load. */
 export default function ProductImage({ src, alt, sizes, className, priority }: ProductImageProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   if (!src?.trim() || failedSrc === src) {
+    // Dark "no image yet" placeholder with a flower icon.
     return (
       <div
         className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#111] text-white/75"

@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/components/ui/Button";
 
 import { useState } from "react";
 
@@ -19,13 +20,14 @@ export default function ChatbotFAB() {
       id="chatbot-fab"
       className={`fixed bottom-24 right-6 md:bottom-8 md:right-8 z-[100] ${pulsing ? "animate-pulse-gentle" : ""}`}
     >
-      <button
+      {/* Round chat icon button. */}
+      <Button
         onClick={() => setPulsing(false)}
         className="bg-primary text-text-on-primary w-12 h-12 rounded-full flex items-center justify-center hover:bg-primary-hover transition-colors shadow-md"
         aria-label="Open FlowerPlus chat assistant"
       >
         <span className="material-symbols-outlined">forum</span>
-      </button>
+      </Button>
     </div>
   );
 }

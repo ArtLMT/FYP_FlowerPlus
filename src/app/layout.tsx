@@ -30,6 +30,7 @@ const bodyFont = Karla({
 });
 
 import { CartProvider } from "@/features/cart/cart-provider";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 
 export const metadata: Metadata = {
   title: "FlowerPlus | Modern Botanical Gifting",
@@ -69,7 +70,10 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-neutral-canvas text-text-primary font-sans overflow-x-hidden">
-        <CartProvider>{children}</CartProvider>
+        {/* App-wide providers: the toast banner and cart state are available on every page. */}
+        <ToastProvider>
+          <CartProvider>{children}</CartProvider>
+        </ToastProvider>
       </body>
     </html>
   );

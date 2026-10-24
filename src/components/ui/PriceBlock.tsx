@@ -28,11 +28,13 @@ export default function PriceBlock({
 
   return (
     <div className={`flex ${layout === "column" ? "flex-col gap-1" : "flex-row items-center gap-2"}`}>
+      {/* Crossed-out original price (only when discounted). */}
       {originalPrice && (
         <span className={`text-text-muted line-through font-sans ${originalPriceClass}`}>
           {formatVND(originalPrice)}
         </span>
       )}
+      {/* Current price and the "-N%" discount badge. */}
       <div className="flex items-center gap-2">
         <span className={`text-primary font-bold font-sans ${currentPriceClass}`}>
           {formatVND(price)}
