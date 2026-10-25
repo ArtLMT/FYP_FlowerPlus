@@ -1,4 +1,8 @@
-import { api } from "@/lib/api";
+import { api, type ErrorMessages } from "@/lib/api";
 
-export interface Category { id: string; name: string }
-export const getCategories = () => api<Category[]>("/api/categories");
+export interface Category {
+  id: string;
+  name: string;
+}
+
+export const getCategories = (errors?: ErrorMessages) => api<Category[]>("/api/categories", { errors });
