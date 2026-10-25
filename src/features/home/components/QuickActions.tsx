@@ -1,8 +1,9 @@
+import Button from "@/components/ui/Button";
 /**
  * QuickActions — the 4 shortcut buttons (Đơn hàng / Đặt riêng / Ưu đãi / Tài khoản).
  *
  * Reused in TWO places with different shapes (one component, `layout` prop):
- *   • layout="grid" → in the mobile Header (icon stacked over label)
+ *   • layout="grid" → top of the mobile home page, above the Hero (icon stacked over label)
  *   • layout="row"  → below the desktop Hero (icon beside label, left-aligned)
  *
  * The data lives here once; only the presentation changes.
@@ -25,8 +26,9 @@ export default function QuickActions({
 
   return (
     <div className={`grid grid-cols-4 ${isRow ? "gap-[18px]" : "gap-2"} ${className}`}>
+      {/* One shortcut tile: icon plus label. */}
       {ACTIONS.map(({ label, icon }) => (
-        <button
+        <Button
           key={label}
           className={`bg-neutral-surface border border-neutral-border cursor-pointer text-text-secondary hover:bg-neutral-raised transition-colors ${
             isRow
@@ -47,7 +49,7 @@ export default function QuickActions({
           >
             {label}
           </span>
-        </button>
+        </Button>
       ))}
     </div>
   );

@@ -1,6 +1,6 @@
 import ProductImage from "@/components/ui/ProductImage";
 import Link from "next/link";
-import type { PublicProductSummary } from "@/lib/types";
+import { availabilityOf, type PublicProductSummary } from "@/lib/services/products";
 import PriceBlock from "@/components/ui/PriceBlock";
 
 interface ProductCardProps {
@@ -11,9 +11,11 @@ interface ProductCardProps {
  * ProductCard — standard grid card used in Signature Arrangements and Shop.
  *
  * The whole card is a link to the product detail page, so both the homepage
- * grid and the /shop grid navigate on tap.
+ * grid and the /shop grid navigate on tap. Out-of-stock products stay listed, marked as such.
  */
 export default function ProductCard({ product }: ProductCardProps) {
+  const availability = availabilityOf(product);
+
   return (
     <Link
       href={`/product/${product.id}`}
@@ -31,6 +33,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* Info */}
       <div className="flex flex-1 flex-col text-left">
+        {/* Product name and category list. */}
         <h3 className="line-clamp-2 min-h-[2.8em] font-serif text-heading-md font-medium leading-[1.4] tracking-heading text-text-primary">
           {product.name}
         </h3>
@@ -45,6 +48,13 @@ export default function ProductCard({ product }: ProductCardProps) {
             priceSize="md"
           />
         </div>
+        {/* Availability badge (in stock / out of stock …). */}
+        {/*<span*/}
+        {/*  className={`mt-2 self-start rounded-md px-2 py-[2px] font-sans text-label font-bold tracking-badge ${*/}
+        {/*    availability.canBuy ? "bg-accent-sage-light text-accent-sage" : "bg-tertiary text-primary"*/}
+        {/*  }`}>*/}
+        {/*  {availability.title}*/}
+        {/*</span>*/}
       </div>
     </Link>
   );

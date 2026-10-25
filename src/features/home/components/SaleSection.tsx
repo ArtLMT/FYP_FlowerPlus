@@ -1,4 +1,5 @@
-import Image from "next/image";
+import Button from "@/components/ui/Button";
+import ProductImage from "@/components/ui/ProductImage";
 import { getSaleItems } from "@/lib/services/products";
 import { formatVND } from "@/lib/utils";
 import Container from "@/components/ui/Container";
@@ -43,9 +44,9 @@ export default async function SaleSection() {
             <p className="font-sans text-body md:text-[15px] text-[#ffeae5] mb-[18px] md:mb-7 m-0">
               Cho các bộ sưu tập hoa theo mùa.
             </p>
-            <button className="self-start bg-neutral-canvas text-primary border-none rounded-lg md:rounded-[10px] py-3 px-[22px] md:px-[26px] font-sans font-bold text-label md:text-[12px] tracking-button cursor-pointer hover:opacity-90 transition-opacity">
+            <Button className="self-start bg-neutral-canvas text-primary border-none rounded-lg md:rounded-[10px] py-3 px-[22px] md:px-[26px] font-sans font-bold text-label md:text-[12px] tracking-button cursor-pointer hover:opacity-90 transition-opacity">
               MUA NGAY
-            </button>
+            </Button>
           </div>
 
           {/* Desktop: 2×2 horizontal cards */}
@@ -55,12 +56,14 @@ export default async function SaleSection() {
                 key={item.id}
                 className="flex gap-4 bg-neutral-surface border border-neutral-border rounded-2xl p-[14px]"
               >
+                {/* Card image with discount badge. */}
                 <div className="relative flex-none w-[108px] h-[108px] rounded-xl overflow-hidden bg-neutral-raised">
-                  <Image src={item.imageUrl} alt={item.name} fill sizes="108px" style={{ objectFit: "cover" }} />
+                  <ProductImage src={item.imageUrl} alt={item.name} sizes="108px" />
                   <span className="absolute top-2 left-2 px-[9px] py-1 rounded-[7px] font-sans font-bold text-[10px] bg-primary text-white">
                     -{item.discountPercent}%
                   </span>
                 </div>
+                {/* Card name, materials, sale price, and original price. */}
                 <div className="flex flex-col justify-center">
                   <h3 className="font-serif font-medium text-[19px] leading-[1.15] mb-1 m-0">
                     {item.name}
@@ -88,7 +91,7 @@ export default async function SaleSection() {
         {items.map((item) => (
           <div key={item.id} className="flex-none w-[152px]">
             <div className="relative h-[122px] rounded-[14px] bg-neutral-surface overflow-hidden mb-[10px]">
-              <Image src={item.imageUrl} alt={item.name} fill sizes="152px" style={{ objectFit: "cover" }} />
+              <ProductImage src={item.imageUrl} alt={item.name} sizes="152px" />
               <span className="absolute top-[9px] left-[9px] px-[9px] py-1 rounded-[7px] font-sans font-bold text-[10px] tracking-[0.04em] bg-primary text-white">
                 -{item.discountPercent}%
               </span>

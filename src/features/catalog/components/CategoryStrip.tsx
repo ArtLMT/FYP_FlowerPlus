@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getCategories, type Category } from "@/lib/services/categories";
+import { useResource } from "@/lib/hooks/use-resource";
+import { getCategories } from "@/lib/services/categories";
 
+/** Links to every category; hidden when there are none or they could not be loaded. */
 export default function CategoryStrip() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [failed, setFailed] = useState(false);
-  useEffect(() => { getCategories().then(setCategories).catch(() => setFailed(true)); }, []);
-  if (failed || categories.length === 0) return null;
+  const { data: categories = [], error } = useResource(getCategories, "categories");
+  if (error || categories.length === 0) return null;
   return (
     <section aria-label="Danh mục hiện có" className="mb-6">
+      {/* Small "DANH MỤC HIỆN CÓ" label. */}
       <h2 className="font-sans font-bold text-body-sm text-text-muted mb-2">DANH MỤC HIỆN CÓ</h2>
+      {/* Pill links, one per category, to /shop?category=…. */}
       <div className="flex flex-wrap gap-2">
         {categories.map((category) => <Link
           key={category.id}

@@ -35,6 +35,7 @@ export default function FeaturedCard({ item }: FeaturedCardProps) {
           {item.materials}
         </p>
 
+        {/* Price, original price, and discount badge. */}
         <PriceBlock
           price={item.price}
           originalPrice={item.originalPrice}

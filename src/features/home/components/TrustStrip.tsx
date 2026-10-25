@@ -27,6 +27,7 @@ export default function TrustStrip() {
   return (
     <section className="py-9 md:py-16 bg-neutral-canvas" aria-label="Vì sao chọn FlowerPlus">
       <Container>
+        {/* Trust items: icon, title, and short description. */}
         <div className="flex flex-col gap-[22px] md:grid md:grid-cols-3 md:gap-8">
           {TRUST_ITEMS.map(({ icon, title, body }) => (
             <div key={title} className="flex gap-[15px] items-start">

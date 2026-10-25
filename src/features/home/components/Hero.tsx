@@ -1,3 +1,4 @@
+import Button from "@/components/ui/Button";
 import Image from "next/image";
 import Container from "@/components/ui/Container";
 
@@ -15,6 +16,7 @@ export default function Hero() {
     <section className="pt-1 md:pt-8">
       <Container>
         <div className="relative h-[168px] md:h-[440px] rounded-2xl md:rounded-3xl overflow-hidden bg-primary">
+          {/* Background photo. */}
           <Image
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSmkSgMDgNa_sr1692th8VHhzWjJcPzbq5aqrhkiFTAqBeOYrD_GLVUzLIJcaD0_t_enhC0N0oTus5Zcqve-i5kPJ2i_kpruq18MlKlu5-lUxW9YUi9gTxp2XePM3c1zNi4mKdrjHkpwogX34HJFKQfTfZ1wL_W_zUvd9lUAEy0ugypQjvMTIw56SUBw7Y_CA2lgJGoAJNMUYDp7mCUOVOxZpsR2ER83lifNQsf8-zRum06W4wlWdFSxMOgByn6YQA-WiQYbLPsME"
             alt="Hoa tươi đẹp từ FlowerPlus"
@@ -29,18 +31,21 @@ export default function Hero() {
 
           {/* Content block */}
           <div className="absolute inset-0 flex flex-col justify-end p-5 md:justify-center md:p-0 md:pl-14 md:max-w-[560px]">
+            {/* Desktop-only eyebrow text. */}
             <p className="hidden md:block font-sans font-bold text-[12px] tracking-[0.18em] text-[#ffe1da] mb-4">
               HOA TƯƠI THỦ CÔNG
             </p>
+            {/* Headline (shown on all sizes). */}
             <h1 className="font-serif font-medium text-[30px] md:text-[60px] leading-[1.12] md:leading-[1.05] tracking-heading text-neutral-canvas m-0 md:mb-5">
               Hoa cho mọi khoảnh khắc
             </h1>
+            {/* Desktop-only subtitle and "KHÁM PHÁ NGAY" button. */}
             <p className="hidden md:block font-sans text-[17px] leading-[1.6] text-[#ffeae5] mb-[30px]">
               Bộ sưu tập được tuyển chọn mỗi ngày, gói ghém trọn vẹn từng cảm xúc.
             </p>
-            <button className="hidden md:inline-block self-start bg-neutral-canvas text-primary border-none rounded-[10px] px-[30px] py-[15px] font-sans font-bold text-body-sm tracking-button cursor-pointer hover:opacity-90 transition-opacity">
+            <Button className="hidden md:inline-block self-start bg-neutral-canvas text-primary border-none rounded-[10px] px-[30px] py-[15px] font-sans font-bold text-body-sm tracking-button cursor-pointer hover:opacity-90 transition-opacity">
               KHÁM PHÁ NGAY
-            </button>
+            </Button>
           </div>
         </div>
       </Container>

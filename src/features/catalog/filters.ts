@@ -1,4 +1,4 @@
-import type { PublicProductSummary } from "@/lib/types";
+import type { PublicProductSummary } from "@/lib/services/products";
 
 /**
  * Catalog filter config + logic — the single source shared by the Shop filter
@@ -9,9 +9,11 @@ import type { PublicProductSummary } from "@/lib/types";
 export type FilterKey = "category" | "price";
 export type Filters = Record<FilterKey, string[]>;
 
+export type FilterOption = { key: string; label: string };
+
 export const EMPTY_FILTERS: Filters = { category: [], price: [] };
 
-export const PRICE_BUCKETS: { key: string; label: string; test: (p: number) => boolean }[] = [
+export const PRICE_BUCKETS: (FilterOption & { test: (p: number) => boolean })[] = [
   { key: "lt400", label: "Dưới 400.000đ", test: (p) => p < 400_000 },
   { key: "400-600", label: "400.000đ – 600.000đ", test: (p) => p >= 400_000 && p < 600_000 },
   { key: "600-800", label: "600.000đ – 800.000đ", test: (p) => p >= 600_000 && p < 800_000 },
@@ -19,7 +21,7 @@ export const PRICE_BUCKETS: { key: string; label: string; test: (p: number) => b
 ];
 
 /** Category options are derived from the public Product responses. */
-export function categoryOptions(products: PublicProductSummary[]): { key: string; label: string }[] {
+export function categoryOptions(products: PublicProductSummary[]): FilterOption[] {
   const categories = new Map<string, string>();
   products.forEach((product) => product.categories.forEach((category) => categories.set(category.id, category.name)));
   return [...categories]

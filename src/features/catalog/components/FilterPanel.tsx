@@ -1,21 +1,14 @@
 "use client";
 
-import type { PublicProductSummary } from "@/lib/types";
-import {
-  type Filters,
-  type FilterKey,
-  PRICE_BUCKETS,
-  categoryOptions,
-} from "@/features/catalog/filters";
+import { type Filters, type FilterKey, type FilterOption, PRICE_BUCKETS } from "@/features/catalog/filters";
 
 /**
  * FilterPanel — the grouped checkbox filter UI. Presentational: it renders the
- * groups and calls onToggle; the parent (ShopBrowser) owns the state + URL sync.
+ * groups and calls onToggle; useShopFilters owns the state + URL sync.
  * Reused as-is in the desktop sidebar and the mobile filter drawer.
  */
 
-type Option = { key: string; label: string };
-
+/** One filter group: uppercase title, then a custom-styled checkbox per option. */
 function Group({
   title,
   group,
@@ -25,7 +18,7 @@ function Group({
 }: {
   title: string;
   group: FilterKey;
-  options: readonly Option[];
+  options: readonly FilterOption[];
   filters: Filters;
   onToggle: (group: FilterKey, value: string) => void;
 }) {
@@ -39,6 +32,7 @@ function Group({
           const checked = filters[group].includes(o.key);
           return (
             <label key={o.key} className="group flex items-center gap-3 cursor-pointer">
+              {/* Real checkbox is visually hidden; the box drawn below shows its state. */}
               <input
                 type="checkbox"
                 checked={checked}
@@ -71,17 +65,16 @@ function Group({
   );
 }
 
+/** The filter card: Category group, then Price-range group. */
 export default function FilterPanel({
-  products,
+  categories,
   filters,
   onToggle,
 }: {
-  products: PublicProductSummary[];
+  categories: FilterOption[];
   filters: Filters;
   onToggle: (group: FilterKey, value: string) => void;
 }) {
-  const categories = categoryOptions(products);
-
   return (
     <div className="bg-neutral-surface border border-neutral-border rounded-2xl px-5">
       <Group title="Danh mục" group="category" options={categories} filters={filters} onToggle={onToggle} />
