@@ -1,116 +1,85 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
-import type { CartItem, Product, Voucher } from "@/lib/types";
-import { cartItems as seed } from "@/lib/mock-data";
-import { computeVoucher, findVoucher, voucherError } from "./voucher";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  addCartItem,
+  getShopperCart,
+  removeCartItem,
+  updateCartItem,
+  type Cart,
+  type Shopper,
+} from "@/lib/services/cart";
 
 /**
- * Cart store — a client Context seeded from the mock cart.
+ * Cart store — the signed-in Customer's server Cart, shared app-wide.
  *
- * This is the one piece of cross-screen state: the PDP adds to it, the header
- * and bottom nav show its count, /cart edits it, and checkout reads it and
- * clears it on order placement.
- *
- * TODO(api): persist the cart (localStorage or a backend cart endpoint) instead
- *            of resetting to the mock seed on reload.
+ * The header/bottom-nav badge, the product page, /cart and checkout all read it. Every change goes
+ * to the server and the store keeps the Cart the server answers with, so `cart.version` is always
+ * the one checkout must send back.
  */
 
 interface CartContextValue {
-  items: CartItem[];
-  add: (product: Product, qty?: number) => void;
-  remove: (productId: string) => void;
-  setQty: (productId: string, qty: number) => void;
-  toggle: (productId: string) => void;
-  clear: () => void;
-  /** total quantity across all lines — for the badge */
+  shopper: Shopper;
+  cart: Cart | null;
+  /** First load or reload in progress. */
+  loading: boolean;
+  /** The last load failed (network/server); `reload` retries. */
+  loadFailed: boolean;
+  /** Re-read the account and Cart, showing the loading state (e.g. a retry button). */
+  reload: () => Promise<void>;
+  /** Re-read quietly in the background (e.g. on entering /cart or after login). Stable identity. */
+  refresh: () => Promise<void>;
+  /** Throws ApiError so the caller can show what went wrong. */
+  add: (productId: string, quantity?: number) => Promise<void>;
+  /** Quantity 0 removes the line. Throws ApiError. */
+  setQty: (productId: string, quantity: number) => Promise<void>;
+  remove: (productId: string) => Promise<void>;
+  /** Total quantity across all lines — for the badge. */
   count: number;
-  /** number of ticked lines */
-  selectedCount: number;
-  /** sum of price×qty over ticked lines */
-  subtotal: number;
-  /* ── Voucher ── */
-  /** The currently applied voucher, or null. */
-  appliedVoucher: Voucher | null;
-  /** Try to apply a code against the current subtotal. */
-  applyVoucher: (code: string) => { ok: boolean; error?: string };
-  /** Remove any applied voucher. */
-  removeVoucher: () => void;
-  /** VND off the subtotal from the applied voucher (0 if none / invalid). */
-  discount: number;
-  /** Whether the applied voucher makes delivery free. */
-  freeShipping: boolean;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(seed);
-  /** Stored as a code; the Voucher object is resolved from the catalog below. */
-  const [voucherCode, setVoucherCode] = useState<string | null>(null);
+  const [shopper, setShopper] = useState<Shopper>("loading");
+  const [cart, setCart] = useState<Cart | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
-  const add = (product: Product, qty = 1) =>
-    setItems((prev) => {
-      const existing = prev.find((i) => i.product.id === product.id);
-      if (existing) {
-        return prev.map((i) => (i.product.id === product.id ? { ...i, qty: i.qty + qty } : i));
-      }
-      return [...prev, { product, qty, selected: true }];
-    });
+  const refresh = useCallback(
+    () => getShopperCart()
+      .then(
+        (next) => {
+          setShopper(next.shopper);
+          setCart(next.cart);
+          setLoadFailed(false);
+        },
+        () => setLoadFailed(true),
+      )
+      .finally(() => setLoading(false)),
+    [],
+  );
 
-  const remove = (productId: string) =>
-    setItems((prev) => prev.filter((i) => i.product.id !== productId));
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
-  const setQty = (productId: string, qty: number) =>
-    setItems((prev) =>
-      prev.map((i) => (i.product.id === productId ? { ...i, qty: Math.max(1, qty) } : i))
-    );
-
-  const toggle = (productId: string) =>
-    setItems((prev) =>
-      prev.map((i) => (i.product.id === productId ? { ...i, selected: !i.selected } : i))
-    );
-
-  const clear = () => {
-    setItems([]);
-    setVoucherCode(null);
-  };
-
-  const selected = items.filter((i) => i.selected);
-  const subtotal = selected.reduce((s, i) => s + i.product.price * i.qty, 0);
-
-  // Resolve + re-validate the voucher against the *current* subtotal every render,
-  // so a code that no longer qualifies (items removed/unticked) simply stops
-  // discounting instead of going stale.
-  const appliedVoucher = voucherCode ? findVoucher(voucherCode) ?? null : null;
-  const { discount, freeShipping } = computeVoucher(appliedVoucher, subtotal);
-
-  const applyVoucher = (code: string): { ok: boolean; error?: string } => {
-    const voucher = findVoucher(code);
-    if (!voucher) return { ok: false, error: "Mã giảm giá không hợp lệ." };
-    const err = voucherError(voucher, subtotal);
-    if (err) return { ok: false, error: err };
-    setVoucherCode(voucher.code);
-    return { ok: true };
-  };
-
-  const removeVoucher = () => setVoucherCode(null);
+  const reload = useCallback(async () => {
+    setLoading(true);
+    await refresh();
+  }, [refresh]);
 
   const value: CartContextValue = {
-    items,
-    add,
-    remove,
-    setQty,
-    toggle,
-    clear,
-    count: items.reduce((s, i) => s + i.qty, 0),
-    selectedCount: selected.length,
-    subtotal,
-    appliedVoucher,
-    applyVoucher,
-    removeVoucher,
-    discount,
-    freeShipping,
+    shopper,
+    cart,
+    loading,
+    loadFailed,
+    reload,
+    refresh,
+    add: async (productId, quantity = 1) => setCart(await addCartItem(productId, quantity)),
+    setQty: async (productId, quantity) => setCart(await updateCartItem(productId, quantity)),
+    remove: async (productId) => setCart(await removeCartItem(productId)),
+    count: cart?.itemCount ?? 0,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
