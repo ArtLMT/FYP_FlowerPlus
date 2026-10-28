@@ -1,12 +1,12 @@
 "use client";
-import Button from "@/components/ui/Button";
 
-import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Button from "@/components/ui/Button";
 import BottomNav from "@/components/layout/BottomNav";
 import { useAccount } from "@/features/account/account-context";
-import { logout } from "@/lib/services/auth";
+import { ACCOUNT_SECTIONS } from "@/features/account/sections";
+import { useDesktopRedirect } from "@/features/account/hooks/use-desktop-redirect";
+import { useSignOut } from "@/features/account/hooks/use-sign-out";
 
 /**
  * Profile — /account
@@ -16,40 +16,11 @@ import { logout } from "@/lib/services/auth";
  *   • Desktop → there is no distinct "/account" view; the sidebar
  *     (account/layout.tsx) is the navigator, so we redirect to /account/info
  *     and let the info screen be the base landing.
- *
- * User comes from the central mock. Sign-out navigates to /login (stub).
- *
- * TODO(api): the signed-in user from auth/session.
  */
-
-// Static menu config. Each item is just a link to another route.
-const MENU = [
-  { label: "Thông tin tài khoản", icon: "person", href: "/account/info" },
-  { label: "Quản lý đơn hàng", icon: "local_shipping", href: "/account/orders" },
-  { label: "Thông báo", icon: "notifications", href: "/account/notifications" },
-  { label: "Kho voucher", icon: "local_offer", href: "/account/vouchers" },
-];
-
 export default function ProfilePage() {
-  const router = useRouter();
   const user = useAccount();
-  const signOut = async () => {
-    await logout();
-    router.replace("/login");
-    router.refresh();
-  };
-
-  // On desktop, /account/info is the base view — the sidebar handles navigation,
-  // so redirect there. On mobile we stay and show the drill-in menu below.
-  useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 768px)");
-    if (desktop.matches) router.replace("/account/info");
-    const onChange = (e: MediaQueryListEvent) => {
-      if (e.matches) router.replace("/account/info");
-    };
-    desktop.addEventListener("change", onChange);
-    return () => desktop.removeEventListener("change", onChange);
-  }, [router]);
+  const signOut = useSignOut();
+  useDesktopRedirect("/account/info");
 
   return (
     <div className="min-h-dvh flex flex-col bg-neutral-canvas md:min-h-0 md:block md:bg-transparent">
@@ -89,7 +60,7 @@ export default function ProfilePage() {
 
         {/* Menu list */}
         <nav className="mt-[56px] px-[22px]">
-          {MENU.map(({ label, icon, href }) => (
+          {ACCOUNT_SECTIONS.map(({ label, icon, href }) => (
             <Link
               key={label}
               href={href}
@@ -105,7 +76,7 @@ export default function ProfilePage() {
           <div className="border-t border-neutral-border" />
         </nav>
 
-        {/* Sign out — stub: navigates to /login (TODO(logic): clear session first) */}
+        {/* Sign out */}
         <div className="flex justify-center py-[50px]">
           <Button
             onClick={signOut}
@@ -116,6 +87,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Mobile bottom tab bar with Account selected. */}
       <BottomNav active="profile" />
     </div>
   );
