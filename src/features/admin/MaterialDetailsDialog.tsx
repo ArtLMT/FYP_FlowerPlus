@@ -1,16 +1,10 @@
 "use client";
+
 import Button from "@/components/ui/Button";
-
 import ModalDialog from "@/components/ui/ModalDialog";
-import type { AdminMaterial, MaterialUnit } from "@/lib/services/admin";
-
-const typeNames = { FLOWER: "Hoa", DECORATION: "Trang trí" } as const;
-const unitNames: Record<MaterialUnit, string> = {
-  STEM: "Cành",
-  PIECE: "Chiếc",
-  METRE: "Mét",
-  SHEET: "Tờ",
-};
+import MaterialStatusBadge from "@/features/admin/MaterialStatusBadge";
+import { formatMaterialPrice, MATERIAL_TYPE_LABELS, MATERIAL_UNIT_LABELS } from "@/features/admin/material-labels";
+import type { Material } from "@/lib/services/materials";
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -19,6 +13,7 @@ function formatDate(value: string) {
     : new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
 
+/** Audit fields hold a user id until the backend can name the user. */
 function displayUser(value: string | null) {
   if (!value) return "Chưa ghi nhận";
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) {
@@ -37,11 +32,12 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 interface MaterialDetailsDialogProps {
-  material: AdminMaterial;
+  material: Material;
   onClose: () => void;
   onEdit: () => void;
 }
 
+/** Material detail modal: identity/price summary, material properties, audit fields, and Edit action. */
 export default function MaterialDetailsDialog({ material, onClose, onEdit }: MaterialDetailsDialogProps) {
   return (
     <ModalDialog
@@ -49,19 +45,19 @@ export default function MaterialDetailsDialog({ material, onClose, onEdit }: Mat
       onClose={onClose}
       footer={<div className="flex justify-end"><Button type="button" onClick={onEdit} className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover">Chỉnh sửa</Button></div>}
     >
+      {/* Material identity, lifecycle badge, and selling price. */}
       <div className="mb-5">
         <div className="flex flex-wrap items-center gap-3">
           <h3 className="font-serif text-2xl font-semibold text-text-primary">{material.name}</h3>
-          <span className={`rounded-full px-3 py-1 text-xs font-bold ${material.status === "ACTIVE" ? "bg-accent-sage-light text-text-primary" : "bg-neutral-raised text-text-secondary"}`}>
-            {material.status === "ACTIVE" ? "Đang hoạt động" : "Đã ngừng"}
-          </span>
+          <MaterialStatusBadge status={material.status} />
         </div>
-        <p className="mt-3 font-serif text-2xl font-semibold text-primary-deep">{Number(material.sellingPrice).toLocaleString("vi-VN")} ₫ <span className="font-sans text-sm font-normal text-text-muted">/ {unitNames[material.unitOfMeasure]}</span></p>
+        <p className="mt-3 font-serif text-2xl font-semibold text-primary-deep">{formatMaterialPrice(material.sellingPrice)} <span className="font-sans text-sm font-normal text-text-muted">/ {MATERIAL_UNIT_LABELS[material.unitOfMeasure]}</span></p>
       </div>
       <dl className="grid grid-cols-2 gap-x-6">
-        <Detail label="Loại" value={typeNames[material.type]} />
-        <Detail label="Đơn vị" value={unitNames[material.unitOfMeasure]} />
+        <Detail label="Loại" value={MATERIAL_TYPE_LABELS[material.type]} />
+        <Detail label="Đơn vị" value={MATERIAL_UNIT_LABELS[material.unitOfMeasure]} />
       </dl>
+      {/* Read-only creation and last-update audit information. */}
       <section className="mt-5 border-t border-neutral-border pt-4" aria-labelledby="material-audit-title">
         <h4 id="material-audit-title" className="mb-2 font-semibold text-text-primary">Thông tin cập nhật</h4>
         <dl className="grid grid-cols-2 gap-x-6">
