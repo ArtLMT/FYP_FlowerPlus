@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import type { ReactNode } from "react";
 import Button from "@/components/ui/Button";
 import FieldMessages from "@/features/admin/FieldMessages";
 import { takeFiles } from "@/features/admin/file-input";
@@ -27,15 +28,19 @@ const fieldName = (field: string) => FIELD_NAMES[field.split(/[.[\]]/)[0]] ?? fi
 /**
  * Product create/edit form UI.
  * Sections are: page header/actions → basic fields → description/price → categories → images
- * (create only) → recipe builder → save/cancel footer. Form state lives in `use-product-form.ts`.
+ * (create: picker uploaded after saving; edit: `imageManager`, saved at once) → recipe builder →
+ * save/cancel footer. Form state lives in `use-product-form.ts`.
  */
 export default function ProductCreateForm({
   onDeactivate,
   onReturnToDraft,
+  imageManager,
   ...props
 }: ProductFormProps & {
   onDeactivate?: (product: ManagedProduct) => void;
   onReturnToDraft?: (product: ManagedProduct) => void;
+  /** Edit only: the saved product's image controls, shown in place of the create-time picker. */
+  imageManager?: ReactNode;
 }) {
   const { product } = props;
   const {
@@ -195,7 +200,13 @@ export default function ProductCreateForm({
         {fieldErrors.categoryIds?.map((message) => <p key={message} className="text-xs text-red-700">{message}</p>)}
       </section>
 
-      {/* Initial image picker and preview/reorder controls; existing images are managed in ProductDetail. */}
+      {/* Editing: the saved images, changed at once (not on Save) through ProductImageManager. */}
+      {editing && imageManager && <section aria-label="Ảnh sản phẩm" className="space-y-3">
+        {imageManager}
+        <p className="text-xs text-text-muted">Thay đổi ảnh được lưu ngay, không cần bấm “Lưu thay đổi”.</p>
+      </section>}
+
+      {/* Creating: initial image picker and preview/reorder controls, uploaded after the Draft is saved. */}
       {!editing && <section className="space-y-3">
         <div>
           <h3 className="font-semibold text-text-primary">Ảnh <span className="font-normal text-text-muted">· không bắt buộc</span></h3>
