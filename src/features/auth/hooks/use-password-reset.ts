@@ -13,10 +13,18 @@ const normalizeEmail = (email: string) => email.trim().toLowerCase();
 /**
  * Forgot / reset password: request a code by email, then set a new password with it.
  * `accountEmail` is given when a signed-in customer resets their own password (email locked).
+ * `startWithCode` opens on "I already have a code": the email step then moves on without sending,
+ * so the code already received stays valid.
+ * `setup` is a new Staff member's first password (/login/set-password, linked from the welcome
+ * email): one screen with email, code and password, and no way to request a code here, because
+ * that would send a password-reset email instead. A new set-up email comes from the Admin.
  */
-export function usePasswordReset(accountEmail?: string) {
+export function usePasswordReset(accountEmail?: string, startWithCode = false, setup = false) {
   const { busy, error, setError, run } = useAsyncAction();
-  const [step, setStep] = useState<PasswordResetStep>("request");
+  const [step, setStep] = useState<PasswordResetStep>(setup ? "reset" : "request");
+  const [haveCode, setHaveCode] = useState(startWithCode);
+  /** False when the user brought their own code, so the notice does not claim one was just sent. */
+  const [codeSentNow, setCodeSentNow] = useState(false);
   const [email, setEmail] = useState(accountEmail ?? "");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
@@ -39,8 +47,17 @@ export function usePasswordReset(accountEmail?: string) {
 
   function submitRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (haveCode) {
+      // Sending would replace the code the user already holds, so go straight to entering it.
+      setError(null);
+      setCodeSentNow(false);
+      setStep("reset");
+      setCode("");
+      return;
+    }
     return run(async () => {
       await requestPasswordReset(email);
+      setCodeSentNow(true);
       setStep("reset");
       setCode("");
       startCooldown(RESEND_SECONDS);
@@ -49,6 +66,7 @@ export function usePasswordReset(accountEmail?: string) {
 
   const resendCode = () => run(async () => {
     await requestPasswordReset(email);
+    setCodeSentNow(true);
     startCooldown(RESEND_SECONDS);
   }, onError);
 
@@ -73,7 +91,15 @@ export function usePasswordReset(accountEmail?: string) {
 
   return {
     isAccountReset: accountEmail !== undefined,
+    isSetup: setup,
     step,
+    haveCode,
+    /** Switches the email step between "send me a code" and "I already have a code". */
+    toggleHaveCode: () => {
+      setHaveCode((current) => !current);
+      setError(null);
+    },
+    codeSentNow,
     email,
     setEmail,
     code,

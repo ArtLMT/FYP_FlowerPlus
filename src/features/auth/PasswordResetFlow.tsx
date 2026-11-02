@@ -17,10 +17,19 @@ const FIELD =
  * - The form card is: title → 3-step indicator → one of the request / reset / success steps.
  * - Step state and API calls live in `hooks/use-password-reset.ts`.
  */
-export default function PasswordResetFlow({ accountEmail }: { accountEmail?: string }) {
+export default function PasswordResetFlow({ accountEmail, startWithCode = false, setup = false }: {
+  accountEmail?: string;
+  startWithCode?: boolean;
+  /** A new Staff member's first password (/login/set-password): one screen, no code requests. */
+  setup?: boolean;
+}) {
   const {
     isAccountReset,
+    isSetup,
     step,
+    haveCode,
+    toggleHaveCode,
+    codeSentNow,
     email,
     setEmail,
     code,
@@ -41,7 +50,7 @@ export default function PasswordResetFlow({ accountEmail }: { accountEmail?: str
     resendCode,
     submitReset,
     goBackToEmail,
-  } = usePasswordReset(accountEmail);
+  } = usePasswordReset(accountEmail, startWithCode, setup);
 
   return (
     <main className={isAccountReset ? "w-full" : "min-h-dvh bg-neutral-canvas flex items-start justify-center px-4 py-6 md:items-center md:px-6 md:py-12"}>
@@ -50,7 +59,9 @@ export default function PasswordResetFlow({ accountEmail }: { accountEmail?: str
         {!isAccountReset && <aside className="hidden w-1/2 flex-col justify-center bg-primary p-12 text-white md:flex">
           <p className="m-0 font-serif text-[52px] font-medium leading-tight tracking-heading">FlowerPlus</p>
           <p className="mt-4 font-sans text-body-lg leading-relaxed text-white/85">
-            Đặt lại mật khẩu để tiếp tục quản lý tài khoản và đơn hàng của bạn.
+            {isSetup
+              ? "Chào mừng bạn đến với FlowerPlus. Đặt mật khẩu để bắt đầu làm việc."
+              : "Đặt lại mật khẩu để tiếp tục quản lý tài khoản và đơn hàng của bạn."}
           </p>
           <div className="mt-10 flex items-center gap-3 text-white/75">
             <span className="material-symbols-outlined" aria-hidden="true">local_florist</span>
@@ -72,30 +83,37 @@ export default function PasswordResetFlow({ accountEmail }: { accountEmail?: str
           {/* Title for the current step. */}
           <h1 className={`${isAccountReset ? "mt-0" : "mt-2"} font-serif text-[30px] font-medium text-primary`}>
             {step === "request" && (isAccountReset ? "Đặt lại mật khẩu" : "Quên mật khẩu?")}
-            {step === "reset" && "Tạo mật khẩu mới"}
-            {step === "success" && "Mật khẩu đã được cập nhật"}
+            {step === "reset" && (isSetup ? "Thiết lập mật khẩu" : "Tạo mật khẩu mới")}
+            {step === "success" && (isSetup ? "Mật khẩu đã được thiết lập" : "Mật khẩu đã được cập nhật")}
           </h1>
 
-          {/* Step indicator: Email → Xác nhận → Hoàn tất. */}
-          <ol className="my-6 grid grid-cols-3 gap-2 text-center font-sans text-xs text-text-muted" aria-label="Các bước đặt lại mật khẩu">
-            {[
-              { label: "Email", active: step === "request" },
-              { label: "Xác nhận", active: step === "reset" },
-              { label: "Hoàn tất", active: step === "success" },
-            ].map(({ label, active }) => (
+          {/* Step indicator: Email → Xác nhận → Hoàn tất (set-up: Thiết lập → Hoàn tất). */}
+          <ol className={`my-6 grid ${isSetup ? "grid-cols-2" : "grid-cols-3"} gap-2 text-center font-sans text-xs text-text-muted`} aria-label="Các bước đặt lại mật khẩu">
+            {(isSetup
+              ? [
+                { label: "Thiết lập", active: step === "reset" },
+                { label: "Hoàn tất", active: step === "success" },
+              ]
+              : [
+                { label: "Email", active: step === "request" },
+                { label: "Xác nhận", active: step === "reset" },
+                { label: "Hoàn tất", active: step === "success" },
+              ]).map(({ label, active }) => (
               <li key={label} aria-current={active ? "step" : undefined} className={`border-t-2 pt-2 ${active ? "border-primary font-semibold text-primary" : "border-neutral-border"}`}>
                 {label}
               </li>
             ))}
           </ol>
 
-          {/* Step 1: email field and "GỬI MÃ XÁC NHẬN" button. */}
+          {/* Step 1: email field and "GỬI MÃ XÁC NHẬN" button, or "TIẾP TỤC" when the user already has a code. */}
           {step === "request" && (
             <>
               <p className="mb-6 text-sm leading-relaxed text-text-secondary">
-                {isAccountReset
-                  ? "Chúng tôi sẽ gửi mã xác nhận đến email trên tài khoản của bạn."
-                  : "Nhập email đã đăng ký. Nếu email có tài khoản hợp lệ, chúng tôi sẽ gửi mã đặt lại mật khẩu."}
+                {haveCode
+                  ? "Nhập email đã nhận mã. Bạn sẽ nhập mã ở bước tiếp theo; không có mã mới nào được gửi."
+                  : isAccountReset
+                    ? "Chúng tôi sẽ gửi mã xác nhận đến email trên tài khoản của bạn."
+                    : "Nhập email đã đăng ký. Nếu email có tài khoản hợp lệ, chúng tôi sẽ gửi mã đặt lại mật khẩu."}
               </p>
               <form onSubmit={(event) => void submitRequest(event)}>
                 <label htmlFor="reset-email" className="mb-2 block text-sm font-semibold text-text-secondary">Email</label>
@@ -113,12 +131,15 @@ export default function PasswordResetFlow({ accountEmail }: { accountEmail?: str
                 {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
                 <Button
                   type="submit"
-                  disabled={busy || !email.trim() || emailIsCoolingDown}
+                  disabled={busy || !email.trim() || (!haveCode && emailIsCoolingDown)}
                   className="mt-8 block w-full rounded-lg bg-primary py-4 text-center font-sans text-sm font-bold tracking-[0.1em] text-white hover:bg-primary-hover"
                 >
-                  {busy ? "ĐANG GỬI..." : emailIsCoolingDown ? `THỬ LẠI SAU ${formatWait(resendSeconds)}` : "GỬI MÃ XÁC NHẬN"}
+                  {haveCode ? "TIẾP TỤC" : busy ? "ĐANG GỬI..." : emailIsCoolingDown ? `THỬ LẠI SAU ${formatWait(resendSeconds)}` : "GỬI MÃ XÁC NHẬN"}
                 </Button>
               </form>
+              <Button type="button" onClick={toggleHaveCode} disabled={busy} className="mt-5 text-sm font-semibold text-primary underline">
+                {haveCode ? "Chưa có mã? Gửi mã mới" : "Tôi đã có mã"}
+              </Button>
             </>
           )}
 
@@ -126,11 +147,29 @@ export default function PasswordResetFlow({ accountEmail }: { accountEmail?: str
           {step === "reset" && (
             <>
               <div role="status" className="mb-6 rounded-xl border border-neutral-border bg-white/70 p-4 text-sm leading-relaxed text-text-secondary">
-                Nếu email có tài khoản hợp lệ, mã xác nhận đã được gửi. Mã có hiệu lực trong 5 phút. Kiểm tra cả thư mục spam nếu bạn chưa thấy email.
-                <div className="mt-2 break-all font-semibold text-text-primary">{email.trim()}</div>
+                {isSetup
+                  ? "Nhập email công việc, mã trong email chào mừng và mật khẩu mới. Mã có hiệu lực 24 giờ. Nếu mã đã hết hạn, hãy nhờ quản trị viên bấm “Gửi lại email thiết lập”."
+                  : codeSentNow
+                    ? "Nếu email có tài khoản hợp lệ, mã xác nhận đã được gửi. Mã có hiệu lực trong 5 phút. Kiểm tra cả thư mục spam nếu bạn chưa thấy email."
+                    : "Nhập mã trong email bạn đã nhận. Mã đặt lại mật khẩu có hiệu lực 5 phút; nếu mã đã hết hạn, chọn “Gửi lại mã”."}
+                {!isSetup && <div className="mt-2 break-all font-semibold text-text-primary">{email.trim()}</div>}
               </div>
 
               <form onSubmit={(event) => void submitReset(event)}>
+                {/* Set-up only: there was no email step, so the email is asked for here. */}
+                {isSetup && <>
+                  <label htmlFor="setup-email" className="mb-2 block text-sm font-semibold text-text-secondary">Email công việc</label>
+                  <input
+                    id="setup-email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    className={`${FIELD} mb-6`}
+                    placeholder="you@example.com"
+                  />
+                </>}
                 <label htmlFor="reset-code" className="mb-2 block text-sm font-semibold text-text-secondary">Mã xác nhận</label>
                 <input
                   id="reset-code"
@@ -189,17 +228,18 @@ export default function PasswordResetFlow({ accountEmail }: { accountEmail?: str
                   disabled={busy}
                   className="mt-7 block w-full rounded-lg bg-primary py-4 text-center font-sans text-sm font-bold tracking-[0.1em] text-white hover:bg-primary-hover"
                 >
-                  {busy ? "ĐANG CẬP NHẬT..." : "ĐẶT LẠI MẬT KHẨU"}
+                  {busy ? "ĐANG CẬP NHẬT..." : isSetup ? "THIẾT LẬP MẬT KHẨU" : "ĐẶT LẠI MẬT KHẨU"}
                 </Button>
               </form>
 
-              {/* Change-email and resend-code links under the form. */}
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
+              {/* Change-email and resend-code links under the form. Not in set-up: a code requested
+                  here would be a password-reset code, not a set-up one. */}
+              {!isSetup && <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
                 {!isAccountReset && <Button type="button" onClick={goBackToEmail} className="text-text-secondary underline">Đổi email</Button>}
                 <Button type="button" onClick={() => void resendCode()} disabled={busy || resendSeconds > 0} className="font-semibold text-primary underline">
                   {resendSeconds > 0 ? `Gửi lại sau ${formatWait(resendSeconds)}` : "Gửi lại mã"}
                 </Button>
-              </div>
+              </div>}
             </>
           )}
 
@@ -209,7 +249,9 @@ export default function PasswordResetFlow({ accountEmail }: { accountEmail?: str
               <p className="mb-7 text-sm leading-relaxed text-text-secondary">
                 {isAccountReset
                   ? "Phiên trên trình duyệt này đã kết thúc. Hãy đăng nhập lại bằng mật khẩu mới; các thiết bị khác cũng sẽ cần đăng nhập lại khi phiên hiện tại hết hạn."
-                  : "Mật khẩu mới đã được lưu. Hãy đăng nhập lại bằng mật khẩu mới."}
+                  : isSetup
+                    ? "Mật khẩu đã được lưu. Hãy đăng nhập bằng email công việc và mật khẩu mới."
+                    : "Mật khẩu mới đã được lưu. Hãy đăng nhập lại bằng mật khẩu mới."}
               </p>
               <Link href="/login" className="block rounded-lg bg-primary py-4 text-center font-sans text-sm font-bold tracking-[0.1em] text-white no-underline hover:bg-primary-hover">
                 ĐI ĐẾN ĐĂNG NHẬP

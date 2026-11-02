@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { api, asApiError, SIGN_IN_MESSAGE } from "@/lib/api";
 import { formatWait } from "@/lib/utils";
 
@@ -83,6 +84,7 @@ export async function getAccountForToken(
     });
     return { user, error: "" };
   } catch (cause) {
+    unstable_rethrow(cause); // Next.js render signals are not account errors
     return { user: null, error: asApiError(cause).message };
   }
 }

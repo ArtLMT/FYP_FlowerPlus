@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { ApiError, type ErrorMessages } from "./errors";
 
 /** Spring Data page envelope returned by every paged endpoint. */
@@ -43,7 +44,10 @@ export async function api<T>(
       headers: { ...(isJson ? { "Content-Type": "application/json" } : {}), ...headers },
       cache: "no-store",
     });
-  } catch {
+  } catch (cause) {
+    // During `next build`, a no-store fetch throws Next.js's own "render this page per request"
+    // signal. It must reach Next.js; turned into a connection error it fails the build.
+    unstable_rethrow(cause);
     throw ApiError.network(errors);
   }
 
@@ -51,10 +55,17 @@ export async function api<T>(
     const payload = await response.json().catch(() => ({}));
     throw new ApiError(response.status, payload, errors);
   }
+  // A success with no body (204, or 202 from the staff set-up resend) has nothing to parse.
+  // Reading it as JSON would fail and wrongly report "cannot reach the server".
   if (response.status === 204) return undefined as T;
-  return response.json().catch(() => {
+  const text = await response.text().catch(() => null);
+  if (text === null) throw ApiError.network(errors);
+  if (text.trim() === "") return undefined as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
     throw ApiError.network(errors);
-  });
+  }
 }
 
 /** Builds an API path, URL-encoding every interpolated value: path`/api/addresses/${id}`. */
