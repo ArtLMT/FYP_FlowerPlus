@@ -28,6 +28,8 @@ export interface PublicProductSummary {
   basePrice: number;
   categories: PublicProductCategory[];
   mainImageUrl: string | null;
+  /** A new order can be placed now: an Active PreOrder whose recipe materials are all Active (BR-PROD-12). */
+  orderable: boolean;
 }
 
 /** Public-safe detail data returned by GET /api/products/{id}. */
@@ -103,16 +105,20 @@ export async function getSaleItems(): Promise<FeaturedItem[]> {
 }
 
 /**
- * Purchase state; the product cards and the product page both use it. A PreOrder is never shown as
- * out of stock: it is made for its delivery date, so checkout alone checks the materials.
+ * Purchase state; the product cards and the product page both use it. A PreOrder is never out of
+ * stock — the shop prepares its materials after confirming the order — but it is unavailable for new
+ * orders while a recipe material is no longer used (`orderable` false, BR-PROD-12).
  */
-export function availabilityOf(product: Pick<PublicProductSummary, "type">): ProductAvailability {
+export function availabilityOf(product: Pick<PublicProductSummary, "type" | "orderable">): ProductAvailability {
   if (product.type !== "PRE_ORDER") {
     return { canBuy: false, title: "Chưa mở bán trực tuyến", detail: "Sản phẩm làm sẵn sẽ được mở bán sau." };
+  }
+  if (!product.orderable) {
+    return { canBuy: false, title: "Tạm ngừng nhận đơn", detail: "Sản phẩm này tạm thời không nhận đơn mới." };
   }
   return {
     canBuy: true,
     title: "Có thể đặt trước",
-    detail: "Cửa hàng kiểm tra nguyên liệu theo ngày chuẩn bị bạn chọn khi đặt hàng.",
+    detail: "Cửa hàng chuẩn bị hoa và nguyên liệu sau khi xác nhận đơn của bạn.",
   };
 }
