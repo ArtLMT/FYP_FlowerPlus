@@ -113,7 +113,7 @@ export default function AdminDashboard({
         {user && allowedDomains.length === 0 && <section className="rounded-2xl border border-neutral-border bg-white p-5 shadow-sm"><h2 className="font-serif text-2xl text-text-primary">No access</h2><p className="mt-2 text-text-secondary">This page is available to Staff and Admin accounts.</p></section>}
         {user && allowedDomains.length > 0 && domain === "products" && <ProductManager />}
         {user && allowedDomains.length > 0 && domain === "categories" && <CategoryManager />}
-        {user && allowedDomains.length > 0 && domain === "orders" && <OrderManager stockByOrder={stock.stockByOrder} openRequest={openOrder} onStockChanged={stock.reload} />}
+        {user && allowedDomains.length > 0 && domain === "orders" && <OrderManager stockByOrder={stock.stockByOrder} openRequest={openOrder} onStockChanged={stock.reload} viewerId={user.id} />}
         {user && allowedDomains.length > 0 && domain === "materials" && <MaterialManager />}
         {user && allowedDomains.length > 0 && domain === "inventory" && <InventoryManager receiveRequest={receive} onStockChanged={stock.reload} />}
         {user && allowedDomains.length > 0 && domain === "transactions" && <TransactionLedger />}

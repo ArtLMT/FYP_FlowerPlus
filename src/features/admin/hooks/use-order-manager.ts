@@ -79,6 +79,8 @@ export function useOrderManager({ openRequest = null, onStockChanged }: {
 
   const page = list.data;
   const currentPage = page?.page ?? pageNumber;
+  // useResource keeps the last answer while the next one loads: show it only if it is this Order.
+  const order = detail.data?.id === selectedId ? detail.data : undefined;
 
   return {
     page,
@@ -90,21 +92,22 @@ export function useOrderManager({ openRequest = null, onStockChanged }: {
     selectedId,
     selectOrder,
     closeOrder: () => setSelectedId(null),
-    order: detail.data,
+    order,
     orderLoading: detail.loading,
     orderError: detail.error?.message ?? "",
+    reloadOrder: detail.reload,
     saving,
     feedback,
     // The status on screen goes with each action, so a second click or another staff member's change
     // is refused instead of moving the Order twice (BR-STATUS-12); mutate() then reloads it.
     advance: () => {
-      const shown = detail.data;
+      const shown = order;
       return shown
         ? mutate(() => advanceManagementOrder(shown.id, shown.status), "Đã chuyển đơn hàng sang bước tiếp theo.")
         : Promise.resolve(false);
     },
     cancel: (note: string) => {
-      const shown = detail.data;
+      const shown = order;
       return shown
         ? mutate(() => cancelManagementOrder(shown.id, note, shown.status), "Đã hủy đơn hàng.")
         : Promise.resolve(false);
