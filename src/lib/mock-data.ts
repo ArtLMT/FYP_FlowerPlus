@@ -1,27 +1,14 @@
-import type {
-  Product,
-  FeaturedItem,
-  User,
-  Address,
-  PaymentMethod,
-  DeliveryDate,
-  CartItem,
-  Order,
-  LiveOrder,
-  Voucher,
-  Notification,
-} from "./types";
+import type { FeaturedItem, Notification, Voucher } from "./types";
 
 /**
- * Single source of mock data for the whole app.
+ * Mock data for the screens that have no backend yet.
  *
- * One canonical collection per type — screens import these (via lib/services)
- * instead of declaring their own inline arrays, so the same order / address /
- * voucher appears consistently everywhere. Swap each service for a real fetch()
- * when the backend is ready.
+ * Screens never import this file directly — they call lib/services, which
+ * return these collections. Swap each service body for a real request when
+ * its backend is ready, then delete the data here.
  */
 
-/* Shared image URLs (a small pool reused across the mock catalog). */
+/* Shared image URLs (a small pool reused across the mock data). */
 const IMG = {
   rose:
     "https://lh3.googleusercontent.com/aida-public/AB6AXuCSmkSgMDgNa_sr1692th8VHhzWjJcPzbq5aqrhkiFTAqBeOYrD_GLVUzLIJcaD0_t_enhC0N0oTus5Zcqve-i5kPJ2i_kpruq18MlKlu5-lUxW9YUi9gTxp2XePM3c1zNi4mKdrjHkpwogX34HJFKQfTfZ1wL_W_zUvd9lUAEy0ugypQjvMTIw56SUBw7Y_CA2lgJGoAJNMUYDp7mCUOVOxZpsR2ER83lifNQsf8-zRum06W4wlWdFSxMOgByn6YQA-WiQYbLPsME",
@@ -35,34 +22,7 @@ const IMG = {
     "https://lh3.googleusercontent.com/aida-public/AB6AXuABdmnB7oIBRIOGurGccYgibAqpdGjpg_wgyaHoA1RT7Gh5cdqGHmN4bm5FX5m9zzrBo5dpYeRPpoDheNQEuS2ETD-J3znizMGWxX_2XK0aL_cBf3W_yPuGkkYMHVYeKPH9nDaFu4wSXvFcDYfkLGzmk878yR2-oDj7Mp5vfj8fI_A_6LG4tHrF9GYA3s9f6Ib4iMgbUP_Gb6EvDfvHuKBnIp5mOF9XmuRL-Mu1j2zBVWKVU8O2I1tdBu9Ieg9lTzeicD6M4Upy6l8",
 };
 
-/* ── Catalog ─────────────────────────────────────── */
-
-/**
- * Build a small detail-page gallery: the product's hero shot plus two supporting
- * shots from the shared pool. Keeps the PDP thumbnail strip populated without
- * sourcing a unique set of photos per product (mock data).
- */
-const gallery = (hero: string): string[] => {
-  const rest = Object.values(IMG).filter((u) => u !== hero).slice(0, 2);
-  return [hero, ...rest];
-};
-
-export const products: Product[] = [
-  { id: "1", name: "Sương Đông", materials: "Thu mẫu đơn, Bạch đàn, Bông", flowerTypes: ["Mẫu đơn"], decorationType: "bouquet", price: 450000, originalPrice: 600000, discountPercent: 25, imageUrl: IMG.anemone, images: gallery(IMG.anemone), stock: "IN STOCK", occasion: "Everyday" },
-  { id: "2", name: "Hoàng Hôn San Hô", materials: "Hồng san hô, Dương xỉ, Kế", flowerTypes: ["Hồng"], decorationType: "box", price: 680000, originalPrice: 850000, discountPercent: 20, imageUrl: IMG.peony, images: gallery(IMG.peony), stock: "LOW STOCK", occasion: "Birthdays" },
-  { id: "3", name: "Mây Trắng", materials: "Hồng trắng, Baby, Bạch đàn", flowerTypes: ["Hồng", "Baby"], decorationType: "vase", price: 560000, originalPrice: 700000, discountPercent: 20, imageUrl: IMG.white, images: gallery(IMG.white), stock: "IN STOCK", occasion: "Weddings" },
-  { id: "4", name: "Giờ Vàng", materials: "Hướng dương, Cúc La Mã, Hoàng anh", flowerTypes: ["Hướng dương", "Cúc"], decorationType: "basket", price: 520000, originalPrice: 650000, discountPercent: 20, imageUrl: IMG.sun, images: gallery(IMG.sun), stock: "IN STOCK", occasion: "Birthdays" },
-  { id: "5", name: "Nắng Sớm", materials: "Cúc vàng, Cẩm chướng, Lá nho", flowerTypes: ["Cúc", "Cẩm chướng"], decorationType: "bouquet", price: 450000, originalPrice: 580000, discountPercent: 22, imageUrl: IMG.anemone, images: gallery(IMG.anemone), stock: "LOW STOCK", occasion: "Weddings" },
-  { id: "6", name: "Mẫu Đơn Lụa", materials: "Mẫu đơn, Ngải bạc, Bạch đàn", flowerTypes: ["Mẫu đơn"], decorationType: "stand", price: 720000, originalPrice: 900000, discountPercent: 20, imageUrl: IMG.peony, images: gallery(IMG.peony), stock: "IN STOCK", occasion: "Everyday" },
-  { id: "7", name: "Thanh Tịnh", materials: "Hồng trắng, Cúc trắng, Bạch đàn", flowerTypes: ["Hồng", "Cúc"], decorationType: "stand", price: 640000, originalPrice: 800000, discountPercent: 20, imageUrl: IMG.white, images: gallery(IMG.white), stock: "IN STOCK", occasion: "Sympathy" },
-  { id: "8", name: "Vĩnh Cửu", materials: "Cúc vàng, Lá bạc", flowerTypes: ["Cúc"], decorationType: "basket", price: 520000, originalPrice: 680000, discountPercent: 24, imageUrl: IMG.sun, images: gallery(IMG.sun), stock: "IN STOCK", occasion: "Sympathy" },
-  { id: "9", name: "Ngọc Bích", materials: "Mẫu đơn hồng, Baby", flowerTypes: ["Mẫu đơn", "Baby"], decorationType: "vase", price: 780000, originalPrice: 950000, discountPercent: 18, imageUrl: IMG.peony, images: gallery(IMG.peony), stock: "LOW STOCK", occasion: "Birthdays" },
-  { id: "10", name: "Bình Minh", materials: "Hướng dương, Cẩm chướng", flowerTypes: ["Hướng dương", "Cẩm chướng"], decorationType: "box", price: 480000, originalPrice: 600000, discountPercent: 20, imageUrl: IMG.sun, images: gallery(IMG.sun), stock: "IN STOCK", occasion: "Everyday" },
-  { id: "11", name: "Duyên Dáng", materials: "Hồng phấn, Baby trắng", flowerTypes: ["Hồng", "Baby"], decorationType: "box", price: 700000, originalPrice: 880000, discountPercent: 20, imageUrl: IMG.rose, images: gallery(IMG.rose), stock: "IN STOCK", occasion: "Weddings" },
-  { id: "12", name: "Hạ Trắng", materials: "Baby, Cúc trắng", flowerTypes: ["Baby", "Cúc"], decorationType: "bouquet", price: 420000, originalPrice: 540000, discountPercent: 22, imageUrl: IMG.white, images: gallery(IMG.white), stock: "IN STOCK", occasion: "Everyday" },
-];
-
-const byId = (id: string) => products.find((p) => p.id === id)!;
+/* ── Sale showcase ───────────────────────────────── */
 
 export const saleItems: FeaturedItem[] = [
   { id: "s1", name: "Bó Mùa Hạ", materials: "Hồng, Cát tường", price: 690000, originalPrice: 980000, discountPercent: 30, imageUrl: IMG.rose },
@@ -70,92 +30,6 @@ export const saleItems: FeaturedItem[] = [
   { id: "s3", name: "Hồng Phai", materials: "Hồng phấn, Lá bạc", price: 380000, originalPrice: 540000, discountPercent: 30, imageUrl: IMG.white },
   { id: "s4", name: "Cúc Dại", materials: "Cúc, Hoàng anh", price: 360000, originalPrice: 480000, discountPercent: 25, imageUrl: IMG.sun },
 ];
-
-export const featuredCollections: FeaturedItem[] = [
-  { id: "f1", name: "Hồng Nhung", materials: "Đỏ thẫm, Bạch đàn", price: 560000, originalPrice: 750000, discountPercent: 25, imageUrl: IMG.rose },
-  { id: "f2", name: "Mẫu Đơn Lụa", materials: "Mẫu đơn, Ngải bạc", price: 720000, originalPrice: 900000, discountPercent: 20, imageUrl: IMG.peony },
-  { id: "f3", name: "Hoàng Hôn San Hô", materials: "Hồng san hô, Dương xỉ", price: 680000, originalPrice: 850000, discountPercent: 20, imageUrl: IMG.white },
-  { id: "f4", name: "Giờ Vàng", materials: "Hướng dương, Cúc La Mã", price: 520000, originalPrice: 650000, discountPercent: 20, imageUrl: IMG.sun },
-];
-
-/* ── Account ─────────────────────────────────────── */
-
-export const user: User = {
-  id: "u1",
-  username: "floral_dreamer_92",
-  fullName: "Le Minh Thanh",
-  email: "t****@email.com",
-  phone: "***-***-5521",
-  gender: "female",
-  dob: { day: 12, month: "Tháng 10", year: 1992 },
-};
-
-export const addresses: Address[] = [
-  { id: "a1", name: "Le Minh Thanh", line1: "124 Đường Maplewood, Căn 4B", line2: "Quận 1, TP. Hồ Chí Minh", phone: "(555) 867-5309", isDefault: true },
-  { id: "a2", name: "Văn phòng Studio", line1: "890 Đường Broadway, Tầng 5", line2: "Quận 3, TP. Hồ Chí Minh", phone: "(555) 123-4567", isDefault: false },
-];
-
-/* ── Checkout ────────────────────────────────────── */
-
-export const paymentMethods: PaymentMethod[] = [
-  { id: "pm1", kind: "cod", label: "Thanh toán khi nhận hàng", icon: "payments" },
-  { id: "pm2", kind: "bank", label: "Chuyển khoản / VNPay", icon: "account_balance" },
-];
-
-export const deliveryDates: DeliveryDate[] = [
-  { key: "today", label: "Hôm nay" },
-  { key: "tomorrow", label: "Ngày mai" },
-  { key: "pick", label: "Chọn ngày", calendar: true },
-];
-
-export const deliveryTimeSlots: string[] = [
-  "9:00 – 12:00",
-  "12:00 – 15:00",
-  "15:00 – 18:00",
-  "18:00 – 21:00",
-];
-
-/* ── Cart ────────────────────────────────────────── */
-
-export const cartItems: CartItem[] = [
-  { product: byId("2"), qty: 1, selected: true }, // Hoàng Hôn San Hô
-  { product: byId("4"), qty: 1, selected: true }, // Giờ Vàng
-  { product: byId("6"), qty: 1, selected: true }, // Mẫu Đơn Lụa
-];
-
-/* ── Orders ──────────────────────────────────────── */
-
-export const orders: Order[] = [
-  {
-    id: "FP00124",
-    date: "20 Th6, 2026",
-    status: "done",
-    statusLabel: "HOÀN TẤT",
-    total: 560000,
-    items: [{ name: "Hồng Nhung", materials: "Hồng đỏ và bạch đàn", qty: 1, price: 560000, imageUrl: IMG.rose }],
-  },
-  {
-    id: "FP00120",
-    date: "12 Th6, 2026",
-    status: "done",
-    statusLabel: "HOÀN TẤT",
-    total: 720000,
-    items: [{ name: "Mẫu Đơn Phấn", materials: "Mẫu đơn trắng và hoa baby", qty: 1, price: 720000, imageUrl: IMG.peony }],
-  },
-];
-
-export const liveOrder: LiveOrder = {
-  id: "FP00123",
-  steps: [
-    { label: "CHỜ XÁC NHẬN", state: "done" },
-    { label: "ĐANG XỬ LÝ", state: "current" },
-    { label: "ĐANG GIAO", state: "todo" },
-  ],
-  timeline: [
-    { time: "11:45", text: "Đơn hàng đã được bàn giao cho đơn vị vận chuyển", active: true },
-    { time: "10:30", text: "Đơn hàng #FP00123 đã được duyệt", active: false },
-  ],
-};
 
 /* ── Vouchers & notifications ────────────────────── */
 

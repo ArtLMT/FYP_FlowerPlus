@@ -21,6 +21,7 @@ export default function FeaturedCarousel({ items }: FeaturedCarouselProps) {
 
   return (
     <div className="relative">
+      {/* Horizontal snap-scroll strip; each item is a half-width FeaturedCard. */}
       <div
         ref={scrollContainerRef}
         className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 px-margin-mobile"

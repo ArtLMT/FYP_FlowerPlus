@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Container from "@/components/ui/Container";
 import ProductCard from "@/features/catalog/components/ProductCard";
-import type { PublicProductSummary } from "@/lib/types";
+import type { PublicProductSummary } from "@/lib/services/products";
 
 /**
  * CuratedRow — a "shop by category" section: heading + a few real products +
@@ -27,6 +27,7 @@ export default function CuratedRow({
   return (
     <section className="pt-[30px] md:pt-14 bg-neutral-canvas" aria-label={title}>
       <Container>
+        {/* Row heading (category name) and "XEM TẤT CẢ" link to the filtered /shop. */}
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <h2 className="font-serif font-medium text-heading-md md:text-[32px] leading-[1.3] text-text-primary m-0">
             {title}

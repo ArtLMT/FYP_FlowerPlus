@@ -1,11 +1,11 @@
 "use client";
-import Button from "@/components/ui/Button";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Button from "@/components/ui/Button";
 import { useAccount } from "@/features/account/account-context";
-import { logout } from "@/lib/services/auth";
-import { useRouter } from "next/navigation";
+import { useSignOut } from "@/features/account/hooks/use-sign-out";
+import { ACCOUNT_SECTIONS } from "@/features/account/sections";
 
 /**
  * AccountSidebar — the persistent left rail of the desktop account dashboard.
@@ -14,23 +14,10 @@ import { useRouter } from "next/navigation";
  * (/account) + BottomNav instead. Rendered once by account/layout.tsx so every
  * account route shares the same rail; the active link is derived from the path.
  */
-
-const NAV = [
-  { label: "Thông tin tài khoản", icon: "person", href: "/account/info" },
-  { label: "Quản lý đơn hàng", icon: "local_shipping", href: "/account/orders" },
-  { label: "Thông báo", icon: "notifications", href: "/account/notifications" },
-  { label: "Kho voucher", icon: "local_offer", href: "/account/vouchers" },
-];
-
 export default function AccountSidebar() {
   const pathname = usePathname();
   const user = useAccount();
-  const router = useRouter();
-  const signOut = async () => {
-    await logout();
-    router.replace("/login");
-    router.refresh();
-  };
+  const signOut = useSignOut();
 
   return (
     <aside className="hidden md:flex md:flex-col md:gap-6 md:sticky md:top-24">
@@ -40,6 +27,7 @@ export default function AccountSidebar() {
         <div className="w-20 h-20 rounded-full bg-tertiary text-primary flex items-center justify-center ring-4 ring-neutral-raised">
           <span className="material-symbols-outlined" style={{ fontSize: 40 }}>person</span>
         </div>
+        {/* Display name and email. */}
         <p className="w-full font-serif font-medium text-[19px] text-text-primary leading-tight mt-3 mb-0 truncate">
           {user.fullName ?? user.username}
         </p>
@@ -48,8 +36,9 @@ export default function AccountSidebar() {
 
       {/* Nav */}
       <nav className="flex flex-col gap-1">
-        {NAV.map(({ label, icon, href }) => {
+        {ACCOUNT_SECTIONS.map(({ label, icon, href }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
+          // One section link (icon + label); the current section is filled.
           return (
             <Link
               key={href}
@@ -70,7 +59,7 @@ export default function AccountSidebar() {
         })}
       </nav>
 
-      {/* Sign out — stub: navigates to /login (TODO(logic): clear session first) */}
+      {/* Sign out */}
       <Button
         onClick={signOut}
         className="flex items-center gap-3 rounded-xl px-4 py-3 font-sans text-[15px] text-text-secondary hover:bg-neutral-surface transition-colors"

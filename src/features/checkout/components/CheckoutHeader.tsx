@@ -34,6 +34,7 @@ export default function CheckoutHeader({
         >
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
+        {/* Centered step title; the empty div after it balances the back button. */}
         <h1 className="flex-1 text-center font-sans font-bold text-[19px] text-primary m-0">
           {title}
         </h1>

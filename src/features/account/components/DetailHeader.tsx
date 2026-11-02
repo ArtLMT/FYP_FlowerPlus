@@ -14,6 +14,7 @@ import Link from "next/link";
 export default function DetailHeader({ title, backHref = "/account" }: { title: string; backHref?: string }) {
   return (
     <header className="md:hidden flex items-center px-[18px] py-[18px] border-b border-neutral-border bg-neutral-canvas sticky top-0 z-20">
+      {/* Back arrow button. */}
       <Link
         href={backHref}
         className="w-10 h-10 rounded-full flex items-center justify-center text-text-primary hover:bg-neutral-surface transition-colors"
@@ -21,6 +22,7 @@ export default function DetailHeader({ title, backHref = "/account" }: { title: 
       >
         <span className="material-symbols-outlined">arrow_back</span>
       </Link>
+      {/* Centered screen title. */}
       <h1 className="flex-1 text-center font-serif font-medium text-heading-md text-primary m-0">
         {title}
       </h1>

@@ -1,3 +1,4 @@
+import Button from "@/components/ui/Button";
 import Container from "@/components/ui/Container";
 
 const CATEGORIES = ["Trang chủ", "Bộ sưu tập", "Đặt riêng", "Ưu đãi"];
@@ -51,14 +52,14 @@ export default function Footer() {
                 aria-label="Địa chỉ email đăng ký nhận tin"
                 className="flex-1 bg-transparent font-sans text-[14px] text-text-primary placeholder:text-text-muted outline-none min-w-0"
               />
-              <button
+              <Button
                 className="w-10 h-10 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-white hover:bg-primary-hover transition-colors"
                 aria-label="Đăng ký"
               >
                 <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
                   arrow_forward
                 </span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>

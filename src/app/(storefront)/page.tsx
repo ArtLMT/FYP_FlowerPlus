@@ -24,6 +24,7 @@ export default function HomePage() {
         <QuickActions layout="grid" />
       </Container>
 
+      {/* Large hero banner with headline and call-to-action buttons. */}
       <Hero />
 
       {/* Desktop quick-action row under the hero */}
@@ -31,10 +32,15 @@ export default function HomePage() {
         <QuickActions layout="row" />
       </Container>
 
+      {/* "Featured collections" product carousel. */}
       <FeaturedCollections />
+      {/* Curated product rows (one row per curated section). */}
       <CuratedSections />
+      {/* "All products" grid. */}
       <ProductsGrid />
+      {/* Custom-order promotional banner. */}
       <CustomOrderBanner />
+      {/* Trust/benefit strip (delivery, freshness, …) at the bottom of the page. */}
       <TrustStrip />
     </main>
   );

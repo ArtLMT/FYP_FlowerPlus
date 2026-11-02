@@ -12,6 +12,7 @@ export default function HeaderIcons() {
 
   return (
     <div className="flex gap-[10px]">
+      {/* Cart icon with live item-count badge. */}
       <Link
         href="/cart"
         aria-label={`Giỏ hàng${count ? `, ${count} món` : ""}`}
@@ -26,6 +27,7 @@ export default function HeaderIcons() {
           </span>
         )}
       </Link>
+      {/* Account icon. */}
       <Link
         href="/account"
         aria-label="Tài khoản"

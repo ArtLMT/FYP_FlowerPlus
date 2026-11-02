@@ -4,7 +4,8 @@ import { useState } from "react";
 import Button from "@/components/ui/Button";
 import ProductImage from "@/components/ui/ProductImage";
 import ProductCard from "@/features/catalog/components/ProductCard";
-import type { PublicProductDetail, PublicProductSummary, PublicProductType } from "@/lib/types";
+import { useAddToCart } from "@/features/catalog/hooks/use-add-to-cart";
+import type { ProductDetail, PublicProductSummary, PublicProductType } from "@/lib/services/products";
 import { formatVND } from "@/lib/utils";
 
 const TYPE_LABEL: Record<PublicProductType, string> = {
@@ -12,22 +13,36 @@ const TYPE_LABEL: Record<PublicProductType, string> = {
   PRE_MADE: "Sản phẩm làm sẵn",
 };
 
+/**
+ * Product detail screen.
+ *
+ * UI map:
+ * - Left column (sticky on desktop): main image, then the thumbnail picker.
+ * - Right column: type/category chips → name/description → price → availability card
+ *   → Add to cart / Buy now buttons → "Chi tiết" spec list.
+ * - Bottom: "Có thể bạn cũng thích" related-product grid.
+ * - Add-to-cart behaviour lives in `hooks/use-add-to-cart.ts`.
+ */
 export default function ProductDetailView({
   product,
   related,
 }: {
-  product: PublicProductDetail;
+  product: ProductDetail;
   related: PublicProductSummary[];
 }) {
   const [activeImage, setActiveImage] = useState(0);
-  const images = [...product.images].sort((left, right) => left.displayOrder - right.displayOrder);
+  const { adding, addToCart } = useAddToCart(product.id);
+  const { availability, images } = product;
   const visibleImage = images[Math.min(activeImage, Math.max(0, images.length - 1))];
   const categoryNames = product.categories.map((category) => category.name).join(" · ");
 
   return (
     <main className="md:max-w-[1120px] md:mx-auto md:px-8 md:py-10">
+      {/* Two-column layout on desktop; stacked on mobile. */}
       <div className="md:grid md:grid-cols-2 md:gap-12 md:items-start">
+        {/* Image gallery column. */}
         <div className="md:sticky md:top-[90px] md:self-start">
+          {/* Main (selected) image. */}
           <div className="relative h-[320px] bg-neutral-raised md:h-auto md:aspect-square md:overflow-hidden md:rounded-2xl">
             <ProductImage
               src={visibleImage?.contentUrl}
@@ -37,6 +52,7 @@ export default function ProductDetailView({
             />
           </div>
 
+          {/* Thumbnail buttons; only shown when there is more than one image. */}
           {images.length > 1 && (
             <div className="flex gap-3 px-[18px] pt-4 md:px-0">
               {images.map((image, index) => (
@@ -56,7 +72,9 @@ export default function ProductDetailView({
           )}
         </div>
 
+        {/* Product information column. */}
         <div className="px-[18px] pb-8 pt-[18px] md:px-0 md:pt-0">
+          {/* Product-type chip and category chips. */}
           <div className="mb-3 flex flex-wrap gap-2">
             <span className="rounded-full bg-accent-sage-light px-3 py-1 font-sans text-xs font-bold text-[#3D5236]">
               {TYPE_LABEL[product.type]}
@@ -68,6 +86,7 @@ export default function ProductDetailView({
             ))}
           </div>
 
+          {/* Product name and description. */}
           <h1 className="m-0 font-serif text-[34px] font-medium leading-[1.05] text-primary md:text-[44px]">
             {product.name}
           </h1>
@@ -75,6 +94,7 @@ export default function ProductDetailView({
             {product.description}
           </p>
 
+          {/* Listed price. */}
           <div className="mt-5">
             <span className="block font-sans text-xs font-bold uppercase tracking-badge text-text-muted">Giá niêm yết</span>
             <span className="font-sans text-[26px] font-bold text-primary md:text-[32px]">
@@ -82,22 +102,31 @@ export default function ProductDetailView({
             </span>
           </div>
 
+          {/* Availability card (title + explanation). */}
           <div className="mt-6 rounded-2xl border border-neutral-border bg-neutral-surface p-4">
-            <p className="m-0 font-sans text-sm font-bold text-text-primary">Mua hàng chưa mở cho sản phẩm này</p>
-            <p className="mb-0 mt-1 font-sans text-sm leading-relaxed text-text-muted">
-              Tồn kho và khả năng đáp ứng đang được kết nối. Bạn vẫn có thể xem thông tin sản phẩm thật từ cửa hàng.
-            </p>
+            <p className="m-0 font-sans text-sm font-bold text-text-primary">{availability.title}</p>
+            <p className="mb-0 mt-1 font-sans text-sm leading-relaxed text-text-muted">{availability.detail}</p>
           </div>
 
+          {/* "THÊM VÀO GIỎ" and "MUA NGAY" buttons; disabled when the product cannot be bought. */}
           <div className="mt-4 grid grid-cols-2 gap-[14px]">
-            <Button disabled className="cursor-not-allowed rounded-full border-[1.5px] border-neutral-border py-[17px] font-sans text-body-sm font-bold tracking-button text-text-muted">
+            <Button
+              onClick={() => void addToCart(false)}
+              disabled={!availability.canBuy || adding}
+              className="rounded-full border-[1.5px] border-primary py-[17px] font-sans text-body-sm font-bold tracking-button text-primary hover:bg-neutral-surface"
+            >
               THÊM VÀO GIỎ
             </Button>
-            <Button disabled className="cursor-not-allowed rounded-full border-[1.5px] border-neutral-border bg-neutral-border py-[17px] font-sans text-body-sm font-bold tracking-button text-white">
+            <Button
+              onClick={() => void addToCart(true)}
+              disabled={!availability.canBuy || adding}
+              className="rounded-full bg-primary py-[17px] font-sans text-body-sm font-bold tracking-button text-white hover:bg-primary-hover"
+            >
               MUA NGAY
             </Button>
           </div>
 
+          {/* "Chi tiết" spec list: product type and categories. */}
           <section className="mt-8 border-t border-neutral-border pt-5" aria-labelledby="product-details-heading">
             <h2 id="product-details-heading" className="font-serif text-heading-md font-medium text-text-primary">Chi tiết</h2>
             <dl className="mt-3">
@@ -114,6 +143,7 @@ export default function ProductDetailView({
         </div>
       </div>
 
+      {/* Related-products grid at the bottom of the page. */}
       {related.length > 0 && (
         <section className="border-t border-neutral-border px-[18px] pb-8 pt-6 md:mt-10 md:px-0 md:pt-12" aria-labelledby="related-products-heading">
           <h2 id="related-products-heading" className="mb-4 font-serif text-heading-md font-medium md:mb-6 md:text-[32px]">

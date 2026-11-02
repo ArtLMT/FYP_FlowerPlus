@@ -18,6 +18,7 @@ export default function Stepper({ current }: { current: 1 | 2 | 3 }) {
         const done = step.n <= current;
         return (
           <Fragment key={step.n}>
+            {/* Numbered circle and label for one step. */}
             <div className="flex flex-col items-center gap-[9px] w-14 md:w-16 flex-shrink-0">
               <div
                 className={`w-[38px] h-[38px] md:w-11 md:h-11 rounded-full flex items-center justify-center font-sans font-bold text-[16px] md:text-[18px] ${
@@ -27,13 +28,14 @@ export default function Stepper({ current }: { current: 1 | 2 | 3 }) {
                 {step.n}
               </div>
               <span
-                className={`font-sans font-bold text-[11px] md:text-[12px] tracking-[0.08em] ${
+                className={`font-sans font-bold text-[11px] md:text-[12px] tracking-[0.08em] whitespace-nowrap ${
                   done ? "text-primary" : "text-text-muted"
                 }`}
               >
                 {step.label}
               </span>
             </div>
+            {/* Connector line between steps. */}
             {i < STEPS.length - 1 && (
               <div className="flex-1 h-[2px] bg-neutral-border mt-[18px] md:mt-[21px]" />
             )}

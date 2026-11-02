@@ -28,13 +28,16 @@ export default async function ShopPage({
   return (
     <main className="pt-6 md:pt-10 pb-section bg-neutral-canvas min-h-dvh">
       <Container>
+        {/* Page heading and subtitle. */}
         <h1 className="font-serif font-medium text-heading-lg md:text-[36px] leading-[1.2] text-text-primary m-0">
           Bộ sưu tập
         </h1>
         <p className="font-sans text-body text-text-muted mt-1 mb-5 md:mb-6">
           Khám phá toàn bộ các mẫu hoa của chúng tôi.
         </p>
+        {/* Horizontal category chips. */}
         <CategoryStrip />
+        {/* Filter panel, sort/result bar, and the product grid (see ShopBrowser.tsx). */}
         <ShopBrowser products={products} initial={initial} query={query} />
       </Container>
     </main>

@@ -1,3 +1,4 @@
+import Button from "@/components/ui/Button";
 /**
  * CustomOrderBanner.
  * Mobile: full-bleed surface strip (no side padding, square corners).
@@ -13,15 +14,17 @@ export default function CustomOrderBanner() {
     <section className="mt-8 md:mt-16">
       <div className="mx-auto w-full max-w-[1240px] md:px-10">
         <div className="bg-neutral-raised text-center px-7 py-[44px] md:rounded-3xl md:px-10 md:py-[72px]">
+          {/* Banner headline and subtitle. */}
           <h2 className="font-serif font-medium text-[30px] md:text-[44px] leading-[1.2] md:leading-[1.15] text-text-primary mb-3 md:mb-4 m-0">
             Chưa tìm được mẫu ưng ý?
           </h2>
           <p className="font-sans text-body md:text-[17px] text-text-secondary mb-[26px] md:mb-8 md:max-w-[460px] md:mx-auto m-0">
             Tự thiết kế — chúng tôi sẽ làm theo yêu cầu của bạn.
           </p>
-          <button className="bg-primary hover:bg-primary-hover text-white border-none rounded-lg md:rounded-[10px] py-[15px] px-[30px] md:px-[34px] font-sans font-bold text-label md:text-body-sm tracking-button cursor-pointer transition-colors">
+          {/* "ĐẶT THIẾT KẾ RIÊNG" call-to-action button. */}
+          <Button className="bg-primary hover:bg-primary-hover text-white border-none rounded-lg md:rounded-[10px] py-[15px] px-[30px] md:px-[34px] font-sans font-bold text-label md:text-body-sm tracking-button cursor-pointer transition-colors">
             ĐẶT THIẾT KẾ RIÊNG
-          </button>
+          </Button>
         </div>
       </div>
     </section>

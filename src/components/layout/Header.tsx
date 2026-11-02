@@ -1,4 +1,5 @@
 "use client";
+import Button from "@/components/ui/Button";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -34,6 +35,7 @@ function isActivePath(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
+/** Rounded search field (icon + input); submitting goes to /shop?q=…. Used in both mobile and desktop rows. */
 function SearchBar({ className = "" }: { className?: string }) {
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -50,11 +52,11 @@ function SearchBar({ className = "" }: { className?: string }) {
       onSubmit={submit}
       className={`flex items-center gap-[10px] bg-neutral-surface border border-neutral-border rounded-full ${className}`}
     >
-      <button type="submit" aria-label="Tìm kiếm" className="flex items-center text-text-muted">
+      <Button type="submit" aria-label="Tìm kiếm" className="flex items-center text-text-muted">
         <span className="material-symbols-outlined" style={{ fontSize: 17 }}>
           search
         </span>
-      </button>
+      </Button>
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
@@ -74,20 +76,24 @@ export default function Header() {
       {/* ── Mobile ── */}
       <div className="md:hidden px-margin-mobile pt-4 pb-3">
         <div className="flex items-center justify-between mb-[14px]">
+          {/* Wordmark and cart/account icons. */}
           <span className="font-serif text-[24px] italic text-primary leading-none tracking-heading">
             FlowerPlus
           </span>
           <HeaderIcons />
         </div>
+        {/* Full-width search field under the wordmark. */}
         <SearchBar className="px-4 py-[9px]" />
       </div>
 
       {/* ── Desktop ── */}
       <div className="hidden md:block">
         <Container className="h-[74px] flex items-center gap-9">
+          {/* Wordmark. */}
           <span className="font-serif text-[28px] italic text-primary leading-none tracking-heading">
             FlowerPlus
           </span>
+          {/* Primary nav links; the active one is highlighted. */}
           <nav className="flex gap-7 items-center">
             {DESKTOP_NAV.map(({ label, href }) => {
               const active = isActivePath(pathname, href);
@@ -106,6 +112,7 @@ export default function Header() {
             })}
           </nav>
           <div className="flex-1" />
+          {/* Right side: search field, then cart/account icons. */}
           <SearchBar className="px-4 py-[7px] w-60" />
           <HeaderIcons />
         </Container>

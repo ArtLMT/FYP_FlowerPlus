@@ -20,10 +20,15 @@ export default function StorefrontLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <>
+      {/* Sticky top bar: wordmark, desktop nav links, search field, cart/account icons. */}
       <Header />
+      {/* The current storefront page (home, /shop, …). */}
       {children}
+      {/* Site footer: brand/address, categories, newsletter signup, copyright bar. */}
       <Footer />
+      {/* Floating chat button in the bottom-right corner. */}
       <ChatbotFAB />
+      {/* Mobile-only fixed bottom tab bar. */}
       <BottomNav active="home" />
     </>
   );

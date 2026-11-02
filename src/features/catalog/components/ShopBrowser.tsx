@@ -1,30 +1,17 @@
 "use client";
-import Button from "@/components/ui/Button";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import type { PublicProductSummary } from "@/lib/types";
-import ProductCard from "@/features/catalog/components/ProductCard";
+import Button from "@/components/ui/Button";
 import FilterPanel from "@/features/catalog/components/FilterPanel";
-import {
-  type Filters,
-  type FilterKey,
-  EMPTY_FILTERS,
-  filterProducts,
-  searchProducts,
-  filtersToQuery,
-  activeCount,
-} from "@/features/catalog/filters";
+import ProductCard from "@/features/catalog/components/ProductCard";
+import type { Filters } from "@/features/catalog/filters";
+import { useShopFilters } from "@/features/catalog/hooks/use-shop-filters";
+import type { PublicProductSummary } from "@/lib/services/products";
 
 /**
- * ShopBrowser — the /shop filter engine (owns ALL catalog filtering).
+ * ShopBrowser — the /shop results with their filters.
  *
  *   • Desktop → sticky left filter sidebar + results grid.
  *   • Mobile  → a "Bộ lọc" button opens a bottom-sheet drawer with the same panel.
- *
- * Initial filter state comes from the URL (so home category links land
- * pre-filtered); every change is synced back to
- * the URL via router.replace, making any filtered view shareable/bookmarkable.
  */
 export default function ShopBrowser({
   products,
@@ -35,48 +22,15 @@ export default function ShopBrowser({
   initial: Filters;
   query?: string;
 }) {
-  const router = useRouter();
-  const [filters, setFilters] = useState<Filters>(initial);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const visible = useMemo(
-    () => filterProducts(searchProducts(products, query), filters),
-    [products, filters, query]
-  );
-  const count = activeCount(filters);
-
-  /** Build /shop?… preserving the current search term alongside the filters. */
-  const urlFor = (f: Filters) => {
-    const params = new URLSearchParams(filtersToQuery(f));
-    if (query) params.set("q", query);
-    const qs = params.toString();
-    return qs ? `/shop?${qs}` : "/shop";
-  };
-
-  const apply = (next: Filters) => {
-    setFilters(next);
-    router.replace(urlFor(next), { scroll: false });
-  };
-
-  /** Drop the search term but keep the active filters. */
-  const clearQuery = () => {
-    const qs = filtersToQuery(filters);
-    router.push(qs ? `/shop?${qs}` : "/shop");
-  };
-
-  const toggle = (group: FilterKey, value: string) => {
-    const cur = filters[group];
-    const nextGroup = cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value];
-    apply({ ...filters, [group]: nextGroup });
-  };
-
-  const clear = () => apply(EMPTY_FILTERS);
+  const shop = useShopFilters(products, initial, query);
+  const { filters, visible, toggle, clear, clearQuery, drawerOpen } = shop;
+  const count = shop.activeCount;
 
   return (
     <div className="md:grid md:grid-cols-[240px_1fr] md:gap-8 md:items-start">
       {/* Desktop filter sidebar */}
       <aside className="hidden md:block md:sticky md:top-24">
-        <FilterPanel products={products} filters={filters} onToggle={toggle} />
+        <FilterPanel categories={shop.categories} filters={filters} onToggle={toggle} />
       </aside>
 
       {/* Results */}
@@ -101,7 +55,7 @@ export default function ShopBrowser({
           <p className="font-sans text-body-sm text-text-muted m-0">{visible.length} sản phẩm</p>
 
           <Button
-            onClick={() => setDrawerOpen(true)}
+            onClick={shop.openDrawer}
             className="md:hidden inline-flex items-center gap-2 rounded-full border border-neutral-border px-4 py-2 font-sans font-bold text-label tracking-badge text-text-primary"
           >
             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>tune</span>
@@ -119,6 +73,7 @@ export default function ShopBrowser({
           )}
         </div>
 
+        {/* Empty-result message, or the product-card grid. */}
         {visible.length === 0 ? (
           <p className="text-center py-16 font-serif italic text-heading-sm text-text-muted">
             {query ? `Không tìm thấy kết quả cho “${query}”.` : "Không có sản phẩm nào khớp bộ lọc."}
@@ -135,12 +90,13 @@ export default function ShopBrowser({
       {/* Mobile filter drawer */}
       {drawerOpen && (
         <div className="md:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Bộ lọc">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setDrawerOpen(false)} />
+          <div className="absolute inset-0 bg-black/40" onClick={shop.closeDrawer} />
           <div className="absolute bottom-0 left-0 w-full max-h-[85dvh] flex flex-col bg-neutral-canvas rounded-t-3xl">
+            {/* Drawer title bar and close button. */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-border">
               <h2 className="font-serif font-medium text-heading-md text-primary m-0">Bộ lọc</h2>
               <Button
-                onClick={() => setDrawerOpen(false)}
+                onClick={shop.closeDrawer}
                 className="w-9 h-9 rounded-full flex items-center justify-center text-text-secondary hover:bg-neutral-surface"
                 aria-label="Đóng"
               >
@@ -148,10 +104,12 @@ export default function ShopBrowser({
               </Button>
             </div>
 
+            {/* Scrollable filter groups (same FilterPanel as desktop). */}
             <div className="flex-1 overflow-y-auto no-scrollbar px-5">
-              <FilterPanel products={products} filters={filters} onToggle={toggle} />
+              <FilterPanel categories={shop.categories} filters={filters} onToggle={toggle} />
             </div>
 
+            {/* Drawer footer: Clear and "Xem N kết quả" buttons. */}
             <div className="flex gap-3 px-5 py-4 border-t border-neutral-border">
               <Button
                 onClick={clear}
@@ -160,7 +118,7 @@ export default function ShopBrowser({
                 Xóa
               </Button>
               <Button
-                onClick={() => setDrawerOpen(false)}
+                onClick={shop.closeDrawer}
                 className="flex-1 rounded-full bg-primary text-white py-3 font-sans font-bold text-body-sm tracking-button hover:bg-primary-hover transition-colors"
               >
                 Xem {visible.length} kết quả
