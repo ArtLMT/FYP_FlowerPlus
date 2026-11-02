@@ -84,6 +84,8 @@ export function useProductManager() {
 
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
+  /** Why the last image upload, move or removal failed; shown inside the image controls (U2). */
+  const [imageError, setImageError] = useState("");
   const [activationIssues, setActivationIssues] = useState<string[]>([]);
   const [refreshRequiredId, setRefreshRequiredId] = useState<string | null>(null);
   const [activationProduct, setActivationProduct] = useState<ManagedProduct | null>(null);
@@ -125,6 +127,7 @@ export function useProductManager() {
     setSelectedProduct(null);
     setDetailError("");
     setActionError("");
+    setImageError("");
     setActivationProduct(null);
     setDeactivationProduct(null);
     setDraftProduct(null);
@@ -132,6 +135,7 @@ export function useProductManager() {
 
   function openEdit(product: ManagedProduct) {
     setActionError("");
+    setImageError("");
     setEditingProduct(product);
   }
 
@@ -145,6 +149,7 @@ export function useProductManager() {
     setDetailLoading(false);
     setDetailError("");
     setActionError("");
+    setImageError("");
     setSelectedProduct(product);
     setSelectedId(product.id);
   }
@@ -251,11 +256,12 @@ export function useProductManager() {
     if (!product) return;
     setBusyId(product.id);
     setActionError("");
+    setImageError("");
     try {
       await request(product);
     } catch (cause) {
       const error = asApiError(cause);
-      setActionError(error.message);
+      setImageError(error.message);
       if (error.is("CONCURRENT_MODIFICATION")) {
         // Changed elsewhere: show the current copy everywhere, the edit form included.
         reloadProducts();
@@ -269,7 +275,7 @@ export function useProductManager() {
   function uploadImages(files: File[]) {
     if (!imageProduct) return;
     const problem = imageSelectionError(files, MAX_PRODUCT_IMAGES - imageProduct.images.length, "add");
-    if (problem) return setActionError(problem);
+    if (problem) return setImageError(problem);
     return changeImages(async (product) => {
       let current = product;
       for (const file of files) {
@@ -324,10 +330,12 @@ export function useProductManager() {
     closeEdit: () => {
       setEditingProduct(null);
       setActionError("");
+      setImageError("");
     },
     finishEdit: (updated: ManagedProduct) => {
       applyProductUpdate(updated);
       setEditingProduct(null);
+      setImageError("");
     },
     selectedId,
     selectedProduct,
@@ -356,6 +364,7 @@ export function useProductManager() {
     confirmDeactivation,
     confirmReturnToDraft,
     // Images
+    imageError,
     uploadImages,
     moveImage,
     removeImage,

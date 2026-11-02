@@ -12,6 +12,7 @@ import { IMAGE_ACCEPT, MAX_PRODUCT_IMAGES, type ManagedProduct } from "@/lib/ser
 export default function ProductImageManager({
   product,
   busy,
+  error = "",
   onUpload,
   onMove,
   onRemove,
@@ -19,6 +20,8 @@ export default function ProductImageManager({
 }: {
   product: ManagedProduct;
   busy: boolean;
+  /** Why the last image change was refused, shown right above the images it is about. */
+  error?: string;
   onUpload: (files: File[]) => void;
   onMove: (index: number, direction: -1 | 1) => void;
   onRemove: (imageId: string) => void;
@@ -48,6 +51,7 @@ export default function ProductImageManager({
         />
       </label>
     </div>
+    {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800">{error}</p>}
     {images.length === 0 && <p className="text-xs text-text-muted">Sản phẩm chưa có ảnh nào. Ảnh đầu tiên sẽ là ảnh chính.</p>}
     {images.length > 0 && <div className="grid gap-2 sm:grid-cols-2">
       {images.map((image, index) => <article key={image.id} className="flex min-w-0 items-center gap-2 rounded-xl border border-neutral-border bg-neutral-canvas p-2">

@@ -79,11 +79,13 @@ function ProductDetail({
   onUpload,
   onMove,
   onRemove,
+  imageError,
 }: {
   product: ManagedProduct | null;
   loading: boolean;
   error: string;
   busy: boolean;
+  imageError: string;
   onBack: () => void;
   onEdit: () => void;
   onLifecycle: () => void;
@@ -148,7 +150,7 @@ function ProductDetail({
           </div>}
         </div>
         <div className="border-t border-neutral-border bg-white p-4">
-          <ProductImageManager product={product} busy={busy} onUpload={onUpload} onMove={onMove} onRemove={onRemove} onSelect={setImageIndex} />
+          <ProductImageManager product={product} busy={busy} error={imageError} onUpload={onUpload} onMove={onMove} onRemove={onRemove} onSelect={setImageIndex} />
         </div>
       </section>
 
@@ -260,6 +262,7 @@ export default function ProductManager() {
     confirmActivation,
     confirmDeactivation,
     confirmReturnToDraft,
+    imageError,
     uploadImages,
     moveImage,
     removeImage,
@@ -331,6 +334,7 @@ export default function ProductManager() {
         <ProductImageManager
           product={editingProduct}
           busy={isBusy(editingProduct)}
+          error={imageError}
           onUpload={(files) => { void uploadImages(files); }}
           onMove={(index, direction) => { void moveImage(index, direction); }}
           onRemove={(imageId) => { void removeImage(imageId); }}
@@ -358,6 +362,7 @@ export default function ProductManager() {
       onUpload={(files) => { void uploadImages(files); }}
       onMove={(index, direction) => { void moveImage(index, direction); }}
       onRemove={(imageId) => { void removeImage(imageId); }}
+      imageError={imageError}
     />
     {activationDialog}
     {deactivationDialog}

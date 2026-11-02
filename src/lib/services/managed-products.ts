@@ -108,7 +108,7 @@ const actionErrors = (action: string): ErrorMessages => ({
     CONCURRENT_MODIFICATION: "Sản phẩm đã được thay đổi ở nơi khác. Cần tải lại dữ liệu mới nhất trước khi thử lại.",
     PRODUCT_INVALID_STATE: "Trạng thái sản phẩm đã thay đổi. Vui lòng tải lại và xem trạng thái hiện tại.",
     ...IMAGE_CODES,
-    PRODUCT_IMAGE_REQUIRED: "Sản phẩm đang bán phải giữ ít nhất một ảnh.",
+    PRODUCT_IMAGE_REQUIRED: "Không xóa được ảnh này: sản phẩm đang bán cần ít nhất một ảnh. Hãy thêm ảnh mới rồi xóa ảnh cũ, hoặc ngừng bán sản phẩm trước.",
     VALIDATION_FAILED: (error) => error.fieldMessages.length
       ? `Vui lòng kiểm tra: ${error.fieldMessages.join("; ")}.`
       : "Vui lòng kiểm tra các yêu cầu của sản phẩm và thử lại.",
