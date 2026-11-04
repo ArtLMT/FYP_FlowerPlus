@@ -1,4 +1,4 @@
-export { api, path, withQuery, type Page } from "./client";
+export { api, path, refreshSession, withQuery, type Page } from "./client";
 export {
   ApiError,
   asApiError,
