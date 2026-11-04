@@ -1,5 +1,6 @@
 "use client";
 
+import FeedbackToast from "@/features/admin/FeedbackToast";
 import Button from "@/components/ui/Button";
 import ModalDialog from "@/components/ui/ModalDialog";
 import FieldMessages from "@/features/admin/FieldMessages";
@@ -56,7 +57,7 @@ export default function StaffManager() {
       </select>
     </label>
 
-    {list.feedback && !list.creatorOpen && <p role="status" className={`mb-5 rounded-lg px-4 py-3 text-sm ${list.feedback.kind === "error" ? "bg-red-50 text-red-800" : "bg-accent-sage-light text-text-primary"}`}>{list.feedback.text}</p>}
+    <FeedbackToast feedback={list.creatorOpen ? null : list.feedback} />
 
     {/* Create modal: name and email only; the new Staff member sets their own password. */}
     {list.creatorOpen && <ModalDialog

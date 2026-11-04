@@ -2,13 +2,14 @@
 
 import Button from "@/components/ui/Button";
 import ModalDialog from "@/components/ui/ModalDialog";
+import FeedbackToast from "@/features/admin/FeedbackToast";
 import FieldMessages from "@/features/admin/FieldMessages";
 import { useCategoryManager } from "@/features/admin/hooks/use-category-manager";
 import { formatDate } from "@/features/admin/product-labels";
 
 /**
  * Categories workspace (T-PROD-10).
- * The page is ordered as: Add button → feedback → category list → create/rename and delete dialogs.
+ * The page is ordered as: Add button → category cards → create/rename and delete dialogs.
  * Data and action state live in `hooks/use-category-manager.ts`.
  */
 export default function CategoryManager() {
@@ -22,9 +23,9 @@ export default function CategoryManager() {
         <Button type="button" onClick={c.openCreate} className="w-full shrink-0 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-hover sm:w-auto">+ Thêm danh mục</Button>
       </div>
 
-      {c.feedback && !c.editorOpen && <p role="status" className={`rounded-lg px-4 py-3 text-sm ${c.feedback.kind === "error" ? "bg-red-50 text-red-800" : "bg-accent-sage-light text-text-primary"}`}>{c.feedback.text}</p>}
+      <FeedbackToast feedback={c.editorOpen ? null : c.feedback} />
 
-      {/* Category list: name, last change, and Rename/Delete actions. */}
+      {/* Category cards: name, last change, and Rename/Delete actions. */}
       {c.loading ? <p className="py-8 text-center text-sm text-text-muted">Đang tải danh mục…</p>
         : c.listError ? <div className="rounded-xl border border-neutral-border bg-white px-5 py-8 text-center">
           <p role="alert" className="text-sm text-red-800">{c.listError}</p>
@@ -33,10 +34,10 @@ export default function CategoryManager() {
           : c.categories.length === 0 ? <p className="rounded-xl border border-dashed border-neutral-border py-10 text-center text-sm text-text-muted">Chưa có danh mục nào.</p>
             : <>
               <p className="text-sm font-medium text-text-secondary">{c.categories.length} danh mục</p>
-              <ul className="divide-y divide-neutral-border overflow-hidden rounded-xl border border-neutral-border bg-white">
-                {c.categories.map((category) => <li key={category.id} className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <ul className="grid list-none gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
+                {c.categories.map((category) => <li key={category.id} className="flex flex-col justify-between gap-4 rounded-xl border border-neutral-border bg-white p-4 shadow-sm">
                   <div className="min-w-0">
-                    <p className="break-words font-semibold text-text-primary">{category.name}</p>
+                    <p className="break-words font-serif text-xl font-semibold text-text-primary">{category.name}</p>
                     <p className="mt-0.5 text-xs text-text-muted">Cập nhật {formatDate(category.updatedAt)}</p>
                   </div>
                   <div className="flex shrink-0 gap-2">

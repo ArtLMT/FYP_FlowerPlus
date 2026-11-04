@@ -2,6 +2,7 @@
 
 import Button from "@/components/ui/Button";
 import ModalDialog from "@/components/ui/ModalDialog";
+import FeedbackToast from "@/features/admin/FeedbackToast";
 import FieldMessages from "@/features/admin/FieldMessages";
 import InfoLine from "@/features/admin/InfoLine";
 import MaterialDetailsDialog from "@/features/admin/MaterialDetailsDialog";
@@ -17,7 +18,7 @@ import type { MaterialSort, MaterialStatus, MaterialType, MaterialUnit } from "@
 
 /**
  * Materials workspace.
- * The page is ordered as: Add button → search/filters → editor/details dialogs → material cards → pagination.
+ * The page is ordered as: search/filters and Add button → editor/details dialogs → material cards → pagination.
  * Data and action state live in `hooks/use-material-manager.ts`.
  */
 export default function MaterialManager() {
@@ -25,21 +26,16 @@ export default function MaterialManager() {
 
   return (
     <div className="space-y-5">
-      {/* Primary action above the list. */}
-      <div className="flex justify-end">
-        <Button type="button" onClick={m.openCreate} className="w-full rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-hover sm:w-auto">+ Thêm nguyên liệu</Button>
-      </div>
-
-      {/* Search, type/status filters, and sort controls for the material cards. */}
-      <section className="space-y-4 rounded-xl border border-neutral-border bg-neutral-canvas p-4 sm:p-5" aria-label="Tìm và lọc nguyên liệu">
-        <form onSubmit={m.applySearch} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+      {/* Search, type/status filters, sort and the Add button, on one line from tablet width up. */}
+      <section className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" aria-label="Tìm và lọc nguyên liệu">
+        <form onSubmit={m.applySearch} className="grid min-w-0 gap-3 sm:min-w-64 sm:flex-1 sm:grid-cols-[minmax(0,1fr)_auto]">
           <label className="flex flex-col gap-1 text-xs font-semibold text-text-secondary">
             Tìm theo tên
             <input value={m.search} maxLength={100} onChange={(event) => m.setSearch(event.target.value)} placeholder="Nhập tên nguyên liệu" className="min-h-11 rounded-lg border border-neutral-border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-primary" />
           </label>
           <Button type="submit" className="min-h-11 w-full self-end rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:w-auto">Tìm kiếm</Button>
         </form>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:flex sm:flex-wrap sm:items-end">
           <label className="flex flex-col gap-1 text-xs font-semibold text-text-secondary">
             Loại
             <select value={m.type} onChange={(event) => m.setType(event.target.value as MaterialType | "")} className="min-h-11 rounded-lg border border-neutral-border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-primary">
@@ -59,9 +55,10 @@ export default function MaterialManager() {
             </select>
           </label>
         </div>
+        <Button type="button" onClick={m.openCreate} className="min-h-11 w-full rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover sm:ml-auto sm:w-auto">+ Thêm nguyên liệu</Button>
       </section>
 
-      {m.feedback && !m.editorOpen && <p role="status" className={`rounded-lg px-4 py-3 text-sm ${m.feedback.kind === "error" ? "bg-red-50 text-red-800" : "bg-accent-sage-light text-text-primary"}`}>{m.feedback.text}</p>}
+      <FeedbackToast feedback={m.editorOpen ? null : m.feedback} />
       {m.listError && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{m.listError}</p>}
 
       {/* Create/edit modal. The form fields and modal action buttons are changed here. */}

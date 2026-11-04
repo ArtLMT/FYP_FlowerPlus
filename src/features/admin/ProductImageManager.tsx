@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import Button from "@/components/ui/Button";
+import ModalDialog from "@/components/ui/ModalDialog";
 import { takeFiles } from "@/features/admin/file-input";
 import { IMAGE_ACCEPT, MAX_PRODUCT_IMAGES, type ManagedProduct } from "@/lib/services/managed-products";
 
@@ -29,6 +31,7 @@ export default function ProductImageManager({
   onSelect?: (index: number) => void;
 }) {
   const images = product.images;
+  const [removing, setRemoving] = useState<{ id: string; position: number } | null>(null);
 
   return <div className="space-y-3">
     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -82,14 +85,30 @@ export default function ProductImageManager({
             <Button
               type="button"
               disabled={busy}
-              onClick={() => {
-                if (window.confirm(`Xóa ảnh ${index + 1} khỏi ${product.name}?`)) onRemove(image.id);
-              }}
+              onClick={() => setRemoving({ id: image.id, position: index + 1 })}
               className="ml-1 px-1 py-1 text-xs font-semibold text-primary-deep disabled:opacity-40"
             >Xóa</Button>
           </div>
         </div>
       </article>)}
     </div>}
+
+    {removing && <ModalDialog
+      title="Xóa ảnh sản phẩm"
+      onClose={() => setRemoving(null)}
+      footer={<div className="flex justify-end gap-3">
+        <Button type="button" onClick={() => setRemoving(null)} className="rounded-lg border border-neutral-border bg-white px-5 py-2.5 text-sm font-semibold text-text-secondary">Hủy</Button>
+        <Button
+          type="button"
+          onClick={() => {
+            onRemove(removing.id);
+            setRemoving(null);
+          }}
+          className="rounded-lg bg-red-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-800"
+        >Xác nhận xóa</Button>
+      </div>}
+    >
+      <p className="text-sm text-text-secondary">Xóa ảnh {removing.position} khỏi <strong>{product.name}</strong>? Không thể hoàn tác.</p>
+    </ModalDialog>}
   </div>;
 }

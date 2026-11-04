@@ -9,7 +9,7 @@ export default function AddressLookup() {
   const { addressId, setAddressId, address, loading, error, canLookup, lookup } = useAddressLookup();
 
   return <section className="rounded-2xl border border-neutral-border bg-white p-4 shadow-sm sm:p-6">
-    <h2 className="mb-4 font-serif text-xl font-semibold text-text-primary">Find a saved address</h2>
+    <h2 className="mb-4 font-serif text-xl font-semibold text-text-primary">Tìm địa chỉ đã lưu</h2>
     {/* Address UUID search controls. */}
     <form onSubmit={(event) => void lookup(event)} className="flex flex-col gap-3 sm:flex-row">
       <label className="sr-only" htmlFor="address-id">Mã địa chỉ</label>

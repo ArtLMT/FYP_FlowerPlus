@@ -27,9 +27,10 @@ type Feedback = { kind: "success" | "error"; text: string };
  * first, optionally one material's), and the batch being adjusted. After a receipt the list is
  * re-read from the first page; after an adjustment the current page is re-read.
  */
-export function useInventoryManager({ receiveRequest = null, onStockChanged }: {
+export function useInventoryManager({ receiveRequest = null, initialMaterialId = "", onStockChanged }: {
   /** A material to receive, e.g. from the stock alert; a new object picks it again. */
   receiveRequest?: { materialId: string } | null;
+  initialMaterialId?: string;
   /** Told after a receipt or an adjustment, which changes usable stock. */
   onStockChanged?: () => void;
 } = {}) {
@@ -43,7 +44,7 @@ export function useInventoryManager({ receiveRequest = null, onStockChanged }: {
 
   // Batch list
   const [pageNumber, setPageNumber] = useState(0);
-  const [filterMaterialId, setFilterMaterialId] = useState("");
+  const [filterMaterialId, setFilterMaterialId] = useState(initialMaterialId);
   const list = useResource(
     () => listBatches({ page: pageNumber, size: PAGE_SIZE, materialId: filterMaterialId || undefined }),
     `${pageNumber}|${filterMaterialId}`,

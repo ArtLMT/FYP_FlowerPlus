@@ -1,5 +1,6 @@
 "use client";
 
+import FeedbackToast from "@/features/admin/FeedbackToast";
 import Button from "@/components/ui/Button";
 import BatchAdjustDialog from "@/features/admin/BatchAdjustDialog";
 import FieldMessages from "@/features/admin/FieldMessages";
@@ -19,11 +20,13 @@ const formatQuantity = (quantity: number) => Number(quantity).toLocaleString("vi
  * transaction with a note (BR-INV-21), from the row's Adjust button.
  * Change the receiving form in the first section and the batch table in the second section.
  */
-export default function InventoryManager({ receiveRequest, onStockChanged }: {
+export default function InventoryManager({ receiveRequest, initialMaterialId, onStockChanged }: {
   receiveRequest?: { materialId: string } | null;
+  /** Opens the batch list on one material, e.g. from a ledger row. */
+  initialMaterialId?: string;
   onStockChanged?: () => void;
 } = {}) {
-  const m = useInventoryManager({ receiveRequest, onStockChanged });
+  const m = useInventoryManager({ receiveRequest, initialMaterialId, onStockChanged });
   const unit = m.selected ? MATERIAL_UNIT_LABELS[m.selected.unitOfMeasure] : "";
   const fractional = m.selected?.unitOfMeasure === "METRE";
 
@@ -36,7 +39,8 @@ export default function InventoryManager({ receiveRequest, onStockChanged }: {
           <p className="mt-1 text-sm text-text-muted">Mỗi lần nhận hàng tạo một lô mới, với giá nhập riêng của lô đó.</p>
         </div>
 
-        {m.feedback && <p role={m.feedback.kind === "error" ? "alert" : "status"} className={`rounded-lg px-4 py-3 text-sm ${m.feedback.kind === "error" ? "bg-red-50 text-red-800" : "bg-accent-sage-light text-text-primary"}`}>{m.feedback.text}</p>}
+        <FeedbackToast feedback={m.feedback?.kind === "success" ? m.feedback : null} />
+        {m.feedback?.kind === "error" && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{m.feedback.text}</p>}
         {m.materialsError && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{m.materialsError}</p>}
 
         <form onSubmit={(event) => void m.submit(event)} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

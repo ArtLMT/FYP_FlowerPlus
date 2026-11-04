@@ -7,9 +7,9 @@
 ───────────────────────────────────────────── */
 @theme {
   /* Brand Colors */
-  --color-primary:          #C26B60;
-  --color-primary-hover:    #A8564C;
-  /* DESIGN.md names #92453C "primary"; we keep #C26B60 as the action colour
+  --color-primary:          #A94F44;
+  --color-primary-hover:    #8F4238;
+  /* DESIGN.md names #92453C "primary"; we keep #A94F44 as the action colour
      and expose the deeper plum-rose as primary-deep for headings/prices/icons. */
   --color-primary-deep:     #92453C;
   --color-secondary:        #D9A89A;
@@ -24,7 +24,7 @@
   /* Text Colors */
   --color-text-primary:     #2E1A16;
   --color-text-secondary:   #6B4039;
-  --color-text-muted:       #9C6B62;
+  --color-text-muted:       #875A51;
   --color-text-on-primary:  #FFFFFF;
 
   /* Fonts — fed by next/font in app/layout.tsx (the single swap point).

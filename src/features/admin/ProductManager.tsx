@@ -426,7 +426,7 @@ export default function ProductManager() {
       </div>
 
       <div className="hidden overflow-hidden rounded-2xl border border-neutral-border bg-white xl:block">
-        <div className="grid grid-cols-[minmax(200px,1.5fr)_110px_130px_140px_190px] gap-2 border-b border-neutral-border bg-neutral-surface px-5 py-3 text-xs font-bold uppercase tracking-wide text-text-muted">
+        <div className="grid grid-cols-[minmax(200px,1.5fr)_110px_130px_140px_190px] gap-2 border-b border-neutral-border bg-neutral-raised px-5 py-3 text-xs font-bold uppercase tracking-wide text-text-secondary">
           <span>Sản phẩm</span><span className="text-center">Trạng thái</span><span>Giá bán (gốc)</span><span>Cập nhật lần cuối</span><span className="text-center">Thao tác</span>
         </div>
         {visibleProducts.map((product) => <article key={product.id} className="grid grid-cols-[minmax(200px,1.5fr)_110px_130px_140px_190px] items-center gap-2 border-b border-neutral-border px-5 py-4 last:border-b-0 hover:bg-neutral-canvas/60">
