@@ -1,4 +1,5 @@
 import { getProducts } from "@/lib/services/products";
+import Link from "next/link";
 import Container from "@/components/ui/Container";
 import ShopBrowser from "@/features/catalog/components/ShopBrowser";
 import { filtersFromParams } from "@/features/catalog/filters";
@@ -39,6 +40,11 @@ export default async function ShopPage({
         <CategoryStrip />
         {/* Filter panel, sort/result bar, and the product grid (see ShopBrowser.tsx). */}
         <ShopBrowser products={products} initial={initial} query={query} />
+        {/* The way into the custom builder from the shop. */}
+        <section className="mt-10 rounded-2xl bg-neutral-raised p-6 text-center">
+          <p className="font-serif text-heading-md text-text-primary m-0">Chưa tìm được mẫu ưng ý?</p>
+          <Link href="/custom" className="mt-4 inline-block rounded-lg bg-primary px-6 py-3 font-sans text-body-sm font-bold tracking-[0.05em] text-white hover:bg-primary-hover">TỰ THIẾT KẾ BÓ HOA</Link>
+        </section>
       </Container>
     </main>
   );

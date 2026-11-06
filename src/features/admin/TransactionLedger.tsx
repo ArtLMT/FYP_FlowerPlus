@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 import Button from "@/components/ui/Button";
+import { useToast } from "@/components/ui/ToastProvider";
 import BatchAdjustDialog from "@/features/admin/BatchAdjustDialog";
 import { MATERIAL_UNIT_LABELS } from "@/features/admin/material-labels";
 import { useResource } from "@/lib/hooks/use-resource";
@@ -21,7 +22,7 @@ const TYPE_LABELS: Record<InventoryTransactionType, string> = {
 
 const TYPE_STYLES: Record<InventoryTransactionType, string> = {
   RECEIVED: "bg-accent-sage-light text-text-primary",
-  RESERVED: "bg-tertiary text-primary",
+  RESERVED: "bg-tertiary text-primary-deep",
   RELEASED: "bg-neutral-raised text-text-secondary",
   CONSUMED: "bg-neutral-raised text-text-secondary",
   EXPIRED: "bg-red-50 text-red-800",
@@ -36,17 +37,21 @@ const shortId = (id: string) => id.slice(0, 8).toUpperCase();
  * deleted (BR-INV-09); a correction is a new ADJUSTED row, recorded from the Adjust dialog.
  * Change the summary/action bar, ledger table, and pagination in this component.
  */
-export default function TransactionLedger() {
+export default function TransactionLedger({ onOpenOrder, onOpenBatches }: {
+  onOpenOrder: (orderId: string) => void;
+  /** Opens the Inventory section on one material's batches. */
+  onOpenBatches: (materialId: string) => void;
+}) {
+  const { showToast } = useToast();
   const [pageNumber, setPageNumber] = useState(0);
   const list = useResource(() => listTransactions({ page: pageNumber, size: PAGE_SIZE }), String(pageNumber));
   const page = list.data;
   const currentPage = page?.page ?? pageNumber;
   const [adjusting, setAdjusting] = useState(false);
-  const [notice, setNotice] = useState("");
 
   function adjusted(batch: MaterialBatch) {
     setAdjusting(false);
-    setNotice(`Đã điều chỉnh lô ${batch.materialName}.`);
+    showToast("success", `Đã điều chỉnh lô ${batch.materialName}.`);
     // The new row is the newest: show the first page.
     setPageNumber(0);
     list.reload();
@@ -59,11 +64,9 @@ export default function TransactionLedger() {
         {page && <p className="text-sm text-text-muted">{page.totalElements} giao dịch · mới nhất trước</p>}
         <div className="ml-auto flex gap-2">
           <Button type="button" onClick={list.reload} className="rounded-lg border border-neutral-border bg-white px-4 py-2 text-sm font-semibold text-text-secondary hover:border-primary hover:text-primary-deep">Tải lại</Button>
-          <Button type="button" onClick={() => { setNotice(""); setAdjusting(true); }} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary-hover">Điều chỉnh tồn kho</Button>
+          <Button type="button" onClick={() => setAdjusting(true)} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary-hover">Điều chỉnh tồn kho</Button>
         </div>
       </div>
-
-      {notice && <p role="status" className="rounded-lg bg-accent-sage-light px-4 py-3 text-sm text-text-primary">{notice}</p>}
 
       {list.error && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{list.error.message}</p>}
 
@@ -83,7 +86,7 @@ export default function TransactionLedger() {
                   <th scope="col" className="px-4 py-3 font-semibold">Ghi chú</th>
                 </tr>
               </thead>
-              <tbody className={"text-center"}>{page.content.map((transaction) => <TransactionRow key={transaction.id} transaction={transaction} />)}</tbody>
+              <tbody className={"text-center"}>{page.content.map((transaction) => <TransactionRow key={transaction.id} transaction={transaction} onOpenOrder={onOpenOrder} onOpenBatches={onOpenBatches} />)}</tbody>
             </table>
           </div>}
 
@@ -100,7 +103,12 @@ export default function TransactionLedger() {
 }
 
 /** One row in the stock-transaction ledger. */
-function TransactionRow({ transaction }: { transaction: InventoryTransaction }) {
+function TransactionRow({ transaction, onOpenOrder, onOpenBatches }: {
+  transaction: InventoryTransaction;
+  onOpenOrder: (orderId: string) => void;
+  onOpenBatches: (materialId: string) => void;
+}) {
+  const { orderId } = transaction;
   const amount = Number(transaction.quantity);
   // Only ADJUSTED is signed; show + too so an increase reads as one at a glance.
   const quantity = `${transaction.type === "ADJUSTED" && amount > 0 ? "+" : ""}${amount.toLocaleString("vi-VN", { maximumFractionDigits: 2 })}`;
@@ -115,8 +123,8 @@ function TransactionRow({ transaction }: { transaction: InventoryTransaction }) 
       <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums text-text-primary">
         {quantity} <span className="text-xs text-text-muted">{MATERIAL_UNIT_LABELS[transaction.unitOfMeasure]}</span>
       </td>
-      <td className="px-4 py-3 font-mono text-xs text-text-muted">{shortId(transaction.materialBatchId)}</td>
-      <td className="px-4 py-3 font-mono text-xs text-text-muted">{transaction.orderId ? `#${shortId(transaction.orderId)}` : "—"}</td>
+      <td className="px-4 py-3"><Button type="button" title="Xem các lô của nguyên liệu này" onClick={() => onOpenBatches(transaction.materialId)} className="font-mono text-xs font-semibold text-primary-deep underline">{shortId(transaction.materialBatchId)}</Button></td>
+      <td className="px-4 py-3">{orderId ? <Button type="button" title="Mở đơn hàng" onClick={() => onOpenOrder(orderId)} className="font-mono text-xs font-semibold text-primary-deep underline">#{shortId(orderId)}</Button> : <span className="text-text-muted">—</span>}</td>
       <td className="w-72 max-w-72 px-4 py-3 text-left text-text-secondary">{transaction.note ? <NoteCell note={transaction.note} /> : <span className="block text-center">—</span>}</td>
     </tr>
   );

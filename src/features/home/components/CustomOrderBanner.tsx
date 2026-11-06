@@ -1,4 +1,4 @@
-import Button from "@/components/ui/Button";
+import Link from "next/link";
 /**
  * CustomOrderBanner.
  * Mobile: full-bleed surface strip (no side padding, square corners).
@@ -22,9 +22,9 @@ export default function CustomOrderBanner() {
             Tự thiết kế — chúng tôi sẽ làm theo yêu cầu của bạn.
           </p>
           {/* "ĐẶT THIẾT KẾ RIÊNG" call-to-action button. */}
-          <Button className="bg-primary hover:bg-primary-hover text-white border-none rounded-lg md:rounded-[10px] py-[15px] px-[30px] md:px-[34px] font-sans font-bold text-label md:text-body-sm tracking-button cursor-pointer transition-colors">
+          <Link href="/custom" className="inline-block bg-primary hover:bg-primary-hover text-white border-none rounded-lg md:rounded-[10px] py-[15px] px-[30px] md:px-[34px] font-sans font-bold text-label md:text-body-sm tracking-button cursor-pointer transition-colors">
             ĐẶT THIẾT KẾ RIÊNG
-          </Button>
+          </Link>
         </div>
       </div>
     </section>

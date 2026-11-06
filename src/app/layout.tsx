@@ -31,6 +31,7 @@ const bodyFont = Karla({
 
 import { CartProvider } from "@/features/cart/cart-provider";
 import { ToastProvider } from "@/components/ui/ToastProvider";
+import ReturnAfterGoogleLogin from "@/features/auth/ReturnAfterGoogleLogin";
 
 export const metadata: Metadata = {
   title: "FlowerPlus | Modern Botanical Gifting",
@@ -68,11 +69,19 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         />
+        {/*
+          Edge draws its own eye inside password boxes, beside the show/hide button our forms already have.
+          Inline on purpose: the CSS build drops this Edge-only selector from globals.css.
+        */}
+        <style>{"input::-ms-reveal,input::-ms-clear{display:none}"}</style>
       </head>
       <body className="bg-neutral-canvas text-text-primary font-sans overflow-x-hidden">
         {/* App-wide providers: the toast banner and cart state are available on every page. */}
         <ToastProvider>
-          <CartProvider>{children}</CartProvider>
+          <CartProvider>
+            <ReturnAfterGoogleLogin />
+            {children}
+          </CartProvider>
         </ToastProvider>
       </body>
     </html>

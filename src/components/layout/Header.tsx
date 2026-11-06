@@ -21,12 +21,12 @@ import HeaderIcons from "@/components/layout/HeaderIcons";
  * the home page only and never follows the header onto other pages.
  */
 
-// Only routes that actually exist. /custom (core "Đặt riêng" flow) and /deals
-// are intentionally absent until they're built — a dead 404 in the primary nav
-// is worse than a missing entry. Re-add /custom here when P1.5 ships it.
+// Only routes that actually exist. /deals is intentionally absent until it is
+// built — a dead 404 in the primary nav is worse than a missing entry.
 const DESKTOP_NAV = [
   { label: "Trang chủ", href: "/" },
   { label: "Bộ sưu tập", href: "/shop" },
+  { label: "Thiết kế bó hoa", href: "/custom" },
 ];
 
 /** Active when the path IS the href or sits under it (exact match for "/"). */

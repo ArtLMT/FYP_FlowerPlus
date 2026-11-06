@@ -6,18 +6,20 @@ import Button from "@/components/ui/Button";
 import ModalDialog from "@/components/ui/ModalDialog";
 import ProductImage from "@/components/ui/ProductImage";
 import { useToast } from "@/components/ui/ToastProvider";
+import CustomOrderCards from "@/features/account/components/CustomOrderCards";
 import DetailHeader from "@/features/account/components/DetailHeader";
 import {
   CUSTOMER_STATUS_LABELS,
   CUSTOMER_STATUS_STYLES,
+  CUSTOM_TRACK_STEPS,
   PAYMENT_STATUS_LABELS,
   TRACK_STEPS,
   shortOrderId,
 } from "@/features/account/order-status";
 import { useAsyncAction } from "@/lib/hooks/use-async-action";
 import { useResource } from "@/lib/hooks/use-resource";
-import { cancelMyOrder, deliverySlotLabel, getMyOrder, type CustomerOrder, type CustomerOrderStatus } from "@/lib/services/orders";
-import { formatCalendarDate, formatShopDateTime, formatVND } from "@/lib/utils";
+import { cancelMyOrder, getMyOrder, type CustomerOrder, type CustomerOrderStatus } from "@/lib/services/orders";
+import { formatShopDateTime, formatVND } from "@/lib/utils";
 
 /**
  * One of the signed-in account's orders — /account/orders/[id]. Everything comes from the order's
@@ -83,7 +85,10 @@ function OrderDetail({
   onStale: () => void;
 }) {
   const [cancelling, setCancelling] = useState(false);
-  const subtotal = order.lines.reduce((sum, line) => sum + line.lineTotal, 0);
+  // A custom request has no line until approval; its total is already the agreed price.
+  const subtotal = order.lines.length > 0
+    ? order.lines.reduce((sum, line) => sum + line.lineTotal, 0)
+    : order.total - order.shippingFee;
   const cancelled = order.history.findLast((entry) => entry.status === "CANCELLED");
 
   return (
@@ -124,7 +129,7 @@ function OrderDetail({
             Đơn hàng đã bị hủy{cancelled?.note ? `: ${cancelled.note}` : "."}
           </div>
         ) : (
-          <Tracker status={order.status} />
+          <Tracker status={order.status} custom={order.type === "CUSTOM"} />
         )}
 
         {/* Cancel action; only offered while the shop has not started preparing the order. */}
@@ -144,14 +149,22 @@ function OrderDetail({
         )}
       </Card>
 
-      {/* Delivery card: recipient, address, delivery date/slot, customer note. */}
+      {/* Custom orders: a waiting proposal, then the agreed design and price. */}
+      <CustomOrderCards
+        order={order}
+        onChanged={onCancelled}
+        onStale={onStale}
+        cardClassName="bg-neutral-surface border border-neutral-border rounded-[4px] p-4"
+      />
+
+      {/* Delivery card: recipient, address, delivery wish, customer note. */}
       <Card title="Giao hàng">
         <Row icon="person">
           <span className="font-bold text-text-primary">{order.address.recipientName}</span> · {order.address.recipientPhone}
         </Row>
         <Row icon="location_on">{order.address.deliveryAddress}</Row>
         <Row icon="calendar_today">
-          {formatCalendarDate(order.deliveryDate)} · {deliverySlotLabel(order.deliveryTimeSlot)}
+          {order.deliveryWishText ?? "Chưa chọn thời gian mong muốn"}
         </Row>
         {order.customerNote && (
           <Row icon="edit_note">
@@ -161,10 +174,10 @@ function OrderDetail({
       </Card>
 
       {/* Product lines: thumbnail, name, quantity × unit price, line total. */}
-      <Card title={`Sản phẩm (${order.lines.length})`}>
+      {order.lines.length > 0 && <Card title={`Sản phẩm (${order.lines.length})`}>
         <div className="flex flex-col">
-          {order.lines.map((line) => (
-            <div key={line.productId} className="flex items-center gap-4 py-3 border-b border-neutral-border last:border-b-0">
+          {order.lines.map((line, index) => (
+            <div key={line.productId ?? index} className="flex items-center gap-4 py-3 border-b border-neutral-border last:border-b-0">
               <div className="relative w-[58px] h-[58px] rounded-[10px] flex-shrink-0 overflow-hidden bg-neutral-raised">
                 <ProductImage src={line.imageUrl} alt={line.productName} sizes="58px" />
               </div>
@@ -179,7 +192,7 @@ function OrderDetail({
             </div>
           ))}
         </div>
-      </Card>
+      </Card>}
 
       {/* Payment card: method, payment status, subtotal, shipping fee, total. */}
       <Card title="Thanh toán">
@@ -300,10 +313,12 @@ function CancelOrderDialog({
 }
 
 /** The four COD steps; every step up to the current status is filled. */
-function Tracker({ status }: { status: CustomerOrder["status"] }) {
-  const current = TRACK_STEPS.findIndex((step) => step.status === status);
+function Tracker({ status, custom }: { status: CustomerOrder["status"]; custom: boolean }) {
+  const steps = custom ? CUSTOM_TRACK_STEPS : TRACK_STEPS;
+  const shown = custom && status === "CHANGES_PROPOSED" ? "REQUESTED" : status;
+  const current = steps.findIndex((step) => step.status === shown);
   if (current < 0) return null;
-  const progress = (current / (TRACK_STEPS.length - 1)) * 100;
+  const progress = (current / (steps.length - 1)) * 100;
 
   return (
     <div className="relative mt-6 px-2">
@@ -311,7 +326,7 @@ function Tracker({ status }: { status: CustomerOrder["status"] }) {
         <div className="h-full bg-primary" style={{ width: `${progress}%` }} />
       </div>
       <ol className="relative flex justify-between m-0 p-0 list-none">
-        {TRACK_STEPS.map((step, index) => {
+        {steps.map((step, index) => {
           const done = index < current;
           const here = index === current;
           return (

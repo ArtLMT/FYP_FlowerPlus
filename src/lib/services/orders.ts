@@ -1,4 +1,5 @@
 import { api, groupFieldErrors, path, withQuery, type ErrorMessages, type Page } from "@/lib/api";
+import type { MaterialType, MaterialUnit } from "@/lib/services/materials";
 import type { PublicProductType } from "@/lib/services/products";
 
 export type OrderStatus =
@@ -19,9 +20,43 @@ export type OrderStatus =
 
 export type PlacedOrderStatus = OrderStatus;
 
+export type OrderType = "STANDARD" | "CUSTOM";
+
+export type TermsState = "REQUESTED" | "PENDING" | "ACCEPTED" | "DECLINED" | "REPLACED";
+
+/** One version of a custom order's terms; a snapshot that never changes after it is written. */
+export interface CustomOrderTerms {
+  termsNo: number;
+  state: TermsState;
+  arrangementTypeId: string;
+  arrangementTypeName: string;
+  labourFee: number;
+  materialsSubtotal: number;
+  price: number;
+  note: string | null;
+  responseNote: string | null;
+  createdAt: string;
+  respondedAt: string | null;
+  materials: {
+    materialId: string;
+    materialName: string;
+    materialType: MaterialType;
+    unitOfMeasure: MaterialUnit;
+    unitPrice: number;
+    quantity: number;
+  }[];
+}
+
+/** `allTerms` is staff-only; a customer gets the agreed terms and the waiting proposal. */
+export interface CustomOrderDetails {
+  agreed: CustomOrderTerms | null;
+  pending: CustomOrderTerms | null;
+  allTerms: CustomOrderTerms[] | null;
+}
+
 export type DeliveryTimeSlot = "MORNING" | "NOON" | "AFTERNOON" | "EVENING";
 
-/** The server's delivery slots, in shop time. A slot can be chosen until it starts. */
+/** The server's delivery slots, in shop time. The picker offers a slot until it starts; it is only a wish. */
 export const DELIVERY_SLOTS: { slot: DeliveryTimeSlot; label: string; startMinutes: number }[] = [
   { slot: "MORNING", label: "9:00 – 12:00", startMinutes: 9 * 60 },
   { slot: "NOON", label: "12:00 – 15:00", startMinutes: 12 * 60 },
@@ -36,14 +71,18 @@ export const deliverySlotLabel = (slot: DeliveryTimeSlot) =>
 export interface PlacedOrder {
   id: string;
   status: PlacedOrderStatus;
-  deliveryDate: string;
-  deliveryTimeSlot: DeliveryTimeSlot;
+  type: OrderType;
+  deliveryDate: string | null;
+  deliveryTimeSlot: DeliveryTimeSlot | null;
+  /** Built by the server; null when the customer stated no wish. */
+  deliveryWishText: string | null;
   customerNote: string | null;
   address: { recipientName: string; recipientPhone: string; deliveryAddress: string };
   lines: {
-    productId: string;
+    /** Null on an approved custom order's line. */
+    productId: string | null;
     productName: string;
-    productType: PublicProductType;
+    productType: PublicProductType | null;
     quantity: number;
     unitPrice: number;
     lineTotal: number;
@@ -61,10 +100,12 @@ export type CustomerOrderStatus = Exclude<OrderStatus, "READY">;
 export interface CustomerOrderSummary {
   id: string;
   status: CustomerOrderStatus;
-  deliveryDate: string;
-  deliveryTimeSlot: DeliveryTimeSlot;
+  type: OrderType;
+  deliveryDate: string | null;
+  deliveryTimeSlot: DeliveryTimeSlot | null;
+  deliveryWishText: string | null;
   firstLine: {
-    productId: string;
+    productId: string | null;
     productName: string;
     quantity: number;
     unitPrice: number;
@@ -79,16 +120,19 @@ export interface CustomerOrderSummary {
 export interface CustomerOrder {
   id: string;
   status: CustomerOrderStatus;
-  /** True only before preparation starts (Awaiting Confirmation). */
+  /** True only before preparation starts. */
   canCancel: boolean;
-  deliveryDate: string;
-  deliveryTimeSlot: DeliveryTimeSlot;
+  type: OrderType;
+  deliveryDate: string | null;
+  deliveryTimeSlot: DeliveryTimeSlot | null;
+  deliveryWishText: string | null;
+  custom: CustomOrderDetails | null;
   customerNote: string | null;
   address: { recipientName: string; recipientPhone: string; deliveryAddress: string };
   lines: {
-    productId: string;
+    productId: string | null;
     productName: string;
-    productType: PublicProductType;
+    productType: PublicProductType | null;
     quantity: number;
     unitPrice: number;
     discountAmount: number;
@@ -143,8 +187,8 @@ export function cancelMyOrder(id: string, note: string, expectedStatus: Customer
 
 export interface PlaceOrderInput {
   addressId: string;
-  deliveryDate: string;
-  deliveryTimeSlot: DeliveryTimeSlot;
+  deliveryDate?: string;
+  deliveryTimeSlot?: DeliveryTimeSlot;
   customerNote?: string;
   /** The Cart version the customer reviewed. */
   cartVersion: number;
@@ -163,8 +207,10 @@ export interface ManagementOrderSummary {
   status: OrderStatus;
   nextStatus: OrderStatus | null;
   canCancel: boolean;
-  deliveryDate: string;
-  deliveryTimeSlot: DeliveryTimeSlot;
+  type: OrderType;
+  deliveryDate: string | null;
+  deliveryTimeSlot: DeliveryTimeSlot | null;
+  deliveryWishText: string | null;
   recipientName: string;
   recipientPhone: string;
   total: number;
@@ -173,6 +219,7 @@ export interface ManagementOrderSummary {
 
 export interface ManagementOrder extends ManagementOrderSummary {
   customerId: string;
+  custom: CustomOrderDetails | null;
   customerNote: string | null;
   address: { recipientName: string; recipientPhone: string; deliveryAddress: string };
   lines: PlacedOrder["lines"];
@@ -200,7 +247,13 @@ const managementErrors: ErrorMessages = {
     field === "note" ? "Vui lòng nhập ghi chú hủy đơn." : "Thông tin chưa hợp lệ."),
 };
 
-export function listManagementOrders(query: { page: number; size: number; status?: OrderStatus }) {
+export function listManagementOrders(query: {
+  page: number;
+  size: number;
+  status?: OrderStatus;
+  type?: OrderType;
+  sort?: "createdAt" | "deliveryWish";
+}) {
   return api<Page<ManagementOrderSummary>>(withQuery("/api/manage/orders", query), { errors: managementErrors });
 }
 

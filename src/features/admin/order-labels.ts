@@ -45,6 +45,9 @@ export const ADVANCE_LABELS: Partial<Record<OrderStatus, string>> = {
 
 export const MANAGED_ORDER_STATUSES: OrderStatus[] = [
   "AWAITING_CONFIRMATION",
+  "REQUESTED",
+  "CHANGES_PROPOSED",
+  "CONFIRMED",
   "PREPARING",
   "READY",
   "DELIVERING",

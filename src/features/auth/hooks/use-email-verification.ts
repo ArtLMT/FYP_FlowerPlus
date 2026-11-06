@@ -4,6 +4,7 @@ import { useAsyncAction } from "@/lib/hooks/use-async-action";
 import { useCountdown } from "@/lib/hooks/use-countdown";
 import { resendOtp, verifyEmail } from "@/lib/services/auth";
 import { useCart } from "@/features/cart/cart-provider";
+import { nextFromUrl } from "@/features/auth/return-after-login";
 
 const RESEND_SECONDS = 59;
 
@@ -26,7 +27,7 @@ export function useEmailVerification() {
     return run(async () => {
       await verifyEmail(email, code);
       await refreshCart();
-      router.replace("/account");
+      router.replace(nextFromUrl() ?? "/account");
       router.refresh();
     });
   }

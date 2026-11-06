@@ -43,6 +43,9 @@ export const CUSTOMER_STATUS_STYLES: Record<CustomerOrderStatus, string> = {
 export const ORDER_FILTERS: { key: CustomerOrderStatus | "ALL"; label: string }[] = [
   { key: "ALL", label: "TẤT CẢ" },
   { key: "AWAITING_CONFIRMATION", label: "CHỜ XÁC NHẬN" },
+  { key: "REQUESTED", label: "ĐÃ GỬI YÊU CẦU" },
+  { key: "CHANGES_PROPOSED", label: "ĐỀ XUẤT THAY ĐỔI" },
+  { key: "CONFIRMED", label: "ĐÃ XÁC NHẬN" },
   { key: "PREPARING", label: "ĐANG CHUẨN BỊ" },
   { key: "DELIVERING", label: "ĐANG GIAO" },
   { key: "COMPLETED", label: "HOÀN TẤT" },
@@ -52,6 +55,15 @@ export const ORDER_FILTERS: { key: CustomerOrderStatus | "ALL"; label: string }[
 /** The COD progress shown on an order's details, in order. */
 export const TRACK_STEPS: { status: CustomerOrderStatus; label: string }[] = [
   { status: "AWAITING_CONFIRMATION", label: "Đã đặt" },
+  { status: "PREPARING", label: "Chuẩn bị" },
+  { status: "DELIVERING", label: "Đang giao" },
+  { status: "COMPLETED", label: "Hoàn tất" },
+];
+
+/** A custom order's progress. A waiting proposal sits on the request step. */
+export const CUSTOM_TRACK_STEPS: { status: CustomerOrderStatus; label: string }[] = [
+  { status: "REQUESTED", label: "Yêu cầu" },
+  { status: "CONFIRMED", label: "Đã duyệt" },
   { status: "PREPARING", label: "Chuẩn bị" },
   { status: "DELIVERING", label: "Đang giao" },
   { status: "COMPLETED", label: "Hoàn tất" },

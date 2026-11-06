@@ -4,14 +4,14 @@ import { shopMinutesNow, shopToday } from "@/lib/utils";
 /**
  * What the customer picked between checkout steps, and the order just placed. Kept in
  * sessionStorage (this tab only); every read tolerates storage being unavailable or stale.
- * The server validates the address, date and slot again.
+ * The picker alone judges the date and slot: they are a wish, and the server does not refuse them.
  */
 
 export interface CheckoutSelection {
   addressId: string;
-  /** YYYY-MM-DD, shop time. */
-  deliveryDate: string;
-  deliveryTimeSlot: DeliveryTimeSlot;
+  /** YYYY-MM-DD, shop time; null when the customer states no wish. */
+  deliveryDate: string | null;
+  deliveryTimeSlot: DeliveryTimeSlot | null;
   customerNote: string;
 }
 
@@ -24,8 +24,12 @@ export function openSlots(deliveryDate: string) {
   return DELIVERY_SLOTS.filter((slot) => slot.startMinutes > now);
 }
 
-export const isSlotOpen = (deliveryDate: string, slot: DeliveryTimeSlot) =>
-  openSlots(deliveryDate).some((open) => open.slot === slot);
+/** Still a sensible wish: none at all, a date not in the past, or a slot that has not started. */
+export function isWishOpen(deliveryDate: string | null, slot: DeliveryTimeSlot | null) {
+  if (deliveryDate === null) return slot === null;
+  if (deliveryDate < shopToday()) return false;
+  return slot === null || openSlots(deliveryDate).some((open) => open.slot === slot);
+}
 
 const SELECTION_KEY = "flowerplus.checkout.selection";
 const ORDER_KEY = "flowerplus.checkout.placedOrder";

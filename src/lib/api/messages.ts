@@ -33,6 +33,4 @@ export const COMMON_CODES: Record<string, string> = {
   CART_EMPTY: "Giỏ hàng của bạn đang trống.",
   CART_CHANGED: "Giỏ hàng vừa thay đổi. Vui lòng xem lại trước khi đặt hàng.",
   ACCOUNT_SUSPENDED: "Tài khoản của bạn đang bị tạm khóa đặt hàng.",
-  INVALID_DELIVERY_DATE: "Ngày giao phải từ hôm nay trở đi.",
-  DELIVERY_SLOT_STARTED: "Khung giờ giao này đã bắt đầu. Vui lòng chọn khung giờ khác.",
 };

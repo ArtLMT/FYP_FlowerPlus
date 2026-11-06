@@ -5,7 +5,7 @@ import { getAddresses, type AccountAddress } from "@/lib/services/addresses";
 import type { DeliveryTimeSlot } from "@/lib/services/orders";
 import { addDays, shopToday } from "@/lib/utils";
 import {
-  isSlotOpen,
+  isWishOpen,
   openSlots,
   readSelection,
   saveSelection,
@@ -13,6 +13,8 @@ import {
 } from "@/features/checkout/checkout-session";
 
 export const NOTE_MAX_LENGTH = 500;
+
+export type DateChoice = "none" | "today" | "tomorrow" | "other";
 
 interface DeliveryOptions {
   addresses: AccountAddress[];
@@ -31,23 +33,24 @@ async function loadDeliveryOptions(): Promise<DeliveryOptions> {
       ?? addresses.find((address) => address.isDefault)?.id
       ?? addresses[0]?.id
       ?? null,
-    saved: saved && isSlotOpen(saved.deliveryDate, saved.deliveryTimeSlot) ? saved : null,
+    saved: saved && isWishOpen(saved.deliveryDate, saved.deliveryTimeSlot) ? saved : null,
   };
 }
 
 /**
- * Checkout step 1: one saved address, the date the customer wants the flowers, a delivery slot
- * (today only those not yet started, in shop time) and an optional note. The choice is remembered
- * for the confirm step.
+ * Checkout step 1: one saved address, an optional wish for the date and slot (no past date, today
+ * only slots not yet started, in shop time) and an optional note. The choice is remembered for the
+ * confirm step.
  */
 export function useDeliveryForm() {
   const router = useRouter();
   const options = useResource(loadDeliveryOptions, "delivery-options");
   const [pickedAddressId, setAddressId] = useState<string | null>(null);
+  const [pickedChoice, setPickedChoice] = useState<DateChoice | null>(null);
   const [pickedDate, setPickedDate] = useState<string | null>(null);
-  const [pickedSlot, setSlot] = useState<DeliveryTimeSlot | null>(null);
+  // undefined: nothing picked yet, so the remembered slot stands; null: the customer cleared it.
+  const [pickedSlot, setSlot] = useState<DeliveryTimeSlot | null | undefined>(undefined);
   const [pickedNote, setNote] = useState<string | null>(null);
-  const [choosingOtherDate, setChoosingOtherDate] = useState(false);
 
   const today = shopToday();
   const tomorrow = addDays(today, 1);
@@ -55,27 +58,24 @@ export function useDeliveryForm() {
   const saved = options.data?.saved ?? null;
 
   const addressId = pickedAddressId ?? options.data?.initialAddressId ?? null;
-  const date = pickedDate ?? saved?.deliveryDate ?? (todayClosed ? tomorrow : today);
-  const slots = openSlots(date);
-  const wantedSlot = pickedSlot ?? saved?.deliveryTimeSlot ?? null;
+  const savedDate = saved?.deliveryDate ?? null;
+  const dateChoice: DateChoice = pickedChoice
+    ?? (savedDate === null ? "none" : savedDate === today ? "today" : savedDate === tomorrow ? "tomorrow" : "other");
+  const date = dateChoice === "none" ? null
+    : dateChoice === "today" ? today
+      : dateChoice === "tomorrow" ? tomorrow
+        : pickedDate ?? savedDate ?? tomorrow;
+  const slots = date ? openSlots(date) : [];
+  const wantedSlot = pickedSlot === undefined ? saved?.deliveryTimeSlot ?? null : pickedSlot;
   // A slot picked for another date drops out when it is not open on this one.
   const slot = wantedSlot && slots.some((open) => open.slot === wantedSlot) ? wantedSlot : null;
   const note = pickedNote ?? saved?.customerNote ?? "";
-  const dateValid = date >= today;
-  const dateChoice = choosingOtherDate || (date !== today && date !== tomorrow)
-    ? "other"
-    : date === today ? "today" : "tomorrow";
+  const dateValid = date === null || date >= today;
 
-  function chooseDate(choice: "today" | "tomorrow" | "other") {
-    setChoosingOtherDate(choice === "other");
-    if (choice === "today") setPickedDate(today);
-    if (choice === "tomorrow") setPickedDate(tomorrow);
-  }
-
-  const canContinue = addressId !== null && dateValid && slot !== null && note.length <= NOTE_MAX_LENGTH;
+  const canContinue = addressId !== null && dateValid && note.length <= NOTE_MAX_LENGTH;
 
   function next() {
-    if (!canContinue || addressId === null || slot === null) return;
+    if (!canContinue || addressId === null) return;
     saveSelection({ addressId, deliveryDate: date, deliveryTimeSlot: slot, customerNote: note.trim() });
     router.push("/checkout/confirm");
   }
@@ -88,7 +88,7 @@ export function useDeliveryForm() {
     today,
     todayClosed,
     dateChoice,
-    chooseDate,
+    chooseDate: setPickedChoice,
     date,
     setDate: setPickedDate,
     dateValid,

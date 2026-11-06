@@ -110,7 +110,9 @@ function ConfirmView() {
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary" style={{ fontSize: 20 }}>calendar_today</span>
                 <span className="font-sans text-[16px] text-text-secondary">
-                  {formatCalendarDate(selection.deliveryDate)} · {deliverySlotLabel(selection.deliveryTimeSlot)}
+                  {selection.deliveryDate
+                    ? <>Mong muốn: {formatCalendarDate(selection.deliveryDate)}{selection.deliveryTimeSlot && <> · {deliverySlotLabel(selection.deliveryTimeSlot)}</>}</>
+                    : "Không chọn thời gian mong muốn"}
                 </span>
               </div>
               {selection.customerNote && (

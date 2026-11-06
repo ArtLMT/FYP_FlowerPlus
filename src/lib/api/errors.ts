@@ -16,6 +16,9 @@ export interface ValidationFieldError {
 
 export interface ApiErrorDetails {
   fields?: ValidationFieldError[];
+  /** On CUSTOM_CHOICE_UNAVAILABLE: what is no longer available. */
+  arrangementTypeIds?: string[];
+  materialIds?: string[];
   [key: string]: unknown;
 }
 

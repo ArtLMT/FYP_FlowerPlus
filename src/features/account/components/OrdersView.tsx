@@ -11,8 +11,8 @@ import {
   ORDER_FILTERS,
   shortOrderId,
 } from "@/features/account/order-status";
-import { deliverySlotLabel, type CustomerOrderSummary } from "@/lib/services/orders";
-import { formatCalendarDate, formatShopDateTime, formatVND } from "@/lib/utils";
+import type { CustomerOrderSummary } from "@/lib/services/orders";
+import { formatShopDateTime, formatVND } from "@/lib/utils";
 
 /**
  * Order history for /account/orders — the signed-in account's own orders, newest first, filtered by
@@ -124,6 +124,11 @@ function OrderCard({ order }: { order: CustomerOrderSummary }) {
         </span>
       </div>
 
+      {/* A custom request has no line until the shop approves it. */}
+      {!line && order.type === "CUSTOM" && (
+        <p className="font-serif font-medium text-heading-md text-primary-deep leading-[1.2] m-0">Thiết kế bó hoa của bạn</p>
+      )}
+
       {/* First product line, plus "and N more" when the order has several. */}
       {line && (
         <div className="flex gap-4">
@@ -150,7 +155,7 @@ function OrderCard({ order }: { order: CustomerOrderSummary }) {
         <div className="min-w-0">
           <p className="font-sans font-bold text-label uppercase tracking-badge text-text-muted m-0">Giao hàng</p>
           <p className="font-sans text-body-sm text-text-secondary m-0">
-            {formatCalendarDate(order.deliveryDate)} · {deliverySlotLabel(order.deliveryTimeSlot)}
+            {order.deliveryWishText ?? "Chưa chọn thời gian mong muốn"}
           </p>
         </div>
         <div className="text-right">

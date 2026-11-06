@@ -11,5 +11,7 @@ export default async function AdminPage() {
   // Customers must not learn the admin area exists.
   if (user && !isManager(user)) notFound();
 
-  return <AdminDashboard user={user} initialError={error} />;
+  // The key restarts the dashboard once a renewed session loads the account, so its opening section
+  // is chosen for that account's role and not for a signed-out visitor.
+  return <AdminDashboard key={user?.id ?? "signed-out"} user={user} initialError={error} />;
 }

@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/features/cart/cart-provider";
 
-type NavKey = "home" | "browse" | "cart" | "profile";
+type NavKey = "home" | "browse" | "custom" | "cart" | "profile";
 
 const NAV_ITEMS: { key: NavKey; label: string; icon: string; href: string }[] = [
   { key: "home", label: "Trang chủ", icon: "home", href: "/" },
   { key: "browse", label: "Khám phá", icon: "search", href: "/shop" },
+  { key: "custom", label: "Thiết kế", icon: "local_florist", href: "/custom" },
   { key: "cart", label: "Giỏ hàng", icon: "shopping_cart", href: "/cart" },
   { key: "profile", label: "Tài khoản", icon: "person", href: "/account" },
 ];
@@ -33,9 +34,9 @@ export default function BottomNav({ active = "home" }: { active?: NavKey }) {
     )?.key ?? active;
   return (
     <>
-      {/* Four tab links: Home, Browse, Cart (with item-count badge), Account. */}
+      {/* Five tab links: Home, Browse, Custom builder, Cart (with item-count badge), Account. */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 w-full z-50 bg-neutral-canvas/95 backdrop-blur-md grid grid-cols-4 py-[10px] pb-[14px] border-t border-neutral-border"
+        className="md:hidden fixed bottom-0 left-0 w-full z-50 bg-neutral-canvas/95 backdrop-blur-md grid grid-cols-5 py-[10px] pb-[14px] border-t border-neutral-border"
         aria-label="Điều hướng chính"
       >
         {NAV_ITEMS.map(({ key, label, icon, href }) => {

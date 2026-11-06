@@ -3,8 +3,14 @@ import { useRouter } from "next/navigation";
 import { useAsyncAction } from "@/lib/hooks/use-async-action";
 import { googleLoginError, login, register } from "@/lib/services/auth";
 import { useCart } from "@/features/cart/cart-provider";
+import { nextFromUrl, rememberReturn, takeReturn } from "@/features/auth/return-after-login";
 
 export type LoginTab = "login" | "register";
+
+/** The ?next= page to return to after login, or the account page. */
+function pageAfterLogin() {
+  return nextFromUrl() ?? "/account";
+}
 
 /** The /login card: sign in, or register and continue to email verification. */
 export function useLoginForm() {
@@ -32,8 +38,9 @@ export function useLoginForm() {
 
   const submitLogin = () => run(async () => {
     await login(email, password);
+    takeReturn(); // a Google attempt abandoned earlier must not redirect a later visit to "/"
     await refreshCart();
-    router.replace("/account");
+    router.replace(pageAfterLogin());
     router.refresh();
   });
 
@@ -42,7 +49,8 @@ export function useLoginForm() {
     if (!agreed) return setError("Vui lòng đồng ý với điều khoản và chính sách bảo mật.");
     return run(async () => {
       await register(fullName, email, password);
-      router.push(`/login/otp?email=${encodeURIComponent(email.trim())}`);
+      const next = nextFromUrl();
+      router.push(`/login/otp?email=${encodeURIComponent(email.trim())}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
     });
   }
 
@@ -67,5 +75,7 @@ export function useLoginForm() {
     canRegister: !busy && Boolean(fullName && email && password && confirmPassword),
     submitLogin,
     submitRegister,
+    /** Google leaves the site; remember ?next= so ReturnAfterGoogleLogin can come back to it. */
+    rememberGoogleReturn: () => rememberReturn(nextFromUrl()),
   };
 }

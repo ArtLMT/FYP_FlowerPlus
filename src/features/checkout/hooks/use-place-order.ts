@@ -5,7 +5,7 @@ import { useResource } from "@/lib/hooks/use-resource";
 import { getAddresses } from "@/lib/services/addresses";
 import { placeOrder } from "@/lib/services/orders";
 import { useCart } from "@/features/cart/cart-provider";
-import { isSlotOpen, readSelection, savePlacedOrder } from "@/features/checkout/checkout-session";
+import { isWishOpen, readSelection, savePlacedOrder } from "@/features/checkout/checkout-session";
 
 /**
  * Checkout step 2: review the current Cart with the chosen address, date, slot and note, then place
@@ -21,7 +21,7 @@ export function usePlaceOrder() {
   const [placeError, setPlaceError] = useState<string | null>(null);
 
   const address = addresses.data?.find((candidate) => candidate.id === selection?.addressId) ?? null;
-  const selectionValid = selection !== null && isSlotOpen(selection.deliveryDate, selection.deliveryTimeSlot);
+  const selectionValid = selection !== null && isWishOpen(selection.deliveryDate, selection.deliveryTimeSlot);
   const addressMissing = addresses.data !== undefined && address === null;
 
   async function submit() {
@@ -31,8 +31,8 @@ export function usePlaceOrder() {
     try {
       const order = await placeOrder({
         addressId: selection.addressId,
-        deliveryDate: selection.deliveryDate,
-        deliveryTimeSlot: selection.deliveryTimeSlot,
+        deliveryDate: selection.deliveryDate ?? undefined,
+        deliveryTimeSlot: selection.deliveryTimeSlot ?? undefined,
         customerNote: selection.customerNote || undefined,
         cartVersion: cart.version,
       });

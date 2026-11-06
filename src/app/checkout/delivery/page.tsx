@@ -8,6 +8,7 @@ import Stepper from "@/features/checkout/components/Stepper";
 import { NOTE_MAX_LENGTH, useDeliveryForm } from "@/features/checkout/hooks/use-delivery-form";
 
 const DATE_CHOICES = [
+  { key: "none", label: "Không chọn" },
   { key: "today", label: "Hôm nay" },
   { key: "tomorrow", label: "Ngày mai" },
   { key: "other", label: "Chọn ngày" },
@@ -16,7 +17,7 @@ const DATE_CHOICES = [
 /**
  * Checkout · Delivery — /checkout/delivery  (step 1 of 3)
  *
- * The customer picks one saved address, the delivery date and slot, and may leave a note. New
+ * The customer picks one saved address, may state a wished date and slot, and may leave a note. New
  * addresses are added in the account address book. Payment is COD only and shipping is free in
  * this slice.
  */
@@ -112,8 +113,11 @@ function DeliveryForm() {
           Thêm địa chỉ trong sổ địa chỉ
         </Link>
 
-        {/* Delivery-date chips: Today / Tomorrow / Pick a date. */}
-        <h2 className="font-serif font-medium text-[27px] mt-[34px] mb-4 px-[22px]">Ngày giao</h2>
+        {/* Wish chips: None / Today / Tomorrow / Pick a date. The wish is optional and not a promise. */}
+        <h2 className="font-serif font-medium text-[27px] mt-[34px] mb-2 px-[22px]">Thời gian mong muốn</h2>
+        <p className="px-[22px] mb-4 font-sans text-body-sm text-text-muted m-0">
+          Không bắt buộc. Đây là thời gian bạn mong muốn, cửa hàng sẽ cố gắng đáp ứng, không phải cam kết giao đúng giờ.
+        </p>
         <div className="flex gap-3 px-[22px] overflow-x-auto no-scrollbar md:flex-wrap md:overflow-visible">
           {DATE_CHOICES.map((choice) => {
             const on = form.dateChoice === choice.key;
@@ -141,7 +145,7 @@ function DeliveryForm() {
           <div className="px-[22px] mt-4 flex flex-col gap-2">
             <input
               type="date"
-              value={form.date}
+              value={form.date ?? ""}
               min={form.today}
               onChange={(event) => form.setDate(event.target.value)}
               aria-label="Chọn ngày giao"
@@ -154,11 +158,11 @@ function DeliveryForm() {
           </div>
         )}
 
-        {/* Time-slot buttons, or a message when no slot is left today. */}
-        <h2 className="font-serif font-medium text-[27px] mt-[34px] mb-4 px-[22px]">Giờ giao</h2>
-        {form.dateValid && form.slots.length === 0 ? (
+        {/* Time-slot buttons once a date is chosen; pressing the chosen slot clears it. */}
+        {form.date !== null && <h2 className="font-serif font-medium text-[27px] mt-[34px] mb-4 px-[22px]">Khung giờ</h2>}
+        {form.date === null ? null : form.dateValid && form.slots.length === 0 ? (
           <p className="px-[22px] font-sans text-body text-text-secondary m-0">
-            Hôm nay đã hết khung giờ giao. Vui lòng chọn ngày khác.
+            Hôm nay đã hết khung giờ. Bạn có thể bỏ qua khung giờ hoặc chọn ngày khác.
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-[14px] px-[22px] md:grid-cols-4">
@@ -167,7 +171,7 @@ function DeliveryForm() {
               return (
                 <Button
                   key={option.slot}
-                  onClick={() => form.setSlot(option.slot)}
+                  onClick={() => form.setSlot(on ? null : option.slot)}
                   aria-pressed={on}
                   className={`rounded-full py-[18px] px-[10px] font-sans font-bold text-[16px] transition-colors ${
                     on ? "bg-primary text-white" : "bg-neutral-raised text-text-primary"
@@ -201,7 +205,7 @@ function DeliveryForm() {
         <div className="flex items-start gap-[10px] px-[22px] pt-[18px] pb-6 text-text-muted">
           <span className="material-symbols-outlined" style={{ fontSize: 20 }}>info</span>
           <span className="font-serif italic text-[16px] text-text-muted">
-            Thanh toán khi nhận hàng (COD). Cửa hàng sẽ xác nhận đơn và giao trong khung giờ bạn chọn.
+            Thanh toán khi nhận hàng (COD). Cửa hàng sẽ xác nhận đơn và cố gắng giao theo thời gian bạn mong muốn.
           </span>
         </div>
       </div>

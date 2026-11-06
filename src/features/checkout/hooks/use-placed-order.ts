@@ -1,6 +1,6 @@
 import { useResource } from "@/lib/hooks/use-resource";
-import { deliverySlotLabel, type PlacedOrder } from "@/lib/services/orders";
-import { formatCalendarDate, formatVND } from "@/lib/utils";
+import type { PlacedOrder } from "@/lib/services/orders";
+import { formatVND } from "@/lib/utils";
 import { readPlacedOrder } from "@/features/checkout/checkout-session";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -15,10 +15,7 @@ export function orderSummaryRows(order: PlacedOrder) {
     { k: "Sản phẩm", v: `${itemCount} món` },
     { k: "Người nhận", v: `${order.address.recipientName} · ${order.address.recipientPhone}` },
     { k: "Địa chỉ", v: order.address.deliveryAddress },
-    {
-      k: "Giao hàng",
-      v: `${formatCalendarDate(order.deliveryDate)} · ${deliverySlotLabel(order.deliveryTimeSlot)}`,
-    },
+    { k: "Thời gian mong muốn", v: order.deliveryWishText ?? "Không chọn" },
     ...(order.customerNote ? [{ k: "Ghi chú", v: order.customerNote }] : []),
     { k: "Thanh toán", v: "Khi nhận hàng (COD)" },
     { k: "Phí giao hàng", v: order.shippingFee === 0 ? "Miễn phí" : formatVND(order.shippingFee) },

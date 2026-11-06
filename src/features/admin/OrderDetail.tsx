@@ -3,12 +3,16 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Button from "@/components/ui/Button";
 import ModalDialog from "@/components/ui/ModalDialog";
+import { PAYMENT_STATUS_LABELS } from "@/features/account/order-status";
+import CustomOrderPanel from "@/features/admin/CustomOrderPanel";
+import FeedbackToast from "@/features/admin/FeedbackToast";
 import OrderStatusBadge from "@/features/admin/OrderStatusBadge";
 import { formatAmount, shortOrderId } from "@/features/admin/StockAlert";
 import { ADVANCE_LABELS, ORDER_STATUS_LABELS } from "@/features/admin/order-labels";
 import type { OrderStock } from "@/lib/services/inventory";
-import { deliverySlotLabel, type ManagementOrder } from "@/lib/services/orders";
-import { formatCalendarDate, formatShopDateTime } from "@/lib/utils";
+import type { ProposalInput } from "@/lib/services/custom-orders";
+import type { ManagementOrder } from "@/lib/services/orders";
+import { formatShopDateTime } from "@/lib/utils";
 
 export const formatMoney = (value: number) => `${Number(value).toLocaleString("vi-VN")} ₫`;
 
@@ -37,6 +41,8 @@ export default function OrderDetail({
   onReload,
   onAdvance,
   onCancel,
+  onPropose,
+  onApprove,
 }: {
   /** Undefined until this Order has loaded; a reload keeps the previous copy on screen. */
   order: ManagementOrder | undefined;
@@ -52,6 +58,8 @@ export default function OrderDetail({
   onReload: () => void;
   onAdvance: () => Promise<boolean>;
   onCancel: (note: string) => Promise<boolean>;
+  onPropose: (basedOnTermsNo: number, input: ProposalInput) => Promise<boolean>;
+  onApprove: (termsNo: number) => Promise<boolean>;
 }) {
   const [cancelling, setCancelling] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -102,19 +110,21 @@ export default function OrderDetail({
     </div>
 
     {error && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
-    {feedback && !showCancelDialog && <p role={feedback.kind === "error" ? "alert" : "status"} className={`rounded-lg px-4 py-3 text-sm ${feedback.kind === "error" ? "bg-red-50 text-red-800" : "bg-accent-sage-light text-text-primary"}`}>{feedback.text}</p>}
+    <FeedbackToast feedback={showCancelDialog ? null : feedback} />
 
     {cancellation && <CancellationBlock entry={cancellation} order={order} viewerId={viewerId} />}
 
     <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div className="min-w-0 space-y-5">
+        {order.type === "CUSTOM" && <CustomOrderPanel order={order} saving={saving} onPropose={onPropose} onApprove={onApprove} />}
+
         {/* Product lines and the Order total are intentionally one visual table. */}
-        <Card title="Sản phẩm">
+        {order.lines.length > 0 && <Card title="Sản phẩm">
           <div className="-mx-4 -mb-4 sm:-mx-5 sm:-mb-5">
-            {order.lines.map((line) => <div key={line.productId} className="flex items-start justify-between gap-4 border-t border-neutral-border px-4 py-3 sm:px-5"><div className="min-w-0"><p className="font-semibold text-text-primary">{line.productName}</p><p className="mt-1 text-xs text-text-muted">{line.productType} · {line.quantity} sản phẩm × {formatMoney(line.unitPrice)}</p></div><p className="whitespace-nowrap font-semibold tabular-nums text-text-primary">{formatMoney(line.lineTotal)}</p></div>)}
+            {order.lines.map((line, index) => <div key={line.productId ?? index} className="flex items-start justify-between gap-4 border-t border-neutral-border px-4 py-3 sm:px-5"><div className="min-w-0"><p className="font-semibold text-text-primary">{line.productName}</p><p className="mt-1 text-xs text-text-muted">{line.productType} · {line.quantity} sản phẩm × {formatMoney(line.unitPrice)}</p></div><p className="whitespace-nowrap font-semibold tabular-nums text-text-primary">{formatMoney(line.lineTotal)}</p></div>)}
             <div className="flex items-center justify-between border-t border-neutral-border bg-neutral-canvas/60 px-4 py-3 sm:px-5"><span className="text-sm font-semibold text-text-secondary">Tổng cộng</span><strong className="text-lg tabular-nums text-primary-deep">{formatMoney(order.total)}</strong></div>
           </div>
-        </Card>
+        </Card>}
 
         <Card title="Lịch sử trạng thái">
           <ol className="space-y-4 border-l-2 border-neutral-border pl-4">
@@ -136,7 +146,7 @@ export default function OrderDetail({
             <Field label="Người nhận">{order.address.recipientName}</Field>
             <Field label="Điện thoại">{order.address.recipientPhone}</Field>
             <Field label="Địa chỉ">{order.address.deliveryAddress}</Field>
-            <Field label="Ngày giao">{formatCalendarDate(order.deliveryDate)} · {deliverySlotLabel(order.deliveryTimeSlot)}</Field>
+            <Field label="Thời gian mong muốn">{order.deliveryWishText ?? "Không chọn"}</Field>
             {order.customerNote && <Field label="Ghi chú khách hàng"><span className="whitespace-pre-wrap">{order.customerNote}</span></Field>}
           </dl>
         </Card>
@@ -144,7 +154,7 @@ export default function OrderDetail({
         <Card title="Thanh toán">
           <dl className="space-y-3">
             <Field label="Phương thức">{order.paymentMethod}</Field>
-            <Field label="Trạng thái">{order.paymentStatus}</Field>
+            <Field label="Trạng thái">{PAYMENT_STATUS_LABELS[order.paymentStatus] ?? order.paymentStatus}</Field>
           </dl>
         </Card>
 
