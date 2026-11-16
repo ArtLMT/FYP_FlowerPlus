@@ -33,6 +33,7 @@ export function isWishOpen(deliveryDate: string | null, slot: DeliveryTimeSlot |
 
 const SELECTION_KEY = "flowerplus.checkout.selection";
 const ORDER_KEY = "flowerplus.checkout.placedOrder";
+const VOUCHER_KEY = "flowerplus.checkout.voucherCode";
 
 function read<T>(key: string): T | null {
   try {
@@ -53,12 +54,20 @@ function write(key: string, value: unknown) {
 
 export const readSelection = () => read<CheckoutSelection>(SELECTION_KEY);
 export const saveSelection = (selection: CheckoutSelection) => write(SELECTION_KEY, selection);
+export function readVoucherCode(): string | null { return read<string>(VOUCHER_KEY); }
+export function saveVoucherCode(code: string | null) {
+  try {
+    if (code) window.sessionStorage.setItem(VOUCHER_KEY, JSON.stringify(code));
+    else window.sessionStorage.removeItem(VOUCHER_KEY);
+  } catch { /* storage may be unavailable */ }
+}
 
 export const readPlacedOrder = () => read<PlacedOrder>(ORDER_KEY);
 export function savePlacedOrder(order: PlacedOrder) {
   write(ORDER_KEY, order);
   try {
     window.sessionStorage.removeItem(SELECTION_KEY);
+    window.sessionStorage.removeItem(VOUCHER_KEY);
   } catch {
     // ignore
   }

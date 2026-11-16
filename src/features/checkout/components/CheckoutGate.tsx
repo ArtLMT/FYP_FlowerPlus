@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Notice, { NoticeButton, NoticeLink } from "@/components/ui/Notice";
 import { useCheckoutGate } from "@/features/checkout/hooks/use-checkout-gate";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 /** Shows the checkout step only when checkout is open; everyone else gets the reason and a way forward. */
 export default function CheckoutGate({ children }: { children: ReactNode }) {
@@ -10,7 +11,7 @@ export default function CheckoutGate({ children }: { children: ReactNode }) {
 
   switch (state) {
     case "loading":
-      return <Notice title="Đang tải giỏ hàng..." />;
+      return <SkeletonRows label="Đang tải giỏ hàng..." rows={3} className="px-[22px] py-6" />;
     case "failed":
       return (
         <Notice title="Không thể tải giỏ hàng.">

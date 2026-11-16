@@ -8,11 +8,15 @@ import ProductImage from "@/components/ui/ProductImage";
 import { useCartPage } from "@/features/cart/hooks/use-cart-page";
 import type { CartLine } from "@/lib/services/cart";
 import { formatVND } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { previewVoucher, type VoucherPreview } from "@/lib/services/vouchers";
+import { readVoucherCode, saveVoucherCode } from "@/features/checkout/checkout-session";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 /**
  * Cart — /cart
  *
- * The signed-in Customer's server Cart. Prices are current list prices, not an Order snapshot: the
+ * The current shopper's server Cart. Prices are current list prices, not an Order snapshot: the
  * Order fixes them at checkout. Flagged lines stay visible and block checkout until fixed.
  */
 /**
@@ -26,7 +30,9 @@ import { formatVND } from "@/lib/utils";
  */
 export default function CartPage() {
   const page = useCartPage();
-  const checkoutLabel = page.shopper === "suspended" ? "Tạm khóa đặt hàng" : "Thanh toán";
+  const checkoutLabel = page.shopper === "guest" ? "Đăng nhập để thanh toán"
+    : page.shopper === "suspended" ? "Tạm khóa đặt hàng" : "Thanh toán";
+  const checkoutHref = page.shopper === "guest" ? "/login?next=/cart" : "/checkout/delivery";
 
   return (
     <div className="min-h-dvh bg-neutral-canvas pb-32 lg:pb-0">
@@ -57,15 +63,10 @@ export default function CartPage() {
       </div>
 
       {/* Loading, error, signed-out, and empty-cart messages. */}
-      {page.view === "loading" && <Notice title="Đang tải giỏ hàng..." />}
+      {page.view === "loading" && <SkeletonRows label="Đang tải giỏ hàng..." rows={3} className="px-5 md:px-0" />}
       {page.view === "failed" && (
         <Notice title="Không thể tải giỏ hàng.">
           <NoticeButton onClick={() => void page.reload()}>THỬ LẠI</NoticeButton>
-        </Notice>
-      )}
-      {page.view === "guest" && (
-        <Notice title="Đăng nhập để xem và lưu giỏ hàng của bạn.">
-          <NoticeLink href="/login">ĐĂNG NHẬP</NoticeLink>
         </Notice>
       )}
       {page.view === "empty" && (
@@ -89,6 +90,11 @@ export default function CartPage() {
                 Tài khoản của bạn đang bị tạm khóa đặt hàng. Bạn vẫn có thể chỉnh sửa giỏ hàng.
               </p>
             )}
+            {page.shopper === "guest" && (
+              <p className="mx-5 md:mx-0 rounded-xl border border-neutral-border bg-neutral-surface p-4 font-sans text-body-sm text-text-secondary m-0">
+                Giỏ hàng tạm sẽ được gộp vào tài khoản sau khi bạn đăng nhập.
+              </p>
+            )}
             {/* One card per cart line. */}
             {page.lines.map((line) => (
               <CartLineCard
@@ -107,6 +113,7 @@ export default function CartPage() {
             <div className="flex flex-col gap-2">
               <SummaryRow label="Tạm tính (giá hiện tại)" value={formatVND(page.cart?.subtotal ?? 0)} />
               <SummaryRow label="Phí giao hàng" value="Miễn phí" />
+              {page.shopper !== "guest" && <VoucherBox />}
               <p className="font-sans text-body-sm text-text-muted m-0 mt-1">
                 Giá và tồn kho được kiểm tra lại khi bạn đặt hàng.
               </p>
@@ -119,7 +126,8 @@ export default function CartPage() {
 
             <CheckoutLink
               className="hidden lg:flex"
-              enabled={page.canCheckout}
+              enabled={page.shopper === "guest" || page.canCheckout}
+              href={checkoutHref}
               label={checkoutLabel}
               lineCount={page.lines.length}
             />
@@ -132,7 +140,8 @@ export default function CartPage() {
         <div className="fixed bottom-0 left-0 w-full px-5 pt-8 pb-5 bg-gradient-to-t from-neutral-canvas from-50% to-transparent pointer-events-none lg:hidden">
           <CheckoutLink
             className="pointer-events-auto flex"
-            enabled={page.canCheckout}
+            enabled={page.shopper === "guest" || page.canCheckout}
+            href={checkoutHref}
             label={checkoutLabel}
             lineCount={page.lines.length}
           />
@@ -140,6 +149,35 @@ export default function CartPage() {
       )}
     </div>
   );
+}
+
+function VoucherBox() {
+  const [code, setCode] = useState(() => readVoucherCode() ?? "");
+  const [appliedCode, setAppliedCode] = useState<string | null>(() => readVoucherCode());
+  const [quote, setQuote] = useState<VoucherPreview | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (!appliedCode) return;
+    let live = true;
+    void previewVoucher(appliedCode).then((result) => { if (live) setQuote(result); })
+      .catch((cause) => { if (live) { setQuote(null); setError(cause instanceof Error ? cause.message : "Mã không còn áp dụng được."); } });
+    return () => { live = false; };
+  }, [appliedCode]);
+  async function apply() {
+    setBusy(true); setError(""); setQuote(null);
+    try { const result = await previewVoucher(code.trim()); setQuote(result); setAppliedCode(result.code); saveVoucherCode(result.code); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Không thể áp dụng mã."); setAppliedCode(null); saveVoucherCode(null); }
+    finally { setBusy(false); }
+  }
+  function clear() { setCode(""); setQuote(null); setAppliedCode(null); setError(""); saveVoucherCode(null); }
+  return <section className="flex flex-col gap-2 border-t border-neutral-border pt-4">
+    <label className="font-sans text-body-sm font-semibold text-text-secondary" htmlFor="voucher-code">Mã giảm giá</label>
+    <div className="flex gap-2"><input id="voucher-code" value={code} onChange={(event) => setCode(event.target.value)} className="min-w-0 flex-1 rounded-lg border border-neutral-border bg-white px-3 py-2 text-sm" placeholder="Nhập mã" />
+      <Button onClick={() => void apply()} disabled={busy || !code.trim()} className="rounded-lg bg-primary px-4 text-sm font-bold text-white disabled:opacity-50">{busy ? "Đang kiểm tra…" : "Áp dụng"}</Button></div>
+    {error && <p role="alert" className="m-0 text-sm text-primary">{error}</p>}
+    {quote && <div className="flex items-center justify-between gap-2 text-sm text-primary-deep"><span>{quote.code}: giảm {formatVND(quote.discountAmount)}</span><Button onClick={clear} className="underline">Xóa</Button></div>}
+  </section>;
 }
 
 /** One cart line: thumbnail, name, problem badge, price, quantity stepper, and delete button. Problem lines get a red border. */
@@ -182,8 +220,10 @@ function CartLineCard({
 
         <div className="flex items-end justify-between gap-2">
           {/* Current list price. */}
-          <span className="font-sans font-bold text-[24px] leading-none text-primary">
-            {formatVND(line.basePrice)}
+          <span className="flex flex-col items-start gap-1">
+            <span className="font-sans font-bold text-[24px] leading-none text-primary">{formatVND(line.effectivePrice)}</span>
+            {line.effectivePrice < line.basePrice && <span className="font-sans text-sm text-text-muted line-through">{formatVND(line.basePrice)}</span>}
+            <span className="font-sans text-xs text-text-muted">Tạm tính: {formatVND(line.lineTotal)}</span>
           </span>
 
           {/* Quantity stepper: − / count / +. */}
@@ -237,17 +277,19 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 function CheckoutLink({
   className,
   enabled,
+  href,
   label,
   lineCount,
 }: {
   className: string;
   enabled: boolean;
+  href: string;
   label: string;
   lineCount: number;
 }) {
   return (
     <Link
-      href="/checkout/delivery"
+      href={href}
       aria-disabled={!enabled}
       className={`${className} items-center justify-between rounded-full px-6 py-4 font-sans font-semibold text-[12px] uppercase tracking-[0.09em] text-white transition-colors ${
         enabled ? "bg-primary hover:bg-primary-hover" : "bg-secondary pointer-events-none"

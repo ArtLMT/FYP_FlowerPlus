@@ -4,7 +4,7 @@ import type { CartLine } from "@/lib/services/cart";
 import { useCart } from "@/features/cart/cart-provider";
 
 /** Which screen /cart shows. */
-export type CartView = "loading" | "failed" | "guest" | "empty" | "lines";
+export type CartView = "loading" | "failed" | "empty" | "lines";
 
 /**
  * State and actions for /cart. The stepper and delete call the API; a failed change shows why and
@@ -38,8 +38,7 @@ export function useCartPage() {
   const view: CartView =
     loading && !cart ? "loading"
       : loadFailed ? "failed"
-        : shopper === "guest" ? "guest"
-          : lines.length === 0 ? "empty"
+        : lines.length === 0 ? "empty"
             : "lines";
 
   return {
@@ -54,6 +53,6 @@ export function useCartPage() {
     increase: (line: CartLine) => change(line, () => setQty(line.productId, line.quantity + 1)),
     remove: (line: CartLine) => change(line, () => remove(line.productId)),
     canCheckout: shopper === "active" && lines.length > 0 && !cart?.hasProblems,
-    showCheckoutBar: shopper !== "guest" && shopper !== "loading" && lines.length > 0,
+    showCheckoutBar: shopper !== "loading" && lines.length > 0,
   };
 }

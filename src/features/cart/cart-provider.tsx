@@ -11,7 +11,7 @@ import {
 } from "@/lib/services/cart";
 
 /**
- * Cart store — the signed-in Customer's server Cart, shared app-wide.
+ * Cart store — the Guest or account server Cart, shared app-wide.
  *
  * The header/bottom-nav badge, the product page, /cart and checkout all read it. Every change goes
  * to the server and the store keeps the Cart the server answers with, so `cart.version` is always
@@ -69,6 +69,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     await refresh();
   }, [refresh]);
 
+  const isGuest = async () => {
+    if (shopper !== "loading") return shopper === "guest";
+    const loaded = await getShopperCart();
+    setShopper(loaded.shopper);
+    setCart(loaded.cart);
+    return loaded.shopper === "guest";
+  };
+
   const value: CartContextValue = {
     shopper,
     cart,
@@ -76,9 +84,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     loadFailed,
     reload,
     refresh,
-    add: async (productId, quantity = 1) => setCart(await addCartItem(productId, quantity)),
-    setQty: async (productId, quantity) => setCart(await updateCartItem(productId, quantity)),
-    remove: async (productId) => setCart(await removeCartItem(productId)),
+    add: async (productId, quantity = 1) => setCart(await addCartItem(productId, quantity, await isGuest())),
+    setQty: async (productId, quantity) => setCart(await updateCartItem(productId, quantity, await isGuest())),
+    remove: async (productId) => setCart(await removeCartItem(productId, await isGuest())),
     count: cart?.itemCount ?? 0,
   };
 

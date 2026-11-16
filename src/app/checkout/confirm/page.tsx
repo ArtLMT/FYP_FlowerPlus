@@ -36,7 +36,7 @@ export default function ConfirmPage() {
  * the bottom. Submit logic lives in `features/checkout/hooks/use-place-order.ts`.
  */
 function ConfirmView() {
-  const { cart, selection, address, needsNewSelection, placing, error, submit } = usePlaceOrder();
+  const { cart, selection, address, needsNewSelection, placing, error, priceChanged, submit, voucherCode, voucherQuote } = usePlaceOrder();
 
   // Delivery choices are missing or stale: ask the customer to pick them again.
   if (needsNewSelection || !selection) {
@@ -63,6 +63,10 @@ function ConfirmView() {
                 <Link href="/cart" className="font-bold underline">Xem giỏ hàng</Link>
               </p>
             )}
+            {priceChanged && <section aria-label="Tổng tiền mới" className="mx-[22px] mt-3 rounded-xl border border-amber-300 bg-amber-50 p-4 font-sans text-sm text-amber-950 md:mt-2">
+              <p className="m-0 font-bold">Tổng tiền đã được cập nhật. Vui lòng xem lại trước khi đặt hàng.</p>
+              <dl className="mb-0 mt-2 grid grid-cols-2 gap-y-1"><dt>Tạm tính</dt><dd className="m-0 text-right">{formatVND(priceChanged.currentSubtotal)}</dd><dt>Giảm giá mã</dt><dd className="m-0 text-right">{formatVND(priceChanged.voucherDiscount)}</dd><dt>Giao hàng</dt><dd className="m-0 text-right">{formatVND(priceChanged.shippingFee)}</dd><dt className="font-bold">Cần thanh toán</dt><dd className="m-0 text-right font-bold">{formatVND(priceChanged.payableTotal)}</dd></dl>
+            </section>}
 
             <div className="flex items-baseline justify-between mt-[30px] mb-[14px] px-[22px] md:mt-0">
               {/* Products heading with "SỬA" link to the cart, then one row per line. */}
@@ -143,10 +147,14 @@ function ConfirmView() {
               <span className="font-sans text-[16px] text-text-secondary">Phí giao hàng</span>
               <span className="font-sans text-[16px] text-text-secondary">Miễn phí</span>
             </div>
+            {voucherCode && <div className="flex items-center justify-between mb-3 text-primary-deep">
+              <span className="font-sans text-[16px]">Mã {voucherCode}</span>
+              <span className="font-sans text-[16px]">−{formatVND(voucherQuote?.discountAmount ?? 0)}</span>
+            </div>}
             <div className="h-px bg-neutral-border mt-2 mb-4" />
             <div className="flex items-baseline justify-between">
               <span className="font-serif font-semibold text-[26px]">Tổng cộng</span>
-              <span className="font-serif font-semibold text-[26px]">{formatVND(cart.subtotal)}</span>
+              <span className="font-serif font-semibold text-[26px]">{formatVND(voucherQuote?.payableTotal ?? cart.subtotal)}</span>
             </div>
             <p className="font-sans text-body-sm text-text-muted mt-3 mb-0">
               Giá được chốt khi đơn hàng được tạo.

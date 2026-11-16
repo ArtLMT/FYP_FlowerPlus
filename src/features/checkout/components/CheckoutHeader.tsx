@@ -5,7 +5,7 @@ import Header from "@/components/layout/Header";
  * CheckoutHeader — back-header for checkout stack screens.
  *
  *   • Mobile  (md:hidden)      → back arrow + centered title. Like the account
- *     DetailHeader, but the title is Karla-bold in the primary colour (matching
+ *     DetailHeader, but the title is sans-bold in the primary colour (matching
  *     the checkout mockup) and the back target is configurable because each step
  *     goes back to a different place.
  *   • Desktop (hidden md:block) → the shared storefront Header, so checkout

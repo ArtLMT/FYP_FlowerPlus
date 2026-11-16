@@ -6,6 +6,8 @@ import CheckoutGate from "@/features/checkout/components/CheckoutGate";
 import CheckoutHeader from "@/features/checkout/components/CheckoutHeader";
 import Stepper from "@/features/checkout/components/Stepper";
 import { NOTE_MAX_LENGTH, useDeliveryForm } from "@/features/checkout/hooks/use-delivery-form";
+import { SkeletonRows } from "@/components/ui/Skeleton";
+import { DELIVERY_AREA } from "@/lib/shop";
 
 const DATE_CHOICES = [
   { key: "none", label: "Không chọn" },
@@ -18,8 +20,8 @@ const DATE_CHOICES = [
  * Checkout · Delivery — /checkout/delivery  (step 1 of 3)
  *
  * The customer picks one saved address, may state a wished date and slot, and may leave a note. New
- * addresses are added in the account address book. Payment is COD only and shipping is free in
- * this slice.
+ * addresses are added in the account address book. Payment is COD only and delivery is free inside
+ * the delivery area.
  */
 export default function DeliveryPage() {
   return (
@@ -47,7 +49,7 @@ function DeliveryForm() {
     return <p role="alert" className="px-[22px] py-10 font-sans text-body text-primary">{form.loadError}</p>;
   }
   if (!form.addresses) {
-    return <p className="px-[22px] py-10 font-sans text-body text-text-muted">Đang tải sổ địa chỉ...</p>;
+    return <SkeletonRows label="Đang tải sổ địa chỉ..." className="px-[22px]" />;
   }
 
   return (
@@ -57,7 +59,12 @@ function DeliveryForm() {
         <Stepper current={1} />
 
         {/* Address section: selectable saved-address cards, or an empty message. */}
-        <h2 className="font-serif font-medium text-[27px] mt-8 mb-4 px-[22px]">Địa chỉ giao hàng</h2>
+        <h2 className="font-serif font-medium text-[27px] mt-8 mb-2 px-[22px]">Địa chỉ giao hàng</h2>
+        {/* The area is stated, not checked: an address is free text, so staff cancel an order outside it. */}
+        <p className="px-[22px] mb-4 font-sans text-body-sm text-text-muted m-0">
+          Cửa hàng giao hàng trong {DELIVERY_AREA} và không tính phí giao hàng.{" "}
+          <Link href="/policies/delivery" target="_blank" rel="noopener noreferrer" className="text-primary underline">Chính sách giao hàng</Link>
+        </p>
         {form.addresses.length === 0 ? (
           <p className="px-[22px] font-sans text-body text-text-secondary m-0">
             Bạn chưa có địa chỉ nào được lưu.

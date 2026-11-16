@@ -32,5 +32,9 @@ export const COMMON_CODES: Record<string, string> = {
   INSUFFICIENT_STOCK: "Cửa hàng không đủ nguyên liệu cho toàn bộ giỏ hàng. Vui lòng giảm số lượng hoặc chọn ngày khác.",
   CART_EMPTY: "Giỏ hàng của bạn đang trống.",
   CART_CHANGED: "Giỏ hàng vừa thay đổi. Vui lòng xem lại trước khi đặt hàng.",
+  CHECKOUT_PRICE_CHANGED: "Giá đã thay đổi. Vui lòng xem lại tổng tiền mới trước khi đặt hàng.",
+  VOUCHER_NOT_APPLICABLE: "Mã giảm giá không áp dụng cho giỏ hàng này.",
+  VOUCHER_LIMIT_REACHED: "Mã giảm giá đã hết lượt sử dụng.",
+  VOUCHER_INVALID_STATE: "Trạng thái mã giảm giá đã thay đổi. Hãy tải lại.",
   ACCOUNT_SUSPENDED: "Tài khoản của bạn đang bị tạm khóa đặt hàng.",
 };

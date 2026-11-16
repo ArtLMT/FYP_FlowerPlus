@@ -88,6 +88,10 @@ export interface PlacedOrder {
     lineTotal: number;
   }[];
   shippingFee: number;
+  voucherCode: string | null;
+  voucherDiscountType: "FIXED" | "PERCENTAGE" | null;
+  voucherDiscountValue: number | null;
+  voucherDiscountAmount: number | null;
   total: number;
   createdAt: string;
 }
@@ -141,6 +145,10 @@ export interface CustomerOrder {
     imageUrl: string | null;
   }[];
   shippingFee: number;
+  voucherCode: string | null;
+  voucherDiscountType: "FIXED" | "PERCENTAGE" | null;
+  voucherDiscountValue: number | null;
+  voucherDiscountAmount: number | null;
   total: number;
   paymentMethod: "COD" | (string & {});
   paymentStatus: string;
@@ -192,11 +200,13 @@ export interface PlaceOrderInput {
   customerNote?: string;
   /** The Cart version the customer reviewed. */
   cartVersion: number;
+  /** Current payable Cart total the customer reviewed; the server recalculates and compares it. */
+  expectedTotal: number;
+  voucherCode?: string;
 }
 
 /**
- * COD checkout. Only the address id, delivery date and slot, the note and the Cart version are
- * sent — the server loads the Cart, prices, names and recipes itself.
+ * COD checkout. The reviewed total is sent only as a stale-price guard; the server recalculates it.
  */
 export const placeOrder = (input: PlaceOrderInput) =>
   api<PlacedOrder>("/api/orders", { method: "POST", body: input });
