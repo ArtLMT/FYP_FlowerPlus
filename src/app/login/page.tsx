@@ -126,8 +126,9 @@ export default function LoginPage() {
               <input type="checkbox" checked={form.agreed} onChange={(e) => form.setAgreed(e.target.checked)} className="mt-[2px] w-4 h-4 accent-[var(--color-primary)]" />
               <span>
                 Tôi đồng ý với{" "}
-                <Link href="#" className="text-primary underline">Điều khoản</Link> và{" "}
-                <Link href="#" className="text-primary underline">Chính sách bảo mật</Link>.
+                {/* New tab: following a link in the same tab would lose what was typed into the form. */}
+                <Link href="/policies/terms" target="_blank" rel="noopener noreferrer" className="text-primary underline">Điều khoản</Link> và{" "}
+                <Link href="/policies/privacy" target="_blank" rel="noopener noreferrer" className="text-primary underline">Chính sách bảo mật</Link>.
               </span>
             </label>
             <Button
@@ -162,6 +163,12 @@ export default function LoginPage() {
             TIẾP TỤC VỚI GOOGLE
           </span>
         </a>
+        {/* A Google sign-in can create an account without passing the sign-up tick, so it is said here. */}
+        <p className="mt-3 text-center font-sans text-body-sm leading-[1.5] text-text-muted m-0">
+          Tiếp tục với Google nghĩa là bạn đồng ý với{" "}
+          <Link href="/policies/terms" target="_blank" rel="noopener noreferrer" className="text-primary underline">Điều khoản</Link> và{" "}
+          <Link href="/policies/privacy" target="_blank" rel="noopener noreferrer" className="text-primary underline">Chính sách bảo mật</Link>.
+        </p>
         </div>
         {/* end form column */}
       </div>

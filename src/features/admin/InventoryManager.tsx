@@ -8,6 +8,7 @@ import { useInventoryManager } from "@/features/admin/hooks/use-inventory-manage
 import { formatMaterialPrice, MATERIAL_TYPE_LABELS, MATERIAL_UNIT_LABELS } from "@/features/admin/material-labels";
 import type { MaterialBatch } from "@/lib/services/inventory";
 import { formatCalendarDate } from "@/lib/utils";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 const INPUT = "min-h-11 rounded-lg border border-neutral-border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-primary";
 
@@ -107,7 +108,7 @@ export default function InventoryManager({ receiveRequest, initialMaterialId, on
 
         {m.listError && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{m.listError}</p>}
 
-        {m.loading ? <p className="py-8 text-center text-sm text-text-muted">Đang tải lô hàng…</p>
+        {m.loading ? <SkeletonRows label="Đang tải lô hàng…" />
           : m.page?.content.length === 0 ? <p className="rounded-xl border border-dashed border-neutral-border py-10 text-center text-sm text-text-muted">Chưa có lô hàng nào.</p>
             : m.page && <div className="overflow-x-auto rounded-xl border border-neutral-border bg-white shadow-sm">
               <table className="w-full min-w-[980px] text-left text-sm">

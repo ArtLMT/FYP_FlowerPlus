@@ -75,9 +75,12 @@ For example, on `/admin` the Materials screen is `features/admin/MaterialManager
 
 ### Current API coverage
 
-- `/admin`: Products (list, search, create/edit Drafts, images, activate/deactivate/return to Draft), Materials (search, filters, sorting, paging, create/edit, status changes, details with audit fields), the Staff list, and an Admin-only Address lookup by ID. Staff account mutations are not wired in yet.
-- `/account/info` reads the signed-in profile and manages the customer's own addresses (loading, empty, error, field-validation and 20-address limit states).
-- Login, registration, email verification/resend, and forgot/reset password use the Auth backend. Google sign-in remains a placeholder.
-- Storefront product list/detail, the server Cart, and COD checkout (`/checkout/delivery` → `/confirm` → `/done`) use the backend. Order history, vouchers, notifications and the sale showcase still use mock data through `services/account.ts` and `services/products.ts`.
+Checked against the code on 2026-11-12. Every screen below calls the backend; only Notifications still reads mock data.
+
+- `/admin` is one page with twelve sections. Staff and Admin: Overview, Orders (list, detail, advance, cancel, and for custom orders propose changes and approve), Products (list, search, create/edit Drafts, recipe, images, arrangement style, activate/deactivate/return to Draft), Sales (list, create, edit, end), Vouchers (list, create, edit, activate/deactivate, assign to a customer), Categories, Arrangement types, Materials (search, filters, sorting, paging, create/edit, status changes, details with audit fields), Inventory (receive a batch, list batches, adjust, shortage alert) and Stock transactions. Admin only: Staff accounts (list, create, deactivate/reactivate, resend the set-up email) and Address lookup by ID.
+- `/account/info` reads the signed-in profile and manages the customer's own addresses (loading, empty, error, field-validation and 20-address limit states). `/account/orders` lists the customer's orders; the order page can cancel an order and accept or decline a custom-order proposal. `/account/vouchers` lists the vouchers the customer can use.
+- Login, registration, email verification/resend, forgot/reset password and the Staff set-up page (`/login/set-password`) use the Auth backend. Google sign-in is a link to the backend's OAuth flow and returns to the page the visitor came from.
+- Storefront product list/detail with sale prices, the home sale showcase, the custom builder (`/custom`), the server Cart, and COD checkout (`/checkout/delivery` → `/confirm` → `/done`) with a voucher preview use the backend.
+- Still mock: `/account/notifications`, through `services/account.ts`. The page is not linked from the account menu.
 
 Shared theme tokens and typography are defined in `src/app/globals.css` and `src/app/layout.tsx`.

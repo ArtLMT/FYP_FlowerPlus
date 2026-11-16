@@ -12,6 +12,7 @@ import { useResource } from "@/lib/hooks/use-resource";
 import { getCustomOrderMaterials, getCustomOrderOptions, MAX_MATERIAL_PAGE, type ProposalInput } from "@/lib/services/custom-orders";
 import type { CustomOrderTerms, ManagementOrder, TermsState } from "@/lib/services/orders";
 import { formatShopDateTime } from "@/lib/utils";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 const money = (value: number) => `${Number(value).toLocaleString("vi-VN")} ₫`;
 
@@ -75,9 +76,9 @@ export default function CustomOrderPanel({ order, saving, onPropose, onApprove }
       }}
     />}
 
-    {allTerms.length > 1 && <details className="rounded-lg border border-neutral-border">
-      <summary className="cursor-pointer px-3 py-2.5 text-sm font-semibold text-text-secondary">Lịch sử các phiên bản ({allTerms.length})</summary>
-      <div className="space-y-3 border-t border-neutral-border p-3">
+    {allTerms.length > 1 && <details className="border-t border-neutral-border pt-3">
+      <summary className="cursor-pointer py-1 text-sm font-semibold text-text-secondary">Lịch sử các phiên bản ({allTerms.length})</summary>
+      <div className="mt-3 space-y-3">
         {[...allTerms].reverse().map((terms) => <TermsBlock key={terms.termsNo} terms={terms} title={`Số ${terms.termsNo} · ${STATE_LABELS[terms.state]}`} />)}
       </div>
     </details>}
@@ -147,7 +148,7 @@ function ProposalForm({ agreed, replacesNo, saving, onSubmit }: {
   const settled = checkedIds.length === 0 || !current.loading;
   const loadError = options.error ?? (checkedIds.length > 0 ? current.error : null);
   if (loadError) return <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{loadError.message}</p>;
-  if (!data || (checkedIds.length > 0 && !current.data)) return <p className="text-sm text-text-muted">Đang tải lựa chọn…</p>;
+  if (!data || (checkedIds.length > 0 && !current.data)) return <SkeletonRows label="Đang tải lựa chọn…" />;
 
   // A type or material the shop has stopped offering cannot be sent, so it is not treated as chosen.
   const type = data.arrangementTypes.find((candidate) => candidate.id === (pickedTypeId ?? agreed?.arrangementTypeId)) ?? null;
@@ -216,7 +217,7 @@ function ProposalForm({ agreed, replacesNo, saving, onSubmit }: {
   const pickerPicks = { ...Object.fromEntries(lookup.map((material) => [material.id, material])), ...picks };
   const pickerProps = { quantities, picks: pickerPicks, refresh: materialsRefresh, onSet: lines.onSet, onChange: lines.onChange, onSettle: lines.onSettle };
 
-  return <form onSubmit={askToSend} onKeyDown={keepFormOpen} className="space-y-4 rounded-lg border border-neutral-border p-3">
+  return <form onSubmit={askToSend} onKeyDown={keepFormOpen} className="space-y-4 border-t border-neutral-border pt-4">
     <label className="flex flex-col gap-1 text-xs font-semibold text-text-secondary">Kiểu cắm
       <select required value={type?.id ?? ""} onChange={(event) => setTypeId(event.target.value)} className={FIELD}>
         <option value="" disabled>Chọn kiểu cắm</option>
@@ -241,9 +242,9 @@ function ProposalForm({ agreed, replacesNo, saving, onSubmit }: {
       </div>)}
     </div>
 
-    <details className="rounded-lg border border-neutral-border">
-      <summary className="cursor-pointer px-3 py-2.5 text-sm font-semibold text-primary-deep">Thêm hoặc đổi nguyên liệu</summary>
-      <div className="space-y-5 border-t border-neutral-border p-3">
+    <details>
+      <summary className="cursor-pointer py-1 text-sm font-semibold text-primary-deep">Thêm hoặc đổi nguyên liệu</summary>
+      <div className="mt-3 space-y-5">
         <div>
           <p className="mb-2 text-sm font-semibold text-text-primary">Hoa</p>
           <MaterialPicker label="loại hoa" type="FLOWER" emptyMessage="Chưa có loại hoa nào đang bán." {...pickerProps} />
@@ -283,7 +284,7 @@ function ProposalForm({ agreed, replacesNo, saving, onSubmit }: {
     >
       <p className="text-sm font-semibold text-text-primary">So với nội dung đã thống nhất:</p>
       {changes.length > 0
-        ? <ul className="mt-1 list-none divide-y divide-neutral-border rounded-lg border border-neutral-border p-0 text-sm text-text-primary">{changes.map((change) => <li key={change} className="break-words px-3 py-2">{change}</li>)}</ul>
+        ? <ul className="mt-1 list-none divide-y divide-neutral-border border-y border-neutral-border p-0 text-sm text-text-primary">{changes.map((change) => <li key={change} className="break-words px-3 py-2">{change}</li>)}</ul>
         : <p className="mt-1 text-sm text-text-secondary">Không có thay đổi về kiểu cắm, nguyên liệu hay giá.</p>}
       <p className="mt-3 text-sm font-semibold text-text-primary">Giá đề xuất {money(finalPrice)}</p>
       <p className="mt-3 rounded-lg bg-neutral-surface p-3 text-sm text-text-primary">

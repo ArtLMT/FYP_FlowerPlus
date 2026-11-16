@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { EB_Garamond, Karla } from "next/font/google";
+import { Be_Vietnam_Pro, EB_Garamond } from "next/font/google";
 import "./globals.css";
 
 /**
@@ -19,11 +19,10 @@ const displayFont = EB_Garamond({
   display: "swap",
 });
 
-// NOTE: Karla does NOT publish a Vietnamese subset (only latin / latin-ext),
-// so Vietnamese tone-marked glyphs in body text fall back to a system font.
-// For full coverage, swap this to a Vietnamese-native sans (e.g. Be_Vietnam_Pro).
-const bodyFont = Karla({
-  subsets: ["latin", "latin-ext"],
+// Be Vietnam Pro replaced Karla, which has no Vietnamese subset: tone-marked letters
+// fell back to a system font in the middle of words.
+const bodyFont = Be_Vietnam_Pro({
+  subsets: ["latin", "latin-ext", "vietnamese"],
   weight: ["200", "300", "400", "500", "600", "700", "800"],
   variable: "--font-sans-src",
   display: "swap",

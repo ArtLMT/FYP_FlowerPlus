@@ -60,7 +60,7 @@ export default function CustomOrderCards({ order, onChanged, onStale, cardClassN
       {pending.note && <p className="font-sans text-[16px] text-text-secondary m-0 mb-2 whitespace-pre-line break-words">{pending.note}</p>}
       {changes.length > 0 && <>
         <p className="m-0 mt-3 mb-1 font-sans text-body-sm font-bold uppercase tracking-wide text-text-secondary">Thay đổi so với thiết kế hiện tại</p>
-        <ul className="m-0 mb-4 list-none divide-y divide-neutral-border rounded-lg border border-neutral-border bg-neutral-surface p-0 font-sans text-[16px] text-text-primary">
+        <ul className="m-0 mb-4 list-none divide-y divide-neutral-border border-y border-neutral-border p-0font-sans text-[16px] text-text-primary">
           {changes.map((change) => <li key={change} className="px-3 py-2 break-words">{change}</li>)}
         </ul>
       </>}

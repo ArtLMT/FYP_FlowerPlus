@@ -29,7 +29,7 @@
 
   /* Fonts — fed by next/font in app/layout.tsx (the single swap point).
      Change the font THERE; these just map the source vars onto the utilities. */
-  --font-sans:  var(--font-sans-src),  'Karla',       sans-serif;
+  --font-sans:  var(--font-sans-src),  'Be Vietnam Pro', sans-serif;
   --font-serif: var(--font-serif-src), 'EB Garamond', serif;
 
   /* Spacing scale extensions */
@@ -40,7 +40,7 @@
   /* ── Semantic Type Scale ──────────────────────
      Use the token name, not the pixel value.
      Rule: headings/names → font-serif (EB Garamond)
-           everything else → font-sans  (Karla)
+           everything else → font-sans  (Be Vietnam Pro)
   ────────────────────────────────────────────── */
 
   /* h1 — one per page, hero headline only */

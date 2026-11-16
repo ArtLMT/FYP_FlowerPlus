@@ -1,5 +1,8 @@
+import Link from "next/link";
 import Button from "@/components/ui/Button";
 import Container from "@/components/ui/Container";
+import { POLICIES, POLICY_ORDER } from "@/features/policy/policies";
+import { DELIVERY_HOURS, SHOP_EMAIL } from "@/lib/shop";
 
 const CATEGORIES = ["Trang chủ", "Bộ sưu tập", "Đặt riêng", "Ưu đãi"];
 
@@ -22,7 +25,8 @@ export default function Footer() {
             <address className="not-italic font-sans text-body md:text-[14px] leading-[1.7] text-text-secondary">
               12 Đường Hoa Sữa, Phường Bến Nghé<br />
               Quận 1, TP. Hồ Chí Minh<br />
-              T2–T7: 09:00 – 19:00
+              Giao hàng: {DELIVERY_HOURS} hằng ngày<br />
+              <a href={`mailto:${SHOP_EMAIL}`} className="text-text-secondary underline hover:text-primary transition-colors">{SHOP_EMAIL}</a>
             </address>
           </div>
 
@@ -65,12 +69,19 @@ export default function Footer() {
         </div>
       </Container>
 
-      {/* Bottom bar */}
+      {/* Bottom bar: copyright and the policy pages */}
       <div className="border-t border-neutral-border">
-        <Container className="py-5">
+        <Container className="flex flex-col gap-3 py-5 md:flex-row md:items-center md:justify-between">
           <p className="font-sans text-[12px] text-text-muted m-0">
-            © 2024 FlowerPlus. Thanh lịch từ thiên nhiên.
+            © 2026 FlowerPlus. Thanh lịch từ thiên nhiên.
           </p>
+          <nav aria-label="Chính sách" className="flex flex-wrap gap-x-5 gap-y-2">
+            {POLICY_ORDER.map((slug) => (
+              <Link key={slug} href={`/policies/${slug}`} className="font-sans text-[12px] text-text-secondary underline hover:text-primary transition-colors">
+                {POLICIES[slug].title}
+              </Link>
+            ))}
+          </nav>
         </Container>
       </div>
     </footer>

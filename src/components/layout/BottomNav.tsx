@@ -34,38 +34,43 @@ export default function BottomNav({ active = "home" }: { active?: NavKey }) {
     )?.key ?? active;
   return (
     <>
-      {/* Five tab links: Home, Browse, Custom builder, Cart (with item-count badge), Account. */}
+      {/* Five shortcut links: Home, Browse, Custom builder, Cart and Account. */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 w-full z-50 bg-neutral-canvas/95 backdrop-blur-md grid grid-cols-5 py-[10px] pb-[14px] border-t border-neutral-border"
+        className="md:hidden fixed bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] left-1/2 -translate-x-1/2 z-50 grid w-[calc(100%-1.5rem)] max-w-[480px] grid-cols-5 items-center gap-1 rounded-full border border-neutral-border/80 bg-neutral-canvas/95 px-2 py-2 shadow-[0_8px_30px_rgba(45,28,24,0.16)] backdrop-blur-xl"
         aria-label="Điều hướng chính"
       >
         {NAV_ITEMS.map(({ key, label, icon, href }) => {
           const isActive = key === current;
+          const isCreate = key === "custom";
           return (
             <Link
               key={key}
               href={href}
-              className={`flex flex-col items-center gap-[5px] ${isActive ? "text-primary" : "text-text-muted hover:text-primary"} transition-colors`}
+              className={`relative flex min-h-12 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                isCreate
+                  ? "mx-auto h-12 w-12 bg-primary text-white shadow-md hover:bg-primary-hover"
+                  : `w-full ${isActive ? "bg-primary/10 text-primary" : "text-text-muted hover:bg-neutral-raised hover:text-primary"}`
+              }`}
               aria-label={label}
               aria-current={isActive ? "page" : undefined}
+              title={label}
             >
               <span className="relative">
                 <span
-                  className="material-symbols-outlined"
-                  style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                  className="material-symbols-outlined leading-none"
+                  style={isActive || isCreate ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                  aria-hidden="true"
                 >
-                  {icon}
+                  {isCreate ? "add" : icon}
                 </span>
                 {/* Cart item-count badge. */}
                 {key === "cart" && count > 0 && (
-                  <span className="absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center">
+                  <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-white ring-2 ring-neutral-canvas">
                     {count}
                   </span>
                 )}
               </span>
-              <span className={`font-sans text-[10.5px] ${isActive ? "font-bold" : "font-normal"}`}>
-                {label}
-              </span>
+              <span className="sr-only">{label}</span>
             </Link>
           );
         })}

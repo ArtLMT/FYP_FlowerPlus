@@ -13,6 +13,7 @@ import {
 } from "@/features/account/order-status";
 import type { CustomerOrderSummary } from "@/lib/services/orders";
 import { formatShopDateTime, formatVND } from "@/lib/utils";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 /**
  * Order history for /account/orders — the signed-in account's own orders, newest first, filtered by
@@ -61,7 +62,7 @@ export default function OrdersView() {
               <Button onClick={orders.reload} className="font-bold underline">Thử lại</Button>
             </div>
           ) : !page ? (
-            <p className="py-10 text-center font-sans text-body text-text-muted">Đang tải đơn hàng...</p>
+            <SkeletonRows label="Đang tải đơn hàng..." />
           ) : page.content.length === 0 ? (
             <div className="py-10 text-center flex flex-col items-center gap-3">
               <p className="font-serif italic text-heading-sm text-text-muted m-0">Không có đơn hàng nào.</p>

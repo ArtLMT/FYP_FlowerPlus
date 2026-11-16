@@ -6,6 +6,7 @@ import FeedbackToast from "@/features/admin/FeedbackToast";
 import FieldMessages from "@/features/admin/FieldMessages";
 import { useCategoryManager } from "@/features/admin/hooks/use-category-manager";
 import { formatDate } from "@/features/admin/product-labels";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 /**
  * Categories workspace (T-PROD-10).
@@ -26,7 +27,7 @@ export default function CategoryManager() {
       <FeedbackToast feedback={c.editorOpen ? null : c.feedback} />
 
       {/* Category cards: name, last change, and Rename/Delete actions. */}
-      {c.loading ? <p className="py-8 text-center text-sm text-text-muted">Đang tải danh mục…</p>
+      {c.loading ? <SkeletonRows label="Đang tải danh mục…" />
         : c.listError ? <div className="rounded-xl border border-neutral-border bg-white px-5 py-8 text-center">
           <p role="alert" className="text-sm text-red-800">{c.listError}</p>
           <Button type="button" onClick={c.reload} className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Thử lại</Button>

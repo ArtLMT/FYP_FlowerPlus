@@ -15,6 +15,7 @@ import {
   MATERIAL_UNIT_LABELS,
 } from "@/features/admin/material-labels";
 import type { MaterialSort, MaterialStatus, MaterialType, MaterialUnit } from "@/lib/services/materials";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 /**
  * Materials workspace.
@@ -106,7 +107,7 @@ export default function MaterialManager() {
       {!m.loading && m.page && <p className="text-sm font-medium text-text-secondary">{m.page.totalElements} nguyên liệu</p>}
 
       {/* Material result cards and their Details/Edit/Status actions. */}
-      {m.loading ? <p className="py-8 text-center text-sm text-text-muted">Đang tải nguyên liệu…</p>
+      {m.loading ? <SkeletonRows label="Đang tải nguyên liệu…" />
         : m.listError ? null
           : m.page?.content.length === 0 ? <p className="rounded-xl border border-dashed border-neutral-border py-10 text-center text-sm text-text-muted">Không tìm thấy nguyên liệu phù hợp.</p>
           : <div className="grid gap-4 md:grid-cols-2">{m.page?.content.map((material) => <article key={material.id} className="flex h-full flex-col rounded-xl border border-neutral-border bg-white p-5 shadow-sm">

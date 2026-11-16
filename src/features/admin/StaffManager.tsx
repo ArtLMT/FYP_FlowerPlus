@@ -7,6 +7,7 @@ import FieldMessages from "@/features/admin/FieldMessages";
 import InfoLine from "@/features/admin/InfoLine";
 import { useStaffList } from "@/features/admin/hooks/use-staff-list";
 import type { StaffAccount, StaffStatusFilter } from "@/lib/services/staff";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 const STATUS_LABELS: Record<string, string> = {
   ACTIVE: "Đang hoạt động",
@@ -85,7 +86,7 @@ export default function StaffManager() {
     </ModalDialog>}
 
     {/* Staff-card grid, including loading/error/empty states. */}
-    {list.state === "loading" ? <p className="py-8 text-center text-sm text-text-muted">Đang tải nhân viên…</p>
+    {list.state === "loading" ? <SkeletonRows label="Đang tải nhân viên…" />
       : list.state === "error" ? <p role="alert" className="py-5 text-sm text-primary-deep">{list.error}</p>
         : list.state === "empty" ? <p className="py-8 text-center text-sm text-text-muted">{list.status ? "Không có nhân viên ở trạng thái này." : "Chưa có nhân sự."}</p>
           : <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{list.staff.map((person) => <StaffCard

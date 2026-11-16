@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useResource } from "@/lib/hooks/use-resource";
 import { getCurrentUser, type AccountUser } from "@/lib/services/auth";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 const AccountContext = createContext<AccountUser | null>(null);
 
@@ -25,7 +26,7 @@ export function AccountGate({ children }: { children: React.ReactNode }) {
 
   // Plain text messages shown in place of the account pages while loading or after a failure.
   if (failed) return <p className="p-6">Không thể tải tài khoản. Vui lòng tải lại trang.</p>;
-  if (!user) return <p className="p-6">Đang tải tài khoản...</p>;
+  if (!user) return <SkeletonRows label="Đang tải tài khoản..." className="p-6" />;
   return <AccountContext.Provider value={user}>{children}</AccountContext.Provider>;
 }
 
