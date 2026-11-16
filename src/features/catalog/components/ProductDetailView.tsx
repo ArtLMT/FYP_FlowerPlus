@@ -79,6 +79,11 @@ export default function ProductDetailView({
             <span className="rounded-full bg-accent-sage-light px-3 py-1 font-sans text-xs font-bold text-[#3D5236]">
               {TYPE_LABEL[product.type]}
             </span>
+            {product.arrangementType && (
+              <span className="rounded-full bg-primary-deep px-3 py-1 font-sans text-xs font-bold text-white">
+                {product.arrangementType.name}
+              </span>
+            )}
             {product.categories.map((category) => (
               <span key={category.id} className="rounded-full border border-neutral-border px-3 py-1 font-sans text-xs text-text-secondary">
                 {category.name}
@@ -94,12 +99,14 @@ export default function ProductDetailView({
             {product.description}
           </p>
 
-          {/* Listed price. */}
+          {/* Current price and the original price while a sale is running. */}
           <div className="mt-5">
-            <span className="block font-sans text-xs font-bold uppercase tracking-badge text-text-muted">Giá niêm yết</span>
+            <span className="block font-sans text-xs font-bold uppercase tracking-badge text-text-muted">{product.sale ? "Giá khuyến mãi" : "Giá niêm yết"}</span>
             <span className="font-sans text-[26px] font-bold text-primary md:text-[32px]">
-              {formatVND(product.basePrice)}
+              {formatVND(product.effectivePrice)}
             </span>
+            {product.effectivePrice < product.basePrice && <span className="ml-3 font-sans text-body text-text-muted line-through">{formatVND(product.basePrice)}</span>}
+            {product.sale && <p className="mt-1 font-sans text-sm text-text-muted">Ưu đãi đến {new Date(product.sale.endsAt).toLocaleString("vi-VN")}</p>}
           </div>
 
           {/* Availability card (title + explanation). */}
@@ -134,6 +141,12 @@ export default function ProductDetailView({
                 <dt className="font-sans text-body text-text-muted">Loại sản phẩm</dt>
                 <dd className="font-sans text-body font-bold text-primary">{TYPE_LABEL[product.type]}</dd>
               </div>
+              {product.arrangementType && (
+                <div className="flex items-center justify-between border-b border-neutral-border py-[14px]">
+                  <dt className="font-sans text-body text-text-muted">Kiểu cắm</dt>
+                  <dd className="font-sans text-body font-bold text-primary">{product.arrangementType.name}</dd>
+                </div>
+              )}
               <div className="flex items-center justify-between border-b border-neutral-border py-[14px]">
                 <dt className="font-sans text-body text-text-muted">Danh mục</dt>
                 <dd className="max-w-[65%] text-right font-sans text-body font-bold text-primary">{categoryNames}</dd>

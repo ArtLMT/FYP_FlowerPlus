@@ -35,6 +35,8 @@ export interface ManagedProduct {
   version: number;
   recipe: RecipeLine[];
   categories: Array<{ id: string; name: string }>;
+  /** Its arrangement style (BR-PROD-22); required to activate. */
+  arrangementType: { id: string; name: string } | null;
   /** Sorted by display order; the first one is the main image. */
   images: Array<{ id: string; contentUrl: string; displayOrder: number }>;
   createdAt: string;
@@ -50,6 +52,7 @@ export interface ManagedProductInput {
   basePrice: number | null;
   categoryIds: string[];
   recipe: Array<{ materialId: string; quantityRequired: number }>;
+  arrangementTypeId: string | null;
 }
 
 /* ── Image rules (mirrors the backend) ───────────── */
@@ -77,6 +80,7 @@ export const ACTIVATION_REQUIREMENTS: Record<string, string> = {
   description: "Mô tả (tối đa 5.000 ký tự)",
   basePrice: "Giá bán gốc là số VND nguyên dương",
   categoryIds: "Ít nhất một danh mục",
+  arrangementTypeId: "Một kiểu cắm",
   recipe: "Ít nhất một dòng công thức hợp lệ",
   images: "Ít nhất một ảnh đã tải lên",
 };
@@ -122,6 +126,7 @@ const FORM_FIELD_MESSAGES: Record<string, string> = {
   description: "Nhập mô tả không để trống, tối đa 5.000 ký tự.",
   basePrice: "Nhập giá bán gốc là số VND nguyên dương, tối đa 12 chữ số.",
   categoryIds: "Chọn ít nhất một danh mục hợp lệ.",
+  arrangementTypeId: "Chọn một kiểu cắm đang dùng.",
   recipe: "Thêm ít nhất một dòng công thức hợp lệ với số lượng lớn hơn 0.",
   images: "Giữ ít nhất một ảnh sản phẩm hợp lệ.",
   type: "Chọn loại sản phẩm.",
@@ -135,6 +140,7 @@ const formErrors = (editing: boolean): ErrorMessages => ({
   },
   codes: {
     PRODUCT_RECIPE_MATERIAL_INACTIVE: "Một nguyên liệu đã chọn không còn hoạt động. Vui lòng tải lại và kiểm tra công thức.",
+    ARRANGEMENT_TYPE_NOT_FOUND: "Kiểu cắm đã chọn không còn tồn tại. Vui lòng chọn kiểu khác.",
     CONCURRENT_MODIFICATION: "Sản phẩm đã được thay đổi ở nơi khác. Hãy đóng biểu mẫu, xem phiên bản hiện tại và thử lại.",
     PRODUCT_INVALID_STATE: "Trạng thái sản phẩm đã thay đổi. Hãy đóng biểu mẫu và xem trạng thái hiện tại.",
     PRODUCT_RECIPE_STOCK_CONFLICT: "Không thể đổi công thức khi vẫn còn sản phẩm làm sẵn đang có sẵn hoặc đã được giữ chỗ.",

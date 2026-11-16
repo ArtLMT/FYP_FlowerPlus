@@ -8,6 +8,7 @@ import ProductCreateForm from "@/features/admin/ProductCreateForm";
 import ProductImageManager from "@/features/admin/ProductImageManager";
 import { useProductManager, type StatusFilter } from "@/features/admin/hooks/use-product-manager";
 import { MATERIAL_TYPE_LABELS, MATERIAL_UNIT_LABELS } from "@/features/admin/material-labels";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 import {
   formatDate,
   formatMoney,
@@ -96,7 +97,7 @@ function ProductDetail({
 }) {
   const [imageIndex, setImageIndex] = useState(0);
 
-  if (loading) return <div className="w-full min-w-0 rounded-2xl border border-neutral-border bg-white p-8 text-center text-sm text-text-muted">Đang tải chi tiết sản phẩm…</div>;
+  if (loading) return <div className="w-full min-w-0 rounded-2xl border border-neutral-border bg-white px-5 py-2"><SkeletonRows label="Đang tải chi tiết sản phẩm…" /></div>;
   if (error || !product) return <div className="w-full min-w-0 rounded-2xl border border-neutral-border bg-white p-6">
     <Button type="button" onClick={onBack} className="mb-5 text-sm font-semibold text-primary-deep">← Quay lại danh sách sản phẩm</Button>
     <p role="alert" className="text-sm text-primary-deep">{error || "Không tìm thấy sản phẩm."}</p>
@@ -161,6 +162,7 @@ function ProductDetail({
           <dl className="grid grid-cols-[minmax(95px,0.7fr)_minmax(0,1.3fr)] gap-x-4 gap-y-3 text-sm">
             <dt className="text-text-muted">Giá bán (gốc)</dt><dd className="min-w-0 break-words text-right"><strong className="text-lg text-primary-deep">{formatMoney(product.basePrice)}</strong><span className="mt-0.5 block text-xs text-text-muted">Chưa áp dụng giảm giá theo lịch</span></dd>
             <dt className="text-text-muted">Loại</dt><dd className="min-w-0 break-words text-right">{productTypeLabel(product.type)}</dd>
+            <dt className="text-text-muted">Kiểu cắm</dt><dd className="min-w-0 break-words text-right">{product.arrangementType?.name ?? "Chưa chọn"}</dd>
             <dt className="text-text-muted">Mô tả</dt><dd className="min-w-0 break-words text-right leading-relaxed">{product.description || "Chưa có"}</dd>
             <dt className="text-text-muted">Phiên bản</dt><dd className="min-w-0 break-words text-right">{product.version}</dd>
           </dl>
@@ -404,7 +406,7 @@ export default function ProductManager() {
     {actionError && <p role="alert" className="rounded-xl border border-primary/30 bg-white px-4 py-3 text-sm text-primary-deep">{actionError}</p>}
     {refreshRequiredId && !activationProduct && <Button type="button" disabled={busyId === refreshRequiredId} onClick={() => void refreshLifecycleProduct(refreshRequiredId)} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Tải lại sản phẩm</Button>}
     {error && <div className="rounded-2xl border border-neutral-border bg-white px-5 py-8 text-center"><p role="alert" className="text-sm text-primary-deep">{error}</p><Button type="button" onClick={reloadProducts} className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Thử lại</Button></div>}
-    {!error && loading && <div className="rounded-2xl border border-neutral-border bg-white py-12 text-center text-sm text-text-muted">Đang tải sản phẩm…</div>}
+    {!error && loading && <div className="rounded-2xl border border-neutral-border bg-white px-5 py-2"><SkeletonRows label="Đang tải sản phẩm…" /></div>}
     {!error && !loading && visibleProducts.length === 0 && <div className="rounded-2xl border border-neutral-border bg-white px-5 py-12 text-center text-sm text-text-muted">{search ? "Không có sản phẩm nào khớp với tìm kiếm." : "Chưa có sản phẩm nào ở trạng thái này."}</div>}
 
     {/* Product results: compact cards below xl, table at xl and above. */}
@@ -415,6 +417,7 @@ export default function ProductManager() {
             <div className="flex min-w-0 items-center gap-2">
               <button type="button" onClick={() => openProduct(product.id)} className="min-w-0 truncate text-left font-semibold text-text-primary hover:text-primary-deep">{product.name}</button>
               <span className="shrink-0 rounded-full bg-neutral-raised px-2 py-1 text-[11px] font-semibold text-text-secondary">{productTypeLabel(product.type)}</span>
+              {product.arrangementType && <span className="shrink-0 rounded-full bg-primary-deep/10 px-2 py-1 text-[11px] font-semibold text-primary-deep">{product.arrangementType.name}</span>}
             </div>
             <StatusBadge status={product.status} />
           </div>
@@ -432,7 +435,7 @@ export default function ProductManager() {
         {visibleProducts.map((product) => <article key={product.id} className="grid grid-cols-[minmax(200px,1.5fr)_110px_130px_140px_190px] items-center gap-2 border-b border-neutral-border px-5 py-4 last:border-b-0 hover:bg-neutral-canvas/60">
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
-              <div className="flex min-w-0 flex-wrap items-center gap-2"><button type="button" onClick={() => openProduct(product.id)} className="truncate text-left font-semibold text-text-primary hover:text-primary-deep">{product.name}</button><span className="shrink-0 rounded-full bg-neutral-raised px-2 py-0.5 text-[10px] font-semibold text-text-secondary">{productTypeLabel(product.type)}</span></div>
+              <div className="flex min-w-0 flex-wrap items-center gap-2"><button type="button" onClick={() => openProduct(product.id)} className="truncate text-left font-semibold text-text-primary hover:text-primary-deep">{product.name}</button><span className="shrink-0 rounded-full bg-neutral-raised px-2 py-0.5 text-[10px] font-semibold text-text-secondary">{productTypeLabel(product.type)}</span>{product.arrangementType && <span className="shrink-0 rounded-full bg-primary-deep/10 px-2 py-0.5 text-[10px] font-semibold text-primary-deep">{product.arrangementType.name}</span>}</div>
               <span className="shrink-0 text-xs text-text-muted">{productSetupSummary(product)}</span>
             </div>
           </div>

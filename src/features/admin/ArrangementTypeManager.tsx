@@ -7,6 +7,7 @@ import FieldMessages from "@/features/admin/FieldMessages";
 import { formatMoney } from "@/features/admin/OrderDetail";
 import { useArrangementTypeManager } from "@/features/admin/hooks/use-arrangement-type-manager";
 import { formatDate } from "@/features/admin/product-labels";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 const FIELD = "rounded-lg border border-neutral-border bg-white px-3 py-2.5 font-normal outline-none focus:border-primary";
 
@@ -26,7 +27,7 @@ export default function ArrangementTypeManager() {
 
       <FeedbackToast feedback={m.editorOpen ? null : m.feedback} />
 
-      {m.loading ? <p className="py-8 text-center text-sm text-text-muted">Đang tải kiểu cắm…</p>
+      {m.loading ? <SkeletonRows label="Đang tải kiểu cắm…" />
         : m.listError ? <div className="rounded-xl border border-neutral-border bg-white px-5 py-8 text-center">
           <p role="alert" className="text-sm text-red-800">{m.listError}</p>
           <Button type="button" onClick={m.reload} className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Thử lại</Button>

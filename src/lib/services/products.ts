@@ -1,10 +1,8 @@
 import { api, asApiError, path, withQuery, type Page } from "@/lib/api";
 import type { FeaturedItem } from "@/lib/types";
-import { saleItems } from "@/lib/mock-data";
 
 /**
- * Public Product catalog. Product list/detail come from the backend; the Promotion-owned sale
- * showcase stays on mock data until Promotion is built.
+ * Public Product catalog and active sale prices come from the backend.
  */
 
 export type PublicProductType = "PRE_ORDER" | "PRE_MADE";
@@ -20,13 +18,24 @@ export interface PublicProductImage {
   displayOrder: number;
 }
 
+export interface PublicSaleSummary {
+  saleId: string;
+  discountType: "FIXED" | "PERCENTAGE";
+  discountValue: number;
+  endsAt: string;
+}
+
 /** Public-safe card data returned by GET /api/products. */
 export interface PublicProductSummary {
   id: string;
   name: string;
   type: PublicProductType;
   basePrice: number;
+  effectivePrice: number;
+  sale: PublicSaleSummary | null;
   categories: PublicProductCategory[];
+  /** Its arrangement style ("Kiểu cắm", BR-PROD-22); null until staff set one. */
+  arrangementType: PublicProductCategory | null;
   mainImageUrl: string | null;
   /** A new order can be placed now: an Active PreOrder whose recipe materials are all Active (BR-PROD-12). */
   orderable: boolean;
@@ -100,8 +109,32 @@ export async function getCategoryShowcases(): Promise<CategoryShowcase[]> {
   }));
 }
 
+/**
+ * The discount as a whole percent, rounded down so a badge never claims more than the real saving
+ * (680.000đ → 580.000đ is "-14%"). Fixed-amount sales get one too, so every sale card looks alike.
+ * Undefined when the product is not cheaper than its base price.
+ */
+export function discountPercentOf(product: Pick<PublicProductSummary, "basePrice" | "effectivePrice">) {
+  if (product.basePrice <= 0 || product.effectivePrice >= product.basePrice) return undefined;
+  return Math.max(1, Math.floor((product.basePrice - product.effectivePrice) * 100 / product.basePrice));
+}
+
 export async function getSaleItems(): Promise<FeaturedItem[]> {
-  return saleItems;
+  const products = await getProducts();
+  return products.filter((product) => product.sale !== null).map((product) => ({
+    id: product.id,
+    name: product.name,
+    materials: product.sale!.discountType === "PERCENTAGE"
+      ? `Giảm ${product.sale!.discountValue}% đến ${new Date(product.sale!.endsAt).toLocaleDateString("vi-VN")}`
+      : `Giảm ${new Intl.NumberFormat("vi-VN").format(product.sale!.discountValue)}₫ đến ${new Date(product.sale!.endsAt).toLocaleDateString("vi-VN")}`,
+    price: product.effectivePrice,
+    originalPrice: product.basePrice,
+    discountPercent: discountPercentOf(product) ?? 0,
+    discountLabel: product.sale!.discountType === "PERCENTAGE"
+      ? `-${product.sale!.discountValue}%`
+      : `-${new Intl.NumberFormat("vi-VN").format(product.sale!.discountValue)}₫`,
+    imageUrl: product.mainImageUrl ?? "",
+  }));
 }
 
 /**

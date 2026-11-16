@@ -1,6 +1,6 @@
 import ProductImage from "@/components/ui/ProductImage";
 import Link from "next/link";
-import { availabilityOf, type PublicProductSummary } from "@/lib/services/products";
+import { availabilityOf, discountPercentOf, type PublicProductSummary } from "@/lib/services/products";
 import PriceBlock from "@/components/ui/PriceBlock";
 
 interface ProductCardProps {
@@ -33,19 +33,26 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* Info */}
       <div className="flex flex-1 flex-col text-left">
-        {/* Product name and category list. */}
-        <h3 className="line-clamp-2 min-h-[2.8em] font-serif text-heading-md font-medium leading-[1.4] tracking-heading text-text-primary">
+        {/* Product name, then its arrangement style and categories. */}
+        {/* No reserved heights here, so the price follows the name closely (decision 2026-11-13).
+            The price block still sits at the card's bottom, so prices line up across a row. */}
+        <h3 className="line-clamp-2 font-serif text-heading-md font-medium leading-[1.3] tracking-heading text-text-primary">
           {product.name}
         </h3>
-        <p className="mb-2 min-h-[1.4em] line-clamp-1 font-sans text-body-sm leading-[1.4] text-text-secondary">
+        {(product.arrangementType || product.categories.length > 0) && <p className="mt-0.5 line-clamp-1 font-sans text-body-sm leading-[1.4] text-text-secondary">
+          {product.arrangementType && <span className="font-bold text-primary-deep">{product.arrangementType.name}</span>}
+          {product.arrangementType && product.categories.length > 0 && " · "}
           {product.categories.map((category) => category.name).join(" · ")}
-        </p>
+        </p>}
 
         {/* Price block */}
-        <div className="mt-auto flex w-full items-center justify-between pt-4">
+        <div className="mt-auto w-full pt-2">
           <PriceBlock
-            price={product.basePrice}
+            price={product.effectivePrice}
+            originalPrice={product.effectivePrice < product.basePrice ? product.basePrice : undefined}
+            discountPercent={discountPercentOf(product)}
             priceSize="md"
+            reserveOriginalLine
           />
         </div>
         {/* Availability badge (in stock / out of stock …). */}

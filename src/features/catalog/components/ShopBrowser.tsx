@@ -3,7 +3,7 @@
 import Button from "@/components/ui/Button";
 import FilterPanel from "@/features/catalog/components/FilterPanel";
 import ProductCard from "@/features/catalog/components/ProductCard";
-import type { Filters } from "@/features/catalog/filters";
+import { sectionsByArrangement, type Filters } from "@/features/catalog/filters";
 import { useShopFilters } from "@/features/catalog/hooks/use-shop-filters";
 import type { PublicProductSummary } from "@/lib/services/products";
 
@@ -25,12 +25,23 @@ export default function ShopBrowser({
   const shop = useShopFilters(products, initial, query);
   const { filters, visible, toggle, clear, clearQuery, drawerOpen } = shop;
   const count = shop.activeCount;
+  // Browsing is split by arrangement style (BR-PROD-22) unless the customer already picked styles,
+  // or everything visible falls under one style anyway.
+  const sections = sectionsByArrangement(visible);
+  const sectioned = filters.arrangement.length === 0 && sections.length > 1;
+  const grid = (items: PublicProductSummary[]) => (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-[14px] md:gap-[22px]">
+      {items.map((p) => (
+        <ProductCard key={p.id} product={p} />
+      ))}
+    </div>
+  );
 
   return (
     <div className="md:grid md:grid-cols-[240px_1fr] md:gap-8 md:items-start">
       {/* Desktop filter sidebar */}
       <aside className="hidden md:block md:sticky md:top-24">
-        <FilterPanel categories={shop.categories} filters={filters} onToggle={toggle} />
+        <FilterPanel arrangements={shop.arrangements} categories={shop.categories} filters={filters} onToggle={toggle} />
       </aside>
 
       {/* Results */}
@@ -78,12 +89,22 @@ export default function ShopBrowser({
           <p className="text-center py-16 font-serif italic text-heading-sm text-text-muted">
             {query ? `Không tìm thấy kết quả cho “${query}”.` : "Không có sản phẩm nào khớp bộ lọc."}
           </p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-[14px] md:gap-[22px]">
-            {visible.map((p) => (
-              <ProductCard key={p.id} product={p} />
+        ) : sectioned ? (
+          <div className="flex flex-col gap-10">
+            {sections.map((section) => (
+              <section key={section.key} aria-labelledby={`style-${section.key}`}>
+                <div className="mb-4 flex items-baseline justify-between gap-3 border-b border-neutral-border pb-2">
+                  <h2 id={`style-${section.key}`} className="m-0 font-serif font-medium text-heading-md text-text-primary">
+                    {section.label}
+                  </h2>
+                  <span className="font-sans text-body-sm text-text-muted">{section.products.length} sản phẩm</span>
+                </div>
+                {grid(section.products)}
+              </section>
             ))}
           </div>
+        ) : (
+          grid(visible)
         )}
       </div>
 
@@ -106,7 +127,7 @@ export default function ShopBrowser({
 
             {/* Scrollable filter groups (same FilterPanel as desktop). */}
             <div className="flex-1 overflow-y-auto no-scrollbar px-5">
-              <FilterPanel categories={shop.categories} filters={filters} onToggle={toggle} />
+              <FilterPanel arrangements={shop.arrangements} categories={shop.categories} filters={filters} onToggle={toggle} />
             </div>
 
             {/* Drawer footer: Clear and "Xem N kết quả" buttons. */}

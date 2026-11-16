@@ -14,6 +14,7 @@ import {
   type ManagedProductType,
 } from "@/lib/services/managed-products";
 import type { Material } from "@/lib/services/materials";
+import { listArrangementTypes } from "@/lib/services/arrangement-types";
 
 type RecipeMaterial = Pick<Material, "id" | "name" | "type" | "unitOfMeasure" | "status">;
 export type RecipeRow = { id: string; material: RecipeMaterial; quantityRequired: string };
@@ -31,7 +32,7 @@ const imageKey = (file: File) => `${file.name}:${file.size}:${file.lastModified}
 
 /** Checks that can fail before anything is sent; the backend re-validates everything. */
 function validate(
-  { name, description, basePrice, categoryIds, recipe }: { name: string; description: string; basePrice: string; categoryIds: string[]; recipe: RecipeRow[] },
+  { name, description, basePrice, categoryIds, arrangementTypeId, recipe }: { name: string; description: string; basePrice: string; categoryIds: string[]; arrangementTypeId: string; recipe: RecipeRow[] },
   product: ManagedProduct | undefined,
 ): FieldErrors {
   const errors: FieldErrors = {};
@@ -50,6 +51,7 @@ function validate(
     if (!description) errors.description = ["Sản phẩm đang bán phải có mô tả."];
     if (!basePrice) errors.basePrice = ["Sản phẩm đang bán phải có giá bán gốc."];
     if (categoryIds.length === 0) errors.categoryIds = ["Sản phẩm đang bán phải có ít nhất một danh mục."];
+    if (!arrangementTypeId) errors.arrangementTypeId = ["Sản phẩm đang bán phải có kiểu cắm."];
     if (recipe.length === 0) errors.recipe = ["Sản phẩm đang bán phải có ít nhất một dòng công thức."];
   }
   return errors;
@@ -67,6 +69,7 @@ export function useProductForm({ onCancel, onCreated, product, onSaved }: Produc
   const [description, setDescription] = useState(product?.description ?? "");
   const [basePrice, setBasePrice] = useState(product?.basePrice == null ? "" : String(product.basePrice));
   const [categoryIds, setCategoryIds] = useState<string[]>(product?.categories.map(({ id }) => id) ?? []);
+  const [arrangementTypeId, setArrangementTypeId] = useState(product?.arrangementType?.id ?? "");
   const [recipe, setRecipe] = useState<RecipeRow[]>(product?.recipe.map((line) => ({
     id: line.materialId,
     material: {
@@ -93,6 +96,13 @@ export function useProductForm({ onCancel, onCreated, product, onSaved }: Produc
   }, []);
 
   const categories = useResource(getProductCategories, "categories");
+  const arrangementTypes = useResource(listArrangementTypes, "arrangement-types");
+  // Only Active styles can be newly chosen (BR-PROD-22); the product's current one stays selectable
+  // even after it was stopped, so an edit does not silently drop it.
+  const currentStyleId = product?.arrangementType?.id;
+  const arrangementOptions = (arrangementTypes.data ?? [])
+    .filter((option) => option.status === "ACTIVE" || option.id === currentStyleId)
+    .map((option) => ({ id: option.id, name: option.status === "ACTIVE" ? option.name : `${option.name} (đã ngừng)` }));
 
   const materialQuery = materialSearch.trim();
   const searchedQuery = useDebouncedValue(materialQuery, 200);
@@ -212,7 +222,7 @@ export function useProductForm({ onCancel, onCreated, product, onSaved }: Produc
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     clearErrors();
-    const normalized = { name: name.trim(), description: description.trim(), basePrice, categoryIds, recipe };
+    const normalized = { name: name.trim(), description: description.trim(), basePrice, categoryIds, arrangementTypeId, recipe };
     const clientErrors = validate(normalized, product);
     if (Object.keys(clientErrors).length > 0) {
       setError(`Vui lòng kiểm tra lại một số thông tin trước khi ${editing ? "lưu" : "tạo"} sản phẩm.`);
@@ -228,6 +238,7 @@ export function useProductForm({ onCancel, onCreated, product, onSaved }: Produc
         description: normalized.description || null,
         basePrice: basePrice === "" ? null : Number(basePrice),
         categoryIds,
+        arrangementTypeId: arrangementTypeId || null,
         recipe: recipe.map((line) => ({
           materialId: line.material.id,
           quantityRequired: Number(line.quantityRequired),
@@ -269,6 +280,12 @@ export function useProductForm({ onCancel, onCreated, product, onSaved }: Produc
     retryCategories: categories.reload,
     categoryIds,
     toggleCategory,
+    arrangementOptions,
+    arrangementTypesLoading: arrangementTypes.loading,
+    arrangementTypesError: arrangementTypes.loading ? "" : arrangementTypes.error?.message ?? "",
+    retryArrangementTypes: arrangementTypes.reload,
+    arrangementTypeId,
+    setArrangementTypeId: edit(setArrangementTypeId),
     recipe,
     selectedMaterialIds: new Set(recipe.map((row) => row.material.id)),
     updateRecipeRow,

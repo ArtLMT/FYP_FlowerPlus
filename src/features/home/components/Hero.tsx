@@ -1,5 +1,5 @@
-import Button from "@/components/ui/Button";
 import Image from "next/image";
+import Link from "next/link";
 import Container from "@/components/ui/Container";
 
 /**
@@ -43,9 +43,9 @@ export default function Hero() {
             <p className="hidden md:block font-sans text-[17px] leading-[1.6] text-[#ffeae5] mb-[30px]">
               Bộ sưu tập được tuyển chọn mỗi ngày, gói ghém trọn vẹn từng cảm xúc.
             </p>
-            <Button className="hidden md:inline-block self-start bg-neutral-canvas text-primary border-none rounded-[10px] px-[30px] py-[15px] font-sans font-bold text-body-sm tracking-button cursor-pointer hover:opacity-90 transition-opacity">
+            <Link href="/shop" className="hidden md:inline-block self-start bg-neutral-canvas text-primary border-none rounded-[10px] px-[30px] py-[15px] font-sans font-bold text-body-sm tracking-button cursor-pointer hover:opacity-90 transition-opacity">
               KHÁM PHÁ NGAY
-            </Button>
+            </Link>
           </div>
         </div>
       </Container>

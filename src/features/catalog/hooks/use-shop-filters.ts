@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import type { PublicProductSummary } from "@/lib/services/products";
 import {
   activeCount,
+  arrangementOptions,
   categoryOptions,
   EMPTY_FILTERS,
   filterProducts,
@@ -27,6 +28,7 @@ export function useShopFilters(products: PublicProductSummary[], initial: Filter
     [products, filters, query],
   );
   const categories = useMemo(() => categoryOptions(products), [products]);
+  const arrangements = useMemo(() => arrangementOptions(products), [products]);
 
   /** Build /shop?… preserving the current search term alongside the filters. */
   const urlFor = (next: Filters) => {
@@ -56,6 +58,7 @@ export function useShopFilters(products: PublicProductSummary[], initial: Filter
   return {
     filters,
     categories,
+    arrangements,
     visible,
     activeCount: activeCount(filters),
     toggle,

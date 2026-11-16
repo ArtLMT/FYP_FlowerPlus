@@ -1,4 +1,4 @@
-import Button from "@/components/ui/Button";
+import Link from "next/link";
 /**
  * QuickActions — the 4 shortcut buttons (Đơn hàng / Đặt riêng / Ưu đãi / Tài khoản).
  *
@@ -9,10 +9,10 @@ import Button from "@/components/ui/Button";
  * The data lives here once; only the presentation changes.
  */
 const ACTIONS = [
-  { label: "Đơn hàng", icon: "shopping_bag" },
-  { label: "Đặt riêng", icon: "edit" },
-  { label: "Ưu đãi", icon: "local_offer" },
-  { label: "Tài khoản", icon: "person" },
+  { label: "Đơn hàng", icon: "shopping_bag", href: "/account/orders" },
+  { label: "Đặt riêng", icon: "edit", href: "/custom" },
+  { label: "Ưu đãi", icon: "local_offer", href: "/account/vouchers" },
+  { label: "Tài khoản", icon: "person", href: "/account" },
 ];
 
 export default function QuickActions({
@@ -27,9 +27,10 @@ export default function QuickActions({
   return (
     <div className={`grid grid-cols-4 ${isRow ? "gap-[18px]" : "gap-2"} ${className}`}>
       {/* One shortcut tile: icon plus label. */}
-      {ACTIONS.map(({ label, icon }) => (
-        <Button
+      {ACTIONS.map(({ label, icon, href }) => (
+        <Link
           key={label}
+          href={href}
           className={`bg-neutral-surface border border-neutral-border cursor-pointer text-text-secondary hover:bg-neutral-raised transition-colors ${
             isRow
               ? "flex items-center gap-[14px] rounded-2xl px-[22px] py-[18px] text-left"
@@ -49,7 +50,7 @@ export default function QuickActions({
           >
             {label}
           </span>
-        </Button>
+        </Link>
       ))}
     </div>
   );

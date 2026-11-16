@@ -65,18 +65,23 @@ function Group({
   );
 }
 
-/** The filter card: Category group, then Price-range group. */
+/** The filter card: arrangement style (BR-PROD-22), then Category, then Price range. */
 export default function FilterPanel({
+  arrangements,
   categories,
   filters,
   onToggle,
 }: {
+  arrangements: FilterOption[];
   categories: FilterOption[];
   filters: Filters;
   onToggle: (group: FilterKey, value: string) => void;
 }) {
   return (
     <div className="bg-neutral-surface border border-neutral-border rounded-2xl px-5">
+      {arrangements.length > 0 && (
+        <Group title="Kiểu cắm" group="arrangement" options={arrangements} filters={filters} onToggle={onToggle} />
+      )}
       <Group title="Danh mục" group="category" options={categories} filters={filters} onToggle={onToggle} />
       <Group title="Khoảng giá" group="price" options={PRICE_BUCKETS} filters={filters} onToggle={onToggle} />
     </div>

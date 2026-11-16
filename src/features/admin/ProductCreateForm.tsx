@@ -19,6 +19,7 @@ const FIELD_NAMES: Record<string, string> = {
   description: "Mô tả",
   basePrice: "Giá bán gốc",
   categoryIds: "Danh mục",
+  arrangementTypeId: "Kiểu cắm",
   recipe: "Công thức",
   images: "Ảnh",
 };
@@ -60,6 +61,12 @@ export default function ProductCreateForm({
     retryCategories,
     categoryIds,
     toggleCategory,
+    arrangementOptions,
+    arrangementTypesLoading,
+    arrangementTypesError,
+    retryArrangementTypes,
+    arrangementTypeId,
+    setArrangementTypeId,
     recipe,
     selectedMaterialIds,
     updateRecipeRow,
@@ -180,6 +187,30 @@ export default function ProductCreateForm({
         </label>
       </section>
 
+      {/* Arrangement style (BR-PROD-22): separates products in the shop. */}
+      <section className="space-y-3">
+        <div>
+          <h3 className="font-semibold text-text-primary">Kiểu cắm <span className="font-normal text-text-muted">· {isActive ? "bắt buộc" : "không bắt buộc"}</span></h3>
+          <p className="mt-1 text-xs text-text-muted">Cửa hàng chia sản phẩm theo kiểu cắm khi khách xem và lọc. {isActive ? "Sản phẩm đang bán phải có kiểu cắm." : "Cần chọn trước khi mở bán."}</p>
+        </div>
+        {arrangementTypesLoading ? <p className="text-sm text-text-muted">Đang tải kiểu cắm…</p>
+          : <select
+            aria-label="Kiểu cắm"
+            value={arrangementTypeId}
+            onChange={(event) => setArrangementTypeId(event.target.value)}
+            className="min-h-11 w-full max-w-sm rounded-xl border border-neutral-border bg-white px-3 text-sm text-text-primary"
+          >
+            <option value="">Chưa chọn</option>
+            {arrangementOptions.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
+          </select>}
+        {!arrangementTypesLoading && !arrangementTypesError && arrangementOptions.length === 0 && <p className="text-sm text-text-muted">Chưa có kiểu cắm nào. Thêm trong mục &quot;Kiểu cắm&quot; của trang quản trị.</p>}
+        {arrangementTypesError && <div className="flex flex-wrap items-center gap-2 text-xs text-amber-800">
+          <span role="status">{arrangementTypesError}</span>
+          <Button type="button" onClick={retryArrangementTypes} disabled={arrangementTypesLoading} className="font-semibold underline">Tải lại kiểu cắm</Button>
+        </div>}
+        {fieldErrors.arrangementTypeId?.map((message) => <p key={message} className="text-xs text-red-700">{message}</p>)}
+      </section>
+
       {/* Category selector. */}
       <section className="space-y-3">
         <div>
@@ -258,7 +289,7 @@ export default function ProductCreateForm({
           <span className="text-xs text-text-muted">Đã chọn {recipe.length}</span>
         </div>
         {recipe.length === 0 ? <p className="rounded-xl border border-dashed border-neutral-border px-4 py-5 text-center text-sm text-text-muted">Chưa chọn nguyên liệu nào. Tìm bên dưới và chọn Thêm để bắt đầu công thức.</p>
-          : <div className="space-y-3 rounded-xl border border-neutral-border bg-neutral-canvas p-3">
+          : <div className="space-y-3 border-y border-neutral-border py-3">
               {recipe.map((row, index) => {
                 const allowsFraction = row.material.unitOfMeasure === "METRE";
                 return <div key={row.id} className="grid gap-3 border-b border-neutral-border pb-3 last:border-b-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_minmax(140px,0.55fr)_auto] sm:items-end">

@@ -13,6 +13,8 @@ export interface FeaturedItem {
   price: number;
   originalPrice: number;
   discountPercent: number;
+  /** Exact campaign value when loaded from a live sale; mock cards fall back to a percent label. */
+  discountLabel?: string;
   imageUrl: string;
 }
 
