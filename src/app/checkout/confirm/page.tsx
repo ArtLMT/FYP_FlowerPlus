@@ -36,7 +36,7 @@ export default function ConfirmPage() {
  * the bottom. Submit logic lives in `features/checkout/hooks/use-place-order.ts`.
  */
 function ConfirmView() {
-  const { cart, selection, address, needsNewSelection, placing, error, priceChanged, submit, voucherCode, voucherQuote } = usePlaceOrder();
+  const { cart, selection, address, needsNewSelection, placing, error, priceChanged, submit, voucherCode, voucherQuote, shippingEstimate } = usePlaceOrder();
 
   // Delivery choices are missing or stale: ask the customer to pick them again.
   if (needsNewSelection || !selection) {
@@ -143,9 +143,22 @@ function ConfirmView() {
               <span className="font-sans text-[16px] text-text-secondary">Tạm tính (giá hiện tại)</span>
               <span className="font-sans text-[16px] text-text-secondary">{formatVND(cart.subtotal)}</span>
             </div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-sans text-[16px] text-text-secondary">Phí giao hàng</span>
-              <span className="font-sans text-[16px] text-text-secondary">Miễn phí</span>
+            {/* GHN's estimate for the chosen address. Shown only: the total below does not include it yet. */}
+            <div className="mb-3">
+              <div className="flex items-center justify-between">
+                <span className="font-sans text-[16px] text-text-secondary">Phí giao hàng (dự kiến)</span>
+                <span className="font-sans text-[16px] text-text-secondary">
+                  {shippingEstimate.state === "ready" ? formatVND(shippingEstimate.fee)
+                    : shippingEstimate.state === "loading" ? "Đang tính…"
+                      : "—"}
+                </span>
+              </div>
+              <p className="font-sans text-body-sm text-text-muted mt-1 mb-0">
+                {shippingEstimate.state === "no-area"
+                  ? <>Địa chỉ chưa có phường/xã. <Link href="/account/info" className="text-primary underline">Sửa địa chỉ</Link> để xem phí.</>
+                  : shippingEstimate.state === "error" ? shippingEstimate.message
+                    : "Theo Giao Hàng Nhanh (GHN). Hiện chưa cộng vào tổng tiền."}
+              </p>
             </div>
             {voucherCode && <div className="flex items-center justify-between mb-3 text-primary-deep">
               <span className="font-sans text-[16px]">Mã {voucherCode}</span>

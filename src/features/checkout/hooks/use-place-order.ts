@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { asApiError } from "@/lib/api";
 import { useResource } from "@/lib/hooks/use-resource";
-import { getAddresses } from "@/lib/services/addresses";
+import { getAddresses, hasDeliveryArea } from "@/lib/services/addresses";
+import { quoteShippingFee } from "@/lib/services/shipping";
 import { placeOrder } from "@/lib/services/orders";
 import { useCart } from "@/features/cart/cart-provider";
 import { isWishOpen, readSelection, readVoucherCode, savePlacedOrder } from "@/features/checkout/checkout-session";
@@ -36,6 +37,17 @@ export function usePlaceOrder() {
   const address = addresses.data?.find((candidate) => candidate.id === selection?.addressId) ?? null;
   const selectionValid = selection !== null && isWishOpen(selection.deliveryDate, selection.deliveryTimeSlot);
   const addressMissing = addresses.data !== undefined && address === null;
+  const addressHasArea = address !== null && hasDeliveryArea(address);
+  // Re-quoted when the address or the Cart changes. Shown only: the order total does not include it yet.
+  const feeQuote = useResource(
+    () => quoteShippingFee(address!.id),
+    addressHasArea && cartVersion !== undefined ? `shipping-fee-${address!.id}-${cartVersion}` : null,
+  );
+  const shippingEstimate = address === null ? { state: "loading" as const }
+    : !addressHasArea ? { state: "no-area" as const }
+      : feeQuote.error ? { state: "error" as const, message: feeQuote.error.message }
+        : feeQuote.loading || !feeQuote.data ? { state: "loading" as const }
+          : { state: "ready" as const, fee: feeQuote.data.shippingFee };
 
   async function submit() {
     if (!selection || !cart) return;
@@ -83,6 +95,8 @@ export function usePlaceOrder() {
     priceChanged,
     voucherCode,
     voucherQuote,
+    /** GHN's estimated fee for the chosen address; not part of the total (checkout still charges 0). */
+    shippingEstimate,
     submit,
   };
 }

@@ -20,8 +20,8 @@ const DATE_CHOICES = [
  * Checkout · Delivery — /checkout/delivery  (step 1 of 3)
  *
  * The customer picks one saved address, may state a wished date and slot, and may leave a note. New
- * addresses are added in the account address book. Payment is COD only and delivery is free inside
- * the delivery area.
+ * addresses are added in the account address book. Payment is COD only; the GHN shipping fee is
+ * shown as an estimate at the confirm step and not yet charged.
  */
 export default function DeliveryPage() {
   return (
@@ -60,9 +60,10 @@ function DeliveryForm() {
 
         {/* Address section: selectable saved-address cards, or an empty message. */}
         <h2 className="font-serif font-medium text-[27px] mt-8 mb-2 px-[22px]">Địa chỉ giao hàng</h2>
-        {/* The area is stated, not checked: an address is free text, so staff cancel an order outside it. */}
+        {/* The area is stated, not checked: staff cancel an order outside it. The GHN fee is an estimate
+            shown at the confirm step; the order total does not include it yet. */}
         <p className="px-[22px] mb-4 font-sans text-body-sm text-text-muted m-0">
-          Cửa hàng giao hàng trong {DELIVERY_AREA} và không tính phí giao hàng.{" "}
+          Cửa hàng giao hàng trong {DELIVERY_AREA}. Phí giao hàng dự kiến theo Giao Hàng Nhanh (GHN) được hiển thị ở bước xác nhận.{" "}
           <Link href="/policies/delivery" target="_blank" rel="noopener noreferrer" className="text-primary underline">Chính sách giao hàng</Link>
         </p>
         {form.addresses.length === 0 ? (

@@ -6,7 +6,9 @@ import ModalDialog from "@/components/ui/ModalDialog";
 import DetailHeader from "@/features/account/components/DetailHeader";
 import { useAccount } from "@/features/account/account-context";
 import { useAddressBook } from "@/features/account/hooks/use-address-book";
-import type { AddressInput } from "@/lib/services/addresses";
+import { hasDeliveryArea } from "@/lib/services/addresses";
+import AreaPicker from "@/features/account/components/AreaPicker";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 /** One "label ……… value" row in the user-information list. */
 function AccountRow({ label, value }: { label: string; value: string | null }) {
@@ -27,7 +29,7 @@ function AddressField({
   multiline = false,
   onChange,
 }: {
-  name: Exclude<keyof AddressInput, "isDefault">;
+  name: "receiverName" | "phone" | "address";
   label: string;
   value: string;
   messages?: string[];
@@ -104,7 +106,7 @@ export default function AccountInfoPage() {
         {book.actionError && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{book.actionError}</p>}
 
         {/* Loading, error-with-retry, and empty states for the address list. */}
-        {book.listState === "loading" && <p className="py-8 text-center text-sm text-text-muted">Đang tải sổ địa chỉ…</p>}
+        {book.listState === "loading" && <SkeletonRows label="Đang tải sổ địa chỉ…" />}
         {book.listState === "error" && <div className="mt-3 rounded-xl border border-neutral-border bg-white p-5 text-center">
           <p role="alert" className="text-sm text-red-700">{book.listError}</p>
           <Button type="button" onClick={book.reloadList} className="mt-3 rounded-lg border border-neutral-border px-4 py-2 text-sm font-semibold text-text-secondary" disabled={book.busy}>Thử tải lại</Button>
@@ -121,6 +123,7 @@ export default function AccountInfoPage() {
               </div>
               <p className="break-words font-sans text-body-lg text-text-secondary">{address.address}</p>
               <p className="mt-1 font-sans text-body-lg text-text-secondary">SĐT: {address.phone}</p>
+              {!hasDeliveryArea(address) && <p className="mt-2 font-sans text-body-sm text-primary">Chưa chọn phường/xã — bấm Sửa để tính được phí giao hàng.</p>}
               <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-neutral-border pt-4">
                 <Button type="button" disabled={book.busy} onClick={() => book.openEdit(address)} className="font-semibold text-primary">Sửa</Button>
                 <Button type="button" disabled={book.busy} onClick={() => void book.remove(address.id)} className="font-semibold text-text-secondary">Xóa</Button>
@@ -143,7 +146,13 @@ export default function AccountInfoPage() {
             {book.formError && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{book.formError}</p>}
             <AddressField name="receiverName" label="Tên người nhận" value={book.form.receiverName} messages={book.fieldErrors.receiverName} onChange={(value) => book.updateField("receiverName", value)} />
             <AddressField name="phone" label="Số điện thoại" value={book.form.phone} messages={book.fieldErrors.phone} onChange={(value) => book.updateField("phone", value)} />
-            <AddressField name="address" label="Địa chỉ" value={book.form.address} messages={book.fieldErrors.address} multiline onChange={(value) => book.updateField("address", value)} />
+            <AreaPicker
+              value={{ provinceId: book.form.provinceId, districtId: book.form.districtId, wardCode: book.form.wardCode }}
+              messages={{ provinceId: book.fieldErrors.provinceId, districtId: book.fieldErrors.districtId, wardCode: book.fieldErrors.wardCode }}
+              disabled={book.busy}
+              onChange={book.updateArea}
+            />
+            <AddressField name="address" label="Số nhà, tên đường" value={book.form.address} messages={book.fieldErrors.address} multiline onChange={(value) => book.updateField("address", value)} />
             <label className="flex items-center gap-2 text-sm text-text-secondary">
               <input type="checkbox" checked={book.form.isDefault} onChange={(event) => book.updateField("isDefault", event.target.checked)} />
               Đặt làm mặc định

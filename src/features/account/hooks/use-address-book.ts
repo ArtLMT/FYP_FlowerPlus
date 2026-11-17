@@ -13,7 +13,18 @@ import {
 } from "@/lib/services/addresses";
 import { useToast } from "@/components/ui/ToastProvider";
 
-const EMPTY_FORM: AddressInput = { receiverName: "", phone: "", address: "", isDefault: false };
+const EMPTY_FORM: AddressInput = {
+  receiverName: "", phone: "", address: "", isDefault: false, provinceId: null, districtId: null, wardCode: null,
+};
+
+/** The area part of the form; choosing a province or district clears what was below it. */
+export type AreaChoice = Pick<AddressInput, "provinceId" | "districtId" | "wardCode">;
+
+const AREA_REQUIRED: Record<keyof AreaChoice, string> = {
+  provinceId: "Tỉnh/Thành phố là bắt buộc.",
+  districtId: "Quận/Huyện là bắt buộc.",
+  wardCode: "Phường/Xã là bắt buộc.",
+};
 
 export type AddressListState = "loading" | "error" | "empty" | "ready";
 
@@ -53,8 +64,18 @@ export function useAddressBook() {
     if (!formOpen) openForm(null, EMPTY_FORM);
   }
 
-  function openEdit({ id, receiverName, phone, address, isDefault }: AccountAddress) {
-    openForm(id, { receiverName, phone, address, isDefault });
+  // An address saved before GHN areas has no street: its old text is offered as the street line,
+  // and the customer picks the area.
+  function openEdit(saved: AccountAddress) {
+    openForm(saved.id, {
+      receiverName: saved.receiverName,
+      phone: saved.phone,
+      address: saved.street ?? saved.address,
+      isDefault: saved.isDefault,
+      provinceId: saved.provinceId,
+      districtId: saved.districtId,
+      wardCode: saved.wardCode,
+    });
   }
 
   function closeForm() {
@@ -67,8 +88,20 @@ export function useAddressBook() {
     setFormError("");
   }
 
+  function updateArea(area: AreaChoice) {
+    setForm((current) => ({ ...current, ...area }));
+    setFieldErrors((current) => ({ ...current, provinceId: [], districtId: [], wardCode: [] }));
+    setFormError("");
+  }
+
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // Every new or edited address gets a GHN area, so shipping can be quoted to it.
+    const missing = (Object.keys(AREA_REQUIRED) as (keyof AreaChoice)[]).filter((field) => form[field] === null);
+    if (missing.length) {
+      setFieldErrors(Object.fromEntries(missing.map((field) => [field, [AREA_REQUIRED[field]]])));
+      return;
+    }
     setSaving(true);
     setFormError("");
     setFieldErrors({});
@@ -123,6 +156,7 @@ export function useAddressBook() {
     openEdit,
     closeForm,
     updateField,
+    updateArea,
     save,
   };
 }

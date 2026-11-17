@@ -15,11 +15,32 @@ export interface AccountAddress {
   id: string;
   receiverName: string;
   phone: string;
+  /** The whole printable address (street, ward, district, province). */
   address: string;
   isDefault: boolean;
+  /** House number and street only. This and the GHN area are null on addresses saved before GHN areas. */
+  street: string | null;
+  provinceId: number | null;
+  provinceName: string | null;
+  districtId: number | null;
+  districtName: string | null;
+  wardCode: string | null;
+  wardName: string | null;
 }
 
-export type AddressInput = Omit<AccountAddress, "id">;
+/** The add/edit form. `address` is the house number and street; the area comes from GHN's lists. */
+export interface AddressInput {
+  receiverName: string;
+  phone: string;
+  address: string;
+  isDefault: boolean;
+  provinceId: number | null;
+  districtId: number | null;
+  wardCode: string | null;
+}
+
+/** Whether GHN can quote shipping to this address. */
+export const hasDeliveryArea = (address: AccountAddress) => address.districtId !== null && address.wardCode !== null;
 
 export interface AdminAddress extends AccountAddress {
   createdAt: string;
@@ -31,7 +52,10 @@ export const MAX_ADDRESSES = 20;
 const FIELD_LABELS: Record<string, string> = {
   receiverName: "Tên người nhận",
   phone: "Số điện thoại",
-  address: "Địa chỉ",
+  address: "Số nhà, tên đường",
+  provinceId: "Tỉnh/Thành phố",
+  districtId: "Quận/Huyện",
+  wardCode: "Phường/Xã",
 };
 
 function fieldMessage(field: ValidationFieldError) {
@@ -39,6 +63,7 @@ function fieldMessage(field: ValidationFieldError) {
   if (field.rule === "NotBlank") return `${label} là bắt buộc.`;
   if (field.rule === "Pattern") return `${label} không đúng định dạng.`;
   if (field.rule === "Size") return `${label} vượt quá độ dài cho phép.`;
+  if (field.rule === "GhnArea") return `${label} không khớp với khu vực đã chọn.`;
   return `${label} chưa hợp lệ.`;
 }
 
