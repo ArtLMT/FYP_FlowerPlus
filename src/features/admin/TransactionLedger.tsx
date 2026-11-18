@@ -8,6 +8,7 @@ import { MATERIAL_UNIT_LABELS } from "@/features/admin/material-labels";
 import { useResource } from "@/lib/hooks/use-resource";
 import { formatShopDateTime } from "@/lib/utils";
 import { listTransactions, type InventoryTransaction, type InventoryTransactionType, type MaterialBatch } from "@/lib/services/inventory";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 const PAGE_SIZE = 20;
 
@@ -71,7 +72,7 @@ export default function TransactionLedger({ onOpenOrder, onOpenBatches }: {
       {list.error && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{list.error.message}</p>}
 
       {/* Read-only transaction table, including its loading and empty states. */}
-      {list.loading && !page ? <p className="py-8 text-center text-sm text-text-muted">Đang tải giao dịch…</p>
+      {list.loading && !page ? <SkeletonRows label="Đang tải giao dịch…" />
         : page?.content.length === 0 ? <p className="rounded-xl border border-dashed border-neutral-border py-10 text-center text-sm text-text-muted">Chưa có giao dịch nào.</p>
           : page && <div className="overflow-x-auto rounded-xl border border-neutral-border bg-white shadow-sm">
             <table className="w-full min-w-[820px] text-left text-sm">

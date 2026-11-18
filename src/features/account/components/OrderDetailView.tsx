@@ -7,6 +7,7 @@ import ModalDialog from "@/components/ui/ModalDialog";
 import ProductImage from "@/components/ui/ProductImage";
 import { useToast } from "@/components/ui/ToastProvider";
 import CustomOrderCards from "@/features/account/components/CustomOrderCards";
+import { DeliveryJourney, DeliveryTracking } from "@/features/account/components/DeliveryTracking";
 import DetailHeader from "@/features/account/components/DetailHeader";
 import {
   CUSTOMER_STATUS_LABELS,
@@ -18,8 +19,9 @@ import {
 } from "@/features/account/order-status";
 import { useAsyncAction } from "@/lib/hooks/use-async-action";
 import { useResource } from "@/lib/hooks/use-resource";
-import { cancelMyOrder, getMyOrder, type CustomerOrder, type CustomerOrderStatus } from "@/lib/services/orders";
+import { cancelMyOrder, getMyOrder, getMyTracking, type CustomerOrder, type CustomerOrderStatus } from "@/lib/services/orders";
 import { formatShopDateTime, formatVND } from "@/lib/utils";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 /**
  * One of the signed-in account's orders — /account/orders/[id]. Everything comes from the order's
@@ -61,7 +63,7 @@ export default function OrderDetailView({ orderId }: { orderId: string }) {
             )}
           </div>
         ) : !order.data ? (
-          <p className="py-10 text-center font-sans text-body text-text-muted">Đang tải đơn hàng...</p>
+          <SkeletonRows label="Đang tải đơn hàng..." />
         ) : (
           <OrderDetail
             order={order.data}
@@ -85,6 +87,9 @@ function OrderDetail({
   onStale: () => void;
 }) {
   const [cancelling, setCancelling] = useState(false);
+  // Loaded once for the summary and the history; only after GHN can have the parcel.
+  const ghnShipped = order.status === "DELIVERING" || order.status === "COMPLETED";
+  const tracking = useResource(() => getMyTracking(order.id), ghnShipped ? order.id : null);
   // A custom request has no line until approval; its total is already the agreed price.
   const subtotal = order.lines.length > 0
     ? order.lines.reduce((sum, line) => sum + line.lineTotal, 0)
@@ -131,6 +136,9 @@ function OrderDetail({
         ) : (
           <Tracker status={order.status} custom={order.type === "CUSTOM"} />
         )}
+
+        {/* GHN's own progress, once the parcel is with them. Silent before that. */}
+        <DeliveryTracking tracking={tracking.data} />
 
         {/* Cancel action; only offered while the shop has not started preparing the order. */}
         {order.canCancel && (
@@ -206,6 +214,7 @@ function OrderDetail({
         <div className="h-px bg-neutral-border my-3" />
         <Amount label="Tạm tính" value={formatVND(subtotal)} />
         <Amount label="Phí giao hàng" value={order.shippingFee === 0 ? "Miễn phí" : formatVND(order.shippingFee)} />
+        {order.voucherCode && <Amount label={`Voucher ${order.voucherCode}`} value={`−${formatVND(order.voucherDiscountAmount ?? 0)}`} />}
         <div className="flex items-baseline justify-between mt-2">
           <span className="font-serif font-semibold text-[22px]">Tổng cộng</span>
           <span className="font-serif font-semibold text-[22px] text-primary-deep">{formatVND(order.total)}</span>
@@ -227,6 +236,7 @@ function OrderDetail({
                 {CUSTOMER_STATUS_LABELS[entry.status]}
               </p>
               {entry.note && <p className="font-sans text-body-sm text-text-secondary m-0 mt-1">{entry.note}</p>}
+              {entry.status === "DELIVERING" && <DeliveryJourney tracking={tracking.data} />}
             </li>
           ))}
         </ol>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Button from "@/components/ui/Button";
+import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton";
 import QuantityStepper, { UNITS, type Material } from "@/features/custom-order/QuantityStepper";
 import { asApiError, type ApiError } from "@/lib/api";
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
@@ -148,7 +149,7 @@ export default function MaterialPicker({ label, type, emptyMessage, refresh = 0,
     box?.scrollBy({ top: box.clientHeight * 0.8, behavior: "smooth" });
   }
 
-  if (!loaded) return <p className="m-0 py-4 font-sans text-body-sm text-text-secondary">Đang tải {label}...</p>;
+  if (!loaded) return <MaterialGridSkeleton label={`Đang tải ${label}...`} />;
   if (catalogEmpty) return <p className="m-0 font-sans text-body-sm text-text-secondary">{emptyMessage}</p>;
 
   return <div aria-busy={loading}>
@@ -200,7 +201,7 @@ export default function MaterialPicker({ label, type, emptyMessage, refresh = 0,
         <div
           ref={listRef}
           onScroll={onListScroll}
-          className="max-h-[23rem] overflow-y-auto rounded-xl border border-neutral-border bg-neutral-canvas/40 p-2 [scrollbar-color:var(--color-primary-deep)_transparent] [scrollbar-width:thin] md:max-h-[28rem]"
+          className="-mx-1 max-h-[23rem] overflow-y-auto px-1 py-1 [scrollbar-color:var(--color-primary-deep)_transparent] [scrollbar-width:thin] md:max-h-[28rem]"
         >
         <ul className={`m-0 grid list-none grid-cols-2 gap-2.5 p-0 md:grid-cols-3 ${loading && !onlyPicked ? "opacity-60" : ""}`}>
           {visible.map((material) => {
@@ -212,7 +213,7 @@ export default function MaterialPicker({ label, type, emptyMessage, refresh = 0,
               </div>
               {picked
                 ? <QuantityStepper material={material} value={quantities[material.id]} onSet={onSet} onChange={onChange} onSettle={onSettle} />
-                : <Button type="button" aria-label={`Chọn ${material.name}`} onClick={() => onChange(material, 1)} className="flex h-[43px] w-full items-center justify-center gap-1 rounded-lg border-[1.5px] border-text-muted/70 bg-white font-sans text-body-sm font-bold text-primary-deep hover:border-primary-deep hover:bg-neutral-surface">
+                : <Button type="button" aria-label={`Chọn ${material.name}`} onClick={() => onChange(material, 1)} className="flex h-[43px] w-full items-center justify-center gap-1 rounded-lg bg-neutral-surface font-sans text-body-sm font-bold text-primary-deep hover:bg-tertiary">
                   <span className="material-symbols-outlined text-[18px]" aria-hidden="true">add</span> Chọn
                 </Button>}
             </li>;
@@ -224,7 +225,7 @@ export default function MaterialPicker({ label, type, emptyMessage, refresh = 0,
         </Button>}
         </div>
         {/* A fade and a button over the bottom edge, so a phone user (no visible scrollbar) sees there is more. */}
-        {moreBelow && <div className="pointer-events-none absolute inset-x-px bottom-px flex h-20 items-end justify-center rounded-b-xl bg-gradient-to-t from-white via-white/80 to-transparent pb-2">
+        {moreBelow && <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-20 items-end justify-center bg-gradient-to-t from-white via-white/80 to-transparent pb-2">
           <Button type="button" onClick={scrollDown} className="pointer-events-auto flex items-center gap-1 rounded-full bg-primary-deep px-4 py-1.5 font-sans text-body-sm font-bold text-white shadow-md">
             <span className="material-symbols-outlined text-[18px]" aria-hidden="true">expand_more</span>
             Cuộn để xem thêm
@@ -232,4 +233,19 @@ export default function MaterialPicker({ label, type, emptyMessage, refresh = 0,
         </div>}
       </div>}
   </div>;
+}
+
+/** The material grid while it loads: cards with a name, a price line and a button, in the real grid. */
+export function MaterialGridSkeleton({ label, count = 6 }: { label: string; count?: number }) {
+  return <SkeletonGroup label={label}>
+    <ul className="m-0 grid list-none grid-cols-2 gap-2.5 p-0 md:grid-cols-3">
+      {Array.from({ length: count }, (_, index) => <li key={index} className="flex flex-col gap-3 rounded-xl border-[1.5px] border-neutral-border bg-white p-3">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-4/5" />
+          <Skeleton className="h-3.5 w-1/2" />
+        </div>
+        <Skeleton className="h-[43px] w-full rounded-lg" />
+      </li>)}
+    </ul>
+  </SkeletonGroup>;
 }

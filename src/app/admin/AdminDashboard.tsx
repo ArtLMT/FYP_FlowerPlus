@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Button from "@/components/ui/Button";
 import AddressLookup from "@/features/admin/AddressLookup";
 import AdminDrawer from "@/features/admin/AdminDrawer";
@@ -11,6 +12,8 @@ import InventoryManager from "@/features/admin/InventoryManager";
 import MaterialManager from "@/features/admin/MaterialManager";
 import OrderManager from "@/features/admin/OrderManager";
 import ProductManager from "@/features/admin/ProductManager";
+import SaleManager from "@/features/admin/SaleManager";
+import VoucherManager from "@/features/admin/VoucherManager";
 import StaffManager from "@/features/admin/StaffManager";
 import StockAlert from "@/features/admin/StockAlert";
 import { useSessionRestore } from "@/features/admin/hooks/use-session-restore";
@@ -45,29 +48,58 @@ export default function AdminDashboard({
   initialError: string;
 }) {
   const restoringSession = useSessionRestore(user !== null);
-  const [domain, setDomain] = useState<AdminDomain>(defaultDomain(user));
   const allowedDomains = allowedDomainsFor(user);
+  // The section and the open Order live in the URL (/admin?section=orders&order=…), so a refresh keeps
+  // the place, Back/Forward move between sections, and an Order link can be shared.
+  // A section the account may not open, or a mistyped one, falls back to the default section.
+  const searchParams = useSearchParams();
+  const requested = searchParams.get("section");
+  const domain = allowedDomains.find((item) => item === requested) ?? defaultDomain(user);
+  const openOrderId = domain === "orders" ? searchParams.get("order") : null;
   const stock = useStockShortages(allowedDomains.length > 0);
-  // A new object each time, so asking for the same Order or material twice still acts.
-  const [openOrder, setOpenOrder] = useState<{ orderId: string } | null>(null);
+  // One-off context from a jump link (receive stock, a filtered list, one material's batches).
+  // A new object each time, so asking to receive the same material twice still acts.
   const [receive, setReceive] = useState<{ materialId: string } | null>(null);
   const [orderFilter, setOrderFilter] = useState<{ status?: OrderStatus; type?: OrderType } | undefined>(undefined);
   const [batchMaterialId, setBatchMaterialId] = useState<string | undefined>(undefined);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  /** Opens a section with nothing carried over from where the last link pointed. */
-  function openSection(next: AdminDomain) {
-    setDomain(next);
-    setOpenOrder(null);
+  /** Drops jump-link context, so it is not applied again when a section opens later. */
+  function clearJump() {
     setReceive(null);
     setOrderFilter(undefined);
     setBatchMaterialId(undefined);
+  }
+
+  // Back/Forward reopen a section from its URL alone, without a jump link's context.
+  useEffect(() => {
+    const onPopState = () => {
+      setReceive(null);
+      setOrderFilter(undefined);
+      setBatchMaterialId(undefined);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  /** Adds a browser history entry for a section, and for an Order when one is open. */
+  function pushPlace(next: AdminDomain, orderId?: string | null) {
+    const query = new URLSearchParams({ section: next });
+    if (orderId) query.set("order", orderId);
+    window.history.pushState(null, "", `?${query}`);
+  }
+
+  /** Opens a section with nothing carried over from where the last link pointed. */
+  function openSection(next: AdminDomain) {
+    clearJump();
     setMenuOpen(false);
+    pushPlace(next);
   }
 
   function showOrder(orderId: string) {
-    openSection("orders");
-    setOpenOrder({ orderId });
+    clearJump();
+    setMenuOpen(false);
+    pushPlace("orders", orderId);
   }
 
   function showOrders(filter: { status: OrderStatus; type?: OrderType }) {
@@ -150,9 +182,11 @@ export default function AdminDashboard({
         {user && allowedDomains.length === 0 && <section className="rounded-2xl border border-neutral-border bg-white p-5 shadow-sm"><h2 className="font-serif text-2xl text-text-primary">Không có quyền truy cập</h2><p className="mt-2 text-text-secondary">Trang này dành cho tài khoản Nhân viên và Quản trị viên.</p></section>}
         {user && allowedDomains.length > 0 && domain === "overview" && <AdminOverview stock={stock} onOpenOrders={showOrders} onOpenInventory={() => openSection("inventory")} />}
         {user && allowedDomains.length > 0 && domain === "products" && <ProductManager />}
+        {user && allowedDomains.length > 0 && domain === "sales" && <SaleManager />}
+        {user && allowedDomains.length > 0 && domain === "vouchers" && <VoucherManager />}
         {user && allowedDomains.length > 0 && domain === "categories" && <CategoryManager />}
         {user && allowedDomains.length > 0 && domain === "arrangementTypes" && <ArrangementTypeManager />}
-        {user && allowedDomains.length > 0 && domain === "orders" && <OrderManager stockByOrder={stock.stockByOrder} openRequest={openOrder} initialFilter={orderFilter} onStockChanged={stock.reload} viewerId={user.id} />}
+        {user && allowedDomains.length > 0 && domain === "orders" && <OrderManager stockByOrder={stock.stockByOrder} selectedId={openOrderId} onSelect={(orderId) => pushPlace("orders", orderId)} initialFilter={orderFilter} onStockChanged={stock.reload} viewerId={user.id} />}
         {user && allowedDomains.length > 0 && domain === "materials" && <MaterialManager />}
         {user && allowedDomains.length > 0 && domain === "inventory" && <InventoryManager key={batchMaterialId} receiveRequest={receive} initialMaterialId={batchMaterialId} onStockChanged={stock.reload} />}
         {user && allowedDomains.length > 0 && domain === "transactions" && <TransactionLedger onOpenOrder={showOrder} onOpenBatches={showBatches} />}

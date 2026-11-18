@@ -2,12 +2,14 @@ import type { AccountUser } from "@/lib/services/auth";
 
 /** The admin workbench sections, and who may open them. The backend enforces the same rules. */
 
-export type AdminDomain = "overview" | "orders" | "products" | "categories" | "arrangementTypes" | "users" | "materials" | "inventory" | "transactions" | "addresses";
+export type AdminDomain = "overview" | "orders" | "products" | "sales" | "vouchers" | "categories" | "arrangementTypes" | "users" | "materials" | "inventory" | "transactions" | "addresses";
 
 export const DOMAIN_NAMES: Record<AdminDomain, string> = {
   overview: "Tổng quan",
   orders: "Đơn hàng",
   products: "Sản phẩm",
+  sales: "Khuyến mãi",
+  vouchers: "Voucher",
   categories: "Danh mục",
   arrangementTypes: "Kiểu cắm",
   users: "Tài khoản nhân viên",
@@ -21,6 +23,8 @@ export const DOMAIN_DESCRIPTIONS: Record<AdminDomain, string> = {
   overview: "Những việc cửa hàng cần xử lý ngay.",
   orders: "Xác nhận, xử lý và hủy đơn của khách mà không sửa nội dung đơn.",
   products: "Quản lý trạng thái bán và thông tin sản phẩm.",
+  sales: "Lập lịch, điều chỉnh hoặc kết thúc chương trình giảm giá sản phẩm.",
+  vouchers: "Tạo voucher, quản lý giới hạn, kích hoạt và gán cho khách hàng.",
   categories: "Tạo, đổi tên và xóa các danh mục khách hàng dùng để lọc sản phẩm.",
   arrangementTypes: "Các kiểu cắm và phí công khách có thể chọn khi thiết kế bó hoa.",
   users: "Tạo tài khoản nhân viên và quản lý quyền truy cập.",
@@ -35,6 +39,8 @@ export const DOMAIN_INITIALS: Record<AdminDomain, string> = {
   overview: "TQ",
   orders: "ĐH",
   products: "SP",
+  sales: "KM",
+  vouchers: "VC",
   categories: "DM",
   arrangementTypes: "KC",
   materials: "NL",
@@ -54,8 +60,8 @@ export const isManager = (user: AccountUser) => user.role === "ADMIN" || user.ro
 
 /** Sections the account may open, in nav order. Staff manage the catalog; Admins also see people. */
 export function allowedDomainsFor(user: AccountUser | null): AdminDomain[] {
-  if (user?.role === "ADMIN") return ["overview", "orders", "products", "categories", "arrangementTypes", "materials", "inventory", "transactions", "users", "addresses"];
-  if (user?.role === "STAFF") return ["overview", "orders", "products", "categories", "arrangementTypes", "materials", "inventory", "transactions"];
+  if (user?.role === "ADMIN") return ["overview", "orders", "products", "sales", "vouchers", "categories", "arrangementTypes", "materials", "inventory", "transactions", "users", "addresses"];
+  if (user?.role === "STAFF") return ["overview", "orders", "products", "sales", "vouchers", "categories", "arrangementTypes", "materials", "inventory", "transactions"];
   return [];
 }
 

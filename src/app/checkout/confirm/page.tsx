@@ -36,7 +36,7 @@ export default function ConfirmPage() {
  * the bottom. Submit logic lives in `features/checkout/hooks/use-place-order.ts`.
  */
 function ConfirmView() {
-  const { cart, selection, address, needsNewSelection, placing, error, priceChanged, submit, voucherCode, voucherQuote, shippingEstimate } = usePlaceOrder();
+  const { cart, selection, address, needsNewSelection, placing, error, priceChanged, submit, voucherCode, voucherQuote, shippingEstimate, payableTotal } = usePlaceOrder();
 
   // Delivery choices are missing or stale: ask the customer to pick them again.
   if (needsNewSelection || !selection) {
@@ -143,10 +143,10 @@ function ConfirmView() {
               <span className="font-sans text-[16px] text-text-secondary">Tạm tính (giá hiện tại)</span>
               <span className="font-sans text-[16px] text-text-secondary">{formatVND(cart.subtotal)}</span>
             </div>
-            {/* GHN's estimate for the chosen address. Shown only: the total below does not include it yet. */}
+            {/* GHN's fee for the chosen address; included in the total and charged when the order is placed. */}
             <div className="mb-3">
               <div className="flex items-center justify-between">
-                <span className="font-sans text-[16px] text-text-secondary">Phí giao hàng (dự kiến)</span>
+                <span className="font-sans text-[16px] text-text-secondary">Phí giao hàng</span>
                 <span className="font-sans text-[16px] text-text-secondary">
                   {shippingEstimate.state === "ready" ? formatVND(shippingEstimate.fee)
                     : shippingEstimate.state === "loading" ? "Đang tính…"
@@ -157,7 +157,7 @@ function ConfirmView() {
                 {shippingEstimate.state === "no-area"
                   ? <>Địa chỉ chưa có phường/xã. <Link href="/account/info" className="text-primary underline">Sửa địa chỉ</Link> để xem phí.</>
                   : shippingEstimate.state === "error" ? shippingEstimate.message
-                    : "Theo Giao Hàng Nhanh (GHN). Hiện chưa cộng vào tổng tiền."}
+                    : "Theo Giao Hàng Nhanh (GHN), đã cộng vào tổng tiền."}
               </p>
             </div>
             {voucherCode && <div className="flex items-center justify-between mb-3 text-primary-deep">
@@ -167,7 +167,7 @@ function ConfirmView() {
             <div className="h-px bg-neutral-border mt-2 mb-4" />
             <div className="flex items-baseline justify-between">
               <span className="font-serif font-semibold text-[26px]">Tổng cộng</span>
-              <span className="font-serif font-semibold text-[26px]">{formatVND(voucherQuote?.payableTotal ?? cart.subtotal)}</span>
+              <span className="font-serif font-semibold text-[26px]">{formatVND(payableTotal)}</span>
             </div>
             <p className="font-sans text-body-sm text-text-muted mt-3 mb-0">
               Giá được chốt khi đơn hàng được tạo.
@@ -176,7 +176,7 @@ function ConfirmView() {
             <PlaceOrderButton
               className="hidden md:block w-full text-center bg-primary text-white rounded-full py-4 mt-5 font-sans font-bold text-body-sm tracking-[0.1em] hover:bg-primary-hover transition-colors"
               placing={placing}
-              disabled={placing || !address}
+              disabled={placing || !address || shippingEstimate.state === "loading"}
               onClick={() => void submit()}
             />
           </aside>
@@ -188,7 +188,7 @@ function ConfirmView() {
         <PlaceOrderButton
           className="block w-full text-center bg-primary text-white rounded-full py-[19px] font-sans font-bold text-body-sm tracking-[0.1em] hover:bg-primary-hover transition-colors"
           placing={placing}
-          disabled={placing || !address}
+          disabled={placing || !address || shippingEstimate.state === "loading"}
           onClick={() => void submit()}
         />
       </div>

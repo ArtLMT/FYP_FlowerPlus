@@ -37,4 +37,6 @@ export const COMMON_CODES: Record<string, string> = {
   VOUCHER_LIMIT_REACHED: "Mã giảm giá đã hết lượt sử dụng.",
   VOUCHER_INVALID_STATE: "Trạng thái mã giảm giá đã thay đổi. Hãy tải lại.",
   ACCOUNT_SUSPENDED: "Tài khoản của bạn đang bị tạm khóa đặt hàng.",
+  // Shipping
+  SHIPPING_PROVIDER_FAILED: "Giao Hàng Nhanh tạm thời không xử lý được yêu cầu. Vui lòng thử lại.",
 };

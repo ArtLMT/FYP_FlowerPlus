@@ -11,7 +11,7 @@ export interface District { id: number; name: string }
 export interface Ward { code: string; name: string }
 
 export interface ShippingFeeQuote {
-  /** Whole VND, GHN's current price. An estimate: checkout does not charge it yet. */
+  /** Whole VND, GHN's current price; checkout charges the fee current at that moment. */
   shippingFee: number;
   itemCount: number;
   parcelWeightGrams: number;

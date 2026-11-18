@@ -6,6 +6,7 @@ import {
   cancelManagementOrder,
   getManagementOrder,
   listManagementOrders,
+  type CourierInput,
   type ManagementOrder,
   type OrderStatus,
   type OrderType,
@@ -21,26 +22,27 @@ type Feedback = { kind: "success" | "error"; text: string };
  * Keep visual markup in `OrderManager.tsx`; change API paths and response shapes in
  * `src/lib/services/orders.ts`.
  */
-export function useOrderManager({ openRequest = null, initialFilter, onStockChanged }: {
-  /** An Order to open, e.g. from the stock alert; a new object opens it again. */
-  openRequest?: { orderId: string } | null;
+export function useOrderManager({ selectedId, onSelect, initialFilter, onStockChanged }: {
+  /** The Order open in detail, or null for the list. The admin shell keeps it in the URL (`?order=`). */
+  selectedId: string | null;
+  /** Opens an Order, or goes back to the list with null. */
+  onSelect: (orderId: string | null) => void;
   initialFilter?: { status?: OrderStatus; type?: OrderType };
   /** Told after an advance or cancel, which can change what stock waiting Orders need. */
   onStockChanged?: () => void;
-} = {}) {
+}) {
   const [pageNumber, setPageNumber] = useState(0);
   const [status, setStatusValue] = useState<OrderStatus | "">(initialFilter?.status ?? "");
   const [type, setTypeValue] = useState<OrderType | "">(initialFilter?.type ?? "");
   const [sort, setSortValue] = useState<"createdAt" | "deliveryWish">("createdAt");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [handledRequest, setHandledRequest] = useState<{ orderId: string } | null>(null);
+  const [shownId, setShownId] = useState(selectedId);
 
-  if (openRequest && openRequest !== handledRequest) {
-    setHandledRequest(openRequest);
+  // Another Order (or the list) was opened, also by the browser's Back/Forward: drop the old message.
+  if (selectedId !== shownId) {
+    setShownId(selectedId);
     setFeedback(null);
-    setSelectedId(openRequest.orderId);
   }
 
   const list = useResource(
@@ -53,8 +55,7 @@ export function useOrderManager({ openRequest = null, initialFilter, onStockChan
   );
 
   function selectOrder(id: string) {
-    setFeedback(null);
-    setSelectedId(id);
+    onSelect(id);
   }
 
   function setStatus(next: OrderStatus | "") {
@@ -110,7 +111,7 @@ export function useOrderManager({ openRequest = null, initialFilter, onStockChan
     setSort,
     selectedId,
     selectOrder,
-    closeOrder: () => setSelectedId(null),
+    closeOrder: () => onSelect(null),
     order,
     orderLoading: detail.loading,
     orderError: detail.error?.message ?? "",
@@ -119,10 +120,10 @@ export function useOrderManager({ openRequest = null, initialFilter, onStockChan
     feedback,
     // The status on screen goes with each action, so a second click or another staff member's change
     // is refused instead of moving the Order twice (BR-STATUS-12); mutate() then reloads it.
-    advance: () => {
+    advance: (courier?: CourierInput) => {
       const shown = order;
       return shown
-        ? mutate(() => advanceManagementOrder(shown.id, shown.status), "Đã chuyển đơn hàng sang bước tiếp theo.")
+        ? mutate(() => advanceManagementOrder(shown.id, shown.status, courier), "Đã chuyển đơn hàng sang bước tiếp theo.")
         : Promise.resolve(false);
     },
     cancel: (note: string) => {

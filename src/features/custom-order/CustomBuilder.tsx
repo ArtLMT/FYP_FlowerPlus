@@ -6,7 +6,8 @@ import Button from "@/components/ui/Button";
 import ModalDialog from "@/components/ui/ModalDialog";
 import BouquetSummary, { BouquetBar } from "@/features/custom-order/BouquetSummary";
 import ConfirmRequestDialog from "@/features/custom-order/ConfirmRequestDialog";
-import MaterialPicker from "@/features/custom-order/MaterialPicker";
+import MaterialPicker, { MaterialGridSkeleton } from "@/features/custom-order/MaterialPicker";
+import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton";
 import { useCustomBuilder } from "@/features/custom-order/hooks/use-custom-builder";
 import { keepFormOpen } from "@/features/custom-order/hooks/use-material-quantities";
 import { SIGN_IN_MESSAGE } from "@/lib/api";
@@ -29,6 +30,35 @@ function Step({ number, title, hint, children }: { number: number; title: string
   </section>;
 }
 
+/** The builder's own layout while the options load: the first two steps and the bouquet card. */
+function BuilderSkeleton() {
+  const stepHead = <div className="mb-4 flex items-center gap-3">
+    <Skeleton className="h-8 w-8 flex-shrink-0 rounded-full" />
+    <Skeleton className="h-6 w-40" />
+  </div>;
+  return <SkeletonGroup label="Đang tải lựa chọn..." className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+    <div className="flex min-w-0 flex-col gap-5">
+      <div className="rounded-2xl border border-neutral-border bg-white p-4 shadow-sm sm:p-6">
+        {stepHead}
+        <div className="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3">
+          {[0, 1, 2].map((index) => <Skeleton key={index} className="h-[74px] rounded-xl" />)}
+        </div>
+      </div>
+      <div className="rounded-2xl border border-neutral-border bg-white p-4 shadow-sm sm:p-6">
+        {stepHead}
+        <MaterialGridSkeleton label="" />
+      </div>
+    </div>
+    <div className="hidden rounded-2xl border border-neutral-border bg-white p-4 shadow-sm sm:p-5 lg:block">
+      <Skeleton className="h-6 w-36" />
+      <Skeleton className="mt-4 h-16 w-full rounded-xl" />
+      <Skeleton className="mt-5 h-4 w-full" />
+      <Skeleton className="mt-3 h-4 w-full" />
+      <Skeleton className="mt-6 h-12 w-full rounded-full" />
+    </div>
+  </SkeletonGroup>;
+}
+
 /**
  * "Thiết kế bó hoa" (screen inventory A10): numbered steps on the left, the bouquet and its estimate
  * beside them. State lives in `hooks/use-custom-builder.ts`.
@@ -45,7 +75,7 @@ export default function CustomBuilder() {
         : <Button onClick={b.reload} className="font-bold underline">Thử lại</Button>}
     </div>;
   }
-  if (!b.options) return <p className="py-10 text-center font-sans text-body text-text-secondary">Đang tải lựa chọn...</p>;
+  if (!b.options) return <BuilderSkeleton />;
 
   const pickerActions = { quantities: b.quantities, picks: b.picks, refresh: b.materialsRefresh, onSet: b.onSet, onChange: b.onChange, onSettle: b.onSettle };
 

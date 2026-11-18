@@ -60,10 +60,10 @@ function DeliveryForm() {
 
         {/* Address section: selectable saved-address cards, or an empty message. */}
         <h2 className="font-serif font-medium text-[27px] mt-8 mb-2 px-[22px]">Địa chỉ giao hàng</h2>
-        {/* The area is stated, not checked: staff cancel an order outside it. The GHN fee is an estimate
-            shown at the confirm step; the order total does not include it yet. */}
+        {/* The area is stated, not checked: staff cancel an order outside it. The GHN fee is shown at
+            the confirm step and added to the order total. */}
         <p className="px-[22px] mb-4 font-sans text-body-sm text-text-muted m-0">
-          Cửa hàng giao hàng trong {DELIVERY_AREA}. Phí giao hàng dự kiến theo Giao Hàng Nhanh (GHN) được hiển thị ở bước xác nhận.{" "}
+          Cửa hàng giao hàng trong {DELIVERY_AREA}. Phí giao hàng theo Giao Hàng Nhanh (GHN) được tính ở bước xác nhận.{" "}
           <Link href="/policies/delivery" target="_blank" rel="noopener noreferrer" className="text-primary underline">Chính sách giao hàng</Link>
         </p>
         {form.addresses.length === 0 ? (

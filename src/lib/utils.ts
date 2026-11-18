@@ -24,6 +24,20 @@ const SHOP_OFFSET_MS = 7 * 60 * 60 * 1000;
 
 const toShopClock = (instant: Date) => new Date(instant.getTime() + SHOP_OFFSET_MS);
 
+/** Convert a datetime-local form value as shop wall time, independent of the browser timezone. */
+export function shopWallTimeToInstant(value: string): string {
+  return new Date(`${value}:00+07:00`).toISOString();
+}
+
+export function instantToShopWallTime(instant: string): string {
+  return toShopClock(new Date(instant)).toISOString().slice(0, 16);
+}
+
+/** Voucher expiresAt is the exclusive next midnight; show the preceding shop date. */
+export function voucherLastValidShopDate(expiresAt: string): string {
+  return addDays(toShopClock(new Date(expiresAt)).toISOString().slice(0, 10), -1);
+}
+
 /** Today in shop time as YYYY-MM-DD — the server's "today" for delivery dates and batch dates alike. */
 export function shopToday(): string {
   return toShopClock(new Date()).toISOString().slice(0, 10);

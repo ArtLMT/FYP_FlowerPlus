@@ -7,12 +7,14 @@ import { PAYMENT_STATUS_LABELS } from "@/features/account/order-status";
 import CustomOrderPanel from "@/features/admin/CustomOrderPanel";
 import FeedbackToast from "@/features/admin/FeedbackToast";
 import OrderStatusBadge from "@/features/admin/OrderStatusBadge";
+import GhnJourney from "@/features/admin/GhnJourney";
 import { formatAmount, shortOrderId } from "@/features/admin/StockAlert";
 import { ADVANCE_LABELS, ORDER_STATUS_LABELS } from "@/features/admin/order-labels";
 import type { OrderStock } from "@/lib/services/inventory";
 import type { ProposalInput } from "@/lib/services/custom-orders";
-import type { ManagementOrder } from "@/lib/services/orders";
+import type { CourierInput, ManagementOrder } from "@/lib/services/orders";
 import { formatShopDateTime } from "@/lib/utils";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 export const formatMoney = (value: number) => `${Number(value).toLocaleString("vi-VN")} ₫`;
 
@@ -56,12 +58,13 @@ export default function OrderDetail({
   viewerId: string | undefined;
   onBack: () => void;
   onReload: () => void;
-  onAdvance: () => Promise<boolean>;
+  onAdvance: (courier?: CourierInput) => Promise<boolean>;
   onCancel: (note: string) => Promise<boolean>;
   onPropose: (basedOnTermsNo: number, input: ProposalInput) => Promise<boolean>;
   onApprove: (termsNo: number) => Promise<boolean>;
 }) {
   const [cancelling, setCancelling] = useState(false);
+  const [askingCourier, setAskingCourier] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
 
   // Opened from far down the list: bring the page's top into view.
@@ -75,7 +78,7 @@ export default function OrderDetail({
   if (!order) return <div ref={pageRef} className="space-y-4">
     {back}
     <section className="rounded-xl border border-neutral-border bg-white px-5 py-10 text-center shadow-sm">
-      {loading ? <p className="text-sm text-text-muted">Đang tải chi tiết…</p> : <>
+      {loading ? <SkeletonRows label="Đang tải chi tiết…" /> : <>
         <p role="alert" className="text-sm text-red-800">{error || "Không tìm thấy đơn hàng này."}</p>
         <Button type="button" onClick={onReload} className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Thử lại</Button>
       </>}
@@ -105,7 +108,7 @@ export default function OrderDetail({
       </div>
       {(order.canCancel || order.nextStatus) && <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         {order.canCancel && <Button type="button" disabled={saving} onClick={() => setCancelling(true)} className="min-h-11 rounded-lg border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">Hủy đơn</Button>}
-        {order.nextStatus && <Button type="button" disabled={saving} onClick={() => void onAdvance()} className="min-h-11 rounded-lg bg-primary px-5 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-50">{saving && !showCancelDialog ? "Đang cập nhật…" : ADVANCE_LABELS[order.status] ?? "Chuyển bước tiếp theo"}</Button>}
+        {order.nextStatus && <Button type="button" disabled={saving} onClick={() => { if (order.needsCourier) setAskingCourier(true); else void onAdvance(); }} className="min-h-11 rounded-lg bg-primary px-5 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-50">{saving && !showCancelDialog && !askingCourier ? "Đang cập nhật…" : ADVANCE_LABELS[order.status] ?? "Chuyển bước tiếp theo"}</Button>}
       </div>}
     </div>
 
@@ -128,13 +131,16 @@ export default function OrderDetail({
 
         <Card title="Lịch sử trạng thái">
           <ol className="space-y-4 border-l-2 border-neutral-border pl-4">
-            {order.history.map((entry, index) => <li key={`${entry.createdAt}-${index}`} className="relative">
+            {/* Newest first, like the GHN journey nested inside Đang giao and the customer's history. */}
+            {[...order.history].reverse().map((entry, index) => <li key={`${entry.createdAt}-${index}`} className="relative">
               <span className={`absolute -left-[21px] top-1 size-2.5 rounded-full ${entry.newStatus === "CANCELLED" ? "bg-red-700" : "bg-primary"}`} />
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span className="font-semibold text-text-primary">{ORDER_STATUS_LABELS[entry.newStatus]}</span>
                 <span className="text-xs text-text-muted">{formatShopDateTime(entry.createdAt)} · {actorOf(entry, order, viewerId).short}</span>
               </div>
               {entry.note && <p className="mt-1 whitespace-pre-wrap break-words text-sm text-text-secondary">{entry.note}</p>}
+              {/* GHN's journey is the detail of the handover step, so it lives inside it. */}
+              {entry.newStatus === "DELIVERING" && order.ghn.orderCode && <GhnJourney orderId={order.id} />}
             </li>)}
           </ol>
         </Card>
@@ -147,22 +153,35 @@ export default function OrderDetail({
             <Field label="Điện thoại">{order.address.recipientPhone}</Field>
             <Field label="Địa chỉ">{order.address.deliveryAddress}</Field>
             <Field label="Thời gian mong muốn">{order.deliveryWishText ?? "Không chọn"}</Field>
+            {order.courierReference && <Field label="Người giao (thu hộ)">{order.courierName} · {order.courierReference}</Field>}
+            {order.ghn.orderCode
+              ? <>
+                <Field label="Mã vận đơn GHN">{order.ghn.orderCode}</Field>
+                {order.ghn.fee !== null && <Field label="Phí GHN (cửa hàng trả)">{formatMoney(order.ghn.fee)}</Field>}
+                {order.ghn.expectedDeliveryAt && <Field label="GHN dự kiến giao">{formatShopDateTime(order.ghn.expectedDeliveryAt)}</Field>}
+              </>
+              : order.ghn.hasArea && order.status === "READY" && <Field label="Vận chuyển">Đơn GHN sẽ được tạo khi bắt đầu giao</Field>}
             {order.customerNote && <Field label="Ghi chú khách hàng"><span className="whitespace-pre-wrap">{order.customerNote}</span></Field>}
           </dl>
         </Card>
 
+
         <Card title="Thanh toán">
           <dl className="space-y-3">
             <Field label="Phương thức">{order.paymentMethod}</Field>
-            <Field label="Trạng thái">{PAYMENT_STATUS_LABELS[order.paymentStatus] ?? order.paymentStatus}</Field>
+            <Field label="Trạng thái">{PAYMENT_STATUS_LABELS[order.paymentStatus] ?? order.paymentStatus}{order.paidAt && <span className="text-text-muted"> · {formatShopDateTime(order.paidAt)}</span>}</Field>
+            {order.voucherCode && <Field label={`Voucher ${order.voucherCode}`}>−{formatMoney(order.voucherDiscountAmount ?? 0)}</Field>}
           </dl>
         </Card>
+
 
         {stock && <StockCard stock={stock} />}
       </div>
     </div>
 
-    {showCancelDialog && <CancelOrderDialog saving={saving} error={feedback?.kind === "error" ? feedback.text : ""} onClose={() => setCancelling(false)} onCancel={onCancel} />}
+    {askingCourier && order.needsCourier && <CourierDialog saving={saving} error={feedback?.kind === "error" ? feedback.text : ""} onClose={() => setAskingCourier(false)} onSubmit={onAdvance} />}
+
+    {showCancelDialog &&<CancelOrderDialog saving={saving} error={feedback?.kind === "error" ? feedback.text : ""} onClose={() => setCancelling(false)} onCancel={onCancel} />}
   </div>;
 }
 
@@ -187,7 +206,7 @@ function CancellationBlock({ entry, order, viewerId }: { entry: HistoryEntry; or
       <Field label="Trạng thái khi hủy">{entry.oldStatus ? ORDER_STATUS_LABELS[entry.oldStatus] : "—"}</Field>
     </dl>
     <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-text-muted">Lý do</p>
-    <p className="mt-1 whitespace-pre-wrap break-words rounded-lg border border-red-100 bg-white px-3 py-2.5 text-sm text-text-primary">{entry.note || "Không có ghi chú."}</p>
+    <p className="mt-1 whitespace-pre-wrap break-words text-sm text-text-primary">{entry.note || "Không có ghi chú."}</p>
   </section>;
 }
 
@@ -243,6 +262,47 @@ function CancelOrderDialog({ saving, error, onClose, onCancel }: {
       {submitted && error && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
       <label className="flex flex-col gap-1 text-xs font-semibold text-text-secondary">Lý do hủy đơn
         <textarea ref={noteRef} required rows={5} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Nhập lý do hủy đơn…" className="resize-y rounded-lg border border-neutral-border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-primary" />
+      </label>
+    </form>
+  </ModalDialog>;
+}
+
+/** BR-PAY-13: who carries the COD cash. Asked when a COD order with something to collect goes out. */
+function CourierDialog({ saving, error, onClose, onSubmit }: {
+  saving: boolean;
+  error: string;
+  onClose: () => void;
+  onSubmit: (courier: CourierInput) => Promise<boolean>;
+}) {
+  const [courierReference, setReference] = useState("");
+  const [courierName, setName] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const ready = courierReference.trim() !== "" && courierName.trim() !== "";
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ready) return;
+    setSubmitted(true);
+    if (await onSubmit({ courierReference: courierReference.trim(), courierName: courierName.trim() })) onClose();
+  }
+
+  const inputClass = "min-h-11 rounded-lg border border-neutral-border bg-white px-3 text-sm font-normal outline-none focus:border-primary";
+  return <ModalDialog
+    title="Bắt đầu giao hàng"
+    onClose={() => { if (!saving) onClose(); }}
+    footer={<div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <Button type="button" disabled={saving} onClick={onClose} className="min-h-11 rounded-lg border border-neutral-border px-4 text-sm font-semibold text-text-secondary">Quay lại</Button>
+      <Button type="submit" form="courier-form" disabled={saving || !ready} className="min-h-11 rounded-lg bg-primary px-5 text-sm font-bold text-white disabled:opacity-50">{saving ? "Đang cập nhật…" : "Bắt đầu giao"}</Button>
+    </div>}
+  >
+    <form id="courier-form" onSubmit={(event) => void submit(event)} className="space-y-3">
+      <p className="text-sm text-text-muted">Đơn COD: người giao sẽ thu tiền của khách và nộp lại cho cửa hàng. Ghi rõ ai giao để đối soát.</p>
+      {submitted && error && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
+      <label className="flex flex-col gap-1 text-xs font-semibold text-text-secondary">Mã người/đơn vị giao
+        <input required maxLength={50} value={courierReference} onChange={(event) => setReference(event.target.value)} placeholder="VD: GHN-01" className={inputClass} />
+      </label>
+      <label className="flex flex-col gap-1 text-xs font-semibold text-text-secondary">Tên người/đơn vị giao
+        <input required maxLength={100} value={courierName} onChange={(event) => setName(event.target.value)} placeholder="VD: Nguyễn Văn A" className={inputClass} />
       </label>
     </form>
   </ModalDialog>;

@@ -38,7 +38,8 @@ export function usePlaceOrder() {
   const selectionValid = selection !== null && isWishOpen(selection.deliveryDate, selection.deliveryTimeSlot);
   const addressMissing = addresses.data !== undefined && address === null;
   const addressHasArea = address !== null && hasDeliveryArea(address);
-  // Re-quoted when the address or the Cart changes. Shown only: the order total does not include it yet.
+  // Re-quoted when the address or the Cart changes. Checkout charges GHN's fee at the moment of ordering;
+  // if it moved since this quote, the server answers CHECKOUT_PRICE_CHANGED with the new breakdown.
   const feeQuote = useResource(
     () => quoteShippingFee(address!.id),
     addressHasArea && cartVersion !== undefined ? `shipping-fee-${address!.id}-${cartVersion}` : null,
@@ -63,7 +64,7 @@ export function usePlaceOrder() {
         deliveryTimeSlot: selection.deliveryTimeSlot ?? undefined,
         customerNote: selection.customerNote || undefined,
         cartVersion: cart.version,
-        expectedTotal: quote?.payableTotal ?? cart.subtotal,
+        expectedTotal: (quote?.payableTotal ?? cart.subtotal) + shippingFeeFor(shippingEstimate),
         voucherCode: voucherCode ?? undefined,
       });
       savePlacedOrder(order);
@@ -95,8 +96,15 @@ export function usePlaceOrder() {
     priceChanged,
     voucherCode,
     voucherQuote,
-    /** GHN's estimated fee for the chosen address; not part of the total (checkout still charges 0). */
+    /** GHN's fee for the chosen address, charged at checkout (0 for an address without a GHN area). */
     shippingEstimate,
+    /** Products after voucher, plus the shipping fee once it is known. */
+    payableTotal: (voucherQuote?.payableTotal ?? cart?.subtotal ?? 0) + shippingFeeFor(shippingEstimate),
     submit,
   };
+}
+
+/** The fee the server will add: GHN's quote, or 0 when the address has no GHN area. */
+function shippingFeeFor(estimate: { state: string; fee?: number }): number {
+  return estimate.state === "ready" ? (estimate.fee ?? 0) : 0;
 }

@@ -9,6 +9,7 @@ import { formatAmount } from "@/features/admin/StockAlert";
 import { MANAGED_ORDER_STATUSES, ORDER_STATUS_LABELS } from "@/features/admin/order-labels";
 import type { ManagementOrderSummary, OrderStatus, OrderType } from "@/lib/services/orders";
 import type { OrderStock } from "@/lib/services/inventory";
+import { SkeletonRows } from "@/components/ui/Skeleton";
 
 const INPUT = "min-h-11 rounded-lg border border-neutral-border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-primary";
 
@@ -28,17 +29,19 @@ const formatTime = (instant: string) => new Intl.DateTimeFormat("vi-VN", {
  * - Change status text, button text, or badge colours in `order-labels.ts`.
  * - Change loading/mutation behaviour in `hooks/use-order-manager.ts`.
  */
-export default function OrderManager({ stockByOrder, openRequest, initialFilter, onStockChanged, viewerId }: {
+export default function OrderManager({ stockByOrder, selectedId, onSelect, initialFilter, onStockChanged, viewerId }: {
   /** Stock coverage of each waiting Order, from the shell's stock check. */
   stockByOrder?: Map<string, OrderStock>;
-  openRequest?: { orderId: string } | null;
+  /** The Order open in detail (kept in the URL by the admin shell), or null for the list. */
+  selectedId: string | null;
+  onSelect: (orderId: string | null) => void;
   /** Opens the list already filtered, e.g. from a dashboard count. */
   initialFilter?: { status?: OrderStatus; type?: OrderType };
   onStockChanged?: () => void;
   /** The signed-in account's id, so the detail page can say "Bạn" for its own actions. */
   viewerId?: string;
-} = {}) {
-  const m = useOrderManager({ openRequest, initialFilter, onStockChanged });
+}) {
+  const m = useOrderManager({ selectedId, onSelect, initialFilter, onStockChanged });
   // Where the list was scrolled when an Order opened, so "Quay lại" lands on the same rows.
   const listScroll = useRef<number | null>(null);
 
@@ -108,7 +111,7 @@ export default function OrderManager({ stockByOrder, openRequest, initialFilter,
 
       {m.listError && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{m.listError}</p>}
 
-      {m.loading ? <p className="py-10 text-center text-sm text-text-muted">Đang tải đơn hàng…</p>
+      {m.loading ? <SkeletonRows label="Đang tải đơn hàng…" />
         : m.page?.content.length === 0 ? <p className="rounded-xl border border-dashed border-neutral-border py-12 text-center text-sm text-text-muted">Không có đơn hàng phù hợp.</p>
           : m.page && <>
             <div className="overflow-x-auto rounded-xl border border-neutral-border bg-white shadow-sm">

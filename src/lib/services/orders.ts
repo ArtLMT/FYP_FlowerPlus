@@ -234,8 +234,24 @@ export interface ManagementOrder extends ManagementOrderSummary {
   address: { recipientName: string; recipientPhone: string; deliveryAddress: string };
   lines: PlacedOrder["lines"];
   shippingFee: number;
+  voucherCode: string | null;
+  voucherDiscountType: "FIXED" | "PERCENTAGE" | null;
+  voucherDiscountValue: number | null;
+  voucherDiscountAmount: number | null;
   paymentMethod: "COD" | string;
   paymentStatus: string;
+  paidAt: string | null;
+  /** The courier carrying COD cash, as typed at Delivering (BR-PAY-13). */
+  courierReference: string | null;
+  courierName: string | null;
+  /** The next step is a COD delivery with something to collect: the courier is required. */
+  needsCourier: boolean;
+  /** Completed COD with something to collect: the shop can record cash received. */
+  /**
+   * hasArea: the handover books GHN, which becomes the courier, so no courier is typed.
+   * The rest is null until the shipment is booked at Delivering; fee is what GHN charges the shop.
+   */
+  ghn: { hasArea: boolean; orderCode: string | null; fee: number | null; expectedDeliveryAt: string | null };
   history: {
     oldStatus: OrderStatus | null;
     newStatus: OrderStatus;
@@ -252,10 +268,21 @@ const managementErrors: ErrorMessages = {
     // Confirming takes the materials now, all or nothing (BR-INV-15); the stock alert names what is short.
     INSUFFICIENT_STOCK: "Kho chưa đủ nguyên liệu để chuẩn bị đơn này. Hãy nhập lô hàng còn thiếu rồi xác nhận lại.",
     CONCURRENT_MODIFICATION: "Kho hoặc đơn hàng đang được cập nhật cùng lúc. Vui lòng thử lại.",
+    // Staff see GHN's own reason; the Order stays Ready, so they can retry or fix the address.
+    SHIPPING_PROVIDER_FAILED: (error) =>
+      `Không tạo được đơn GHN — ${error.serverMessage ?? "Giao Hàng Nhanh không phản hồi."} Đơn vẫn ở trạng thái Sẵn sàng giao.`,
   },
   fields: (fields) => groupFieldErrors(fields, ({ field }) =>
-    field === "note" ? "Vui lòng nhập ghi chú hủy đơn." : "Thông tin chưa hợp lệ."),
+    field === "note" ? "Vui lòng nhập ghi chú hủy đơn."
+      : field === "courierReference" ? "Vui lòng nhập mã đơn vị giao hàng (tối đa 50 ký tự)."
+        : field === "courierName" ? "Vui lòng nhập tên người/đơn vị giao hàng (tối đa 100 ký tự)."
+          : "Thông tin chưa hợp lệ."),
 };
+
+export interface CourierInput {
+  courierReference: string;
+  courierName: string;
+}
 
 export function listManagementOrders(query: {
   page: number;
@@ -267,6 +294,62 @@ export function listManagementOrders(query: {
   return api<Page<ManagementOrderSummary>>(withQuery("/api/manage/orders", query), { errors: managementErrors });
 }
 
+/** GHN's reading of where the parcel is. `stage` collapses GHN's 23 status strings to seven. */
+export type ShipmentStage =
+  | "PICKING" | "IN_TRANSIT" | "DELIVERED" | "RETURNING" | "RETURNED" | "CANCELLED" | "PROBLEM" | "UNKNOWN";
+
+export interface ShipmentEvent {
+  /** GHN's event type: "create" or "switch_status". */
+  type: string;
+  ghnStatus: string | null;
+  stage: ShipmentStage;
+  /** Why a delivery or return failed; GHN sets it only for failure statuses. */
+  reason: string | null;
+  reasonCode: string | null;
+  /** When GHN recorded it, not when FlowerPlus heard of it. */
+  at: string;
+}
+
+/**
+ * `booked` is false when GHN never carried this order (no GHN area, or not yet handed over): show
+ * nothing rather than an empty timeline. `stale` means the shipment is booked but GHN has reported
+ * nothing since — normally a webhook that has not arrived, so the sync button is the way forward.
+ */
+export interface OrderTracking {
+  booked: boolean;
+  ghnOrderCode: string | null;
+  ghnStatus: string | null;
+  stage: ShipmentStage | null;
+  statusAt: string | null;
+  expectedDeliveryAt: string | null;
+  stale: boolean;
+  events: ShipmentEvent[];
+}
+
+export function getManagementTracking(id: string) {
+  return api<OrderTracking>(path`/api/manage/orders/${id}/tracking`, { errors: managementErrors });
+}
+
+const syncErrors: ErrorMessages = {
+  codes: {
+    ORDER_NOT_FOUND: "Không tìm thấy đơn hàng này.",
+    SHIPMENT_NOT_BOOKED: "Đơn hàng chưa có vận đơn GHN để đồng bộ.",
+    SHIPPING_PROVIDER_FAILED: "GHN đang không phản hồi. Vui lòng thử lại sau.",
+  },
+};
+
+/** Asks GHN now instead of waiting for its callback. */
+export function syncManagementTracking(id: string) {
+  return api<OrderTracking>(path`/api/manage/orders/${id}/tracking/sync`, {
+    method: "POST",
+    errors: syncErrors,
+  });
+}
+
+export function getMyTracking(id: string) {
+  return api<OrderTracking>(path`/api/orders/${id}/tracking`, { errors: customerErrors });
+}
+
 export function getManagementOrder(id: string) {
   return api<ManagementOrder>(path`/api/manage/orders/${id}`, { errors: managementErrors });
 }
@@ -275,10 +358,10 @@ export function getManagementOrder(id: string) {
  * `expectedStatus` is the status on the staff member's screen; if the Order has moved since, the
  * server refuses with ORDER_INVALID_STATE instead of moving it again (BR-STATUS-12).
  */
-export function advanceManagementOrder(id: string, expectedStatus: OrderStatus) {
+export function advanceManagementOrder(id: string, expectedStatus: OrderStatus, courier?: CourierInput) {
   return api<ManagementOrder>(path`/api/manage/orders/${id}/advance`, {
     method: "POST",
-    body: { expectedStatus },
+    body: { expectedStatus, ...courier },
     errors: managementErrors,
   });
 }

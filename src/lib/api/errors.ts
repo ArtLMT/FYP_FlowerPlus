@@ -47,18 +47,21 @@ export class ApiError extends Error {
   /** HTTP status, or 0 when the server could not be reached. */
   readonly status: number;
   readonly code?: string;
+  /** The backend's own message. Shown only where a table opts in (e.g. GHN's reason for staff). */
+  readonly serverMessage?: string;
   readonly details: ApiErrorDetails;
   readonly fieldErrors: FieldErrors;
 
   constructor(
     status: number,
-    body: { errorCode?: string; details?: ApiErrorDetails } = {},
+    body: { errorCode?: string; message?: string; details?: ApiErrorDetails } = {},
     messages: ErrorMessages = {},
   ) {
     super();
     this.name = "ApiError";
     this.status = status;
     this.code = body.errorCode;
+    this.serverMessage = body.message;
     this.details = body.details ?? {};
     this.fieldErrors = this.code === "VALIDATION_FAILED" && messages.fields
       ? messages.fields(this.details.fields ?? [])
