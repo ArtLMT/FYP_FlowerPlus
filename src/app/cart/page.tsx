@@ -112,7 +112,7 @@ export default function CartPage() {
           <aside className="px-5 pt-6 flex flex-col gap-6 lg:mt-0 lg:px-5 lg:pt-5 lg:pb-6 lg:border lg:border-neutral-border lg:rounded-2xl lg:bg-neutral-surface lg:sticky lg:top-24">
             <div className="flex flex-col gap-2">
               <SummaryRow label="Tạm tính (giá hiện tại)" value={formatVND(page.cart?.subtotal ?? 0)} />
-              <SummaryRow label="Phí giao hàng" value="Miễn phí" />
+              <SummaryRow label="Phí giao hàng" value="Tính khi chọn địa chỉ" />
               {page.shopper !== "guest" && <VoucherBox />}
               <p className="font-sans text-body-sm text-text-muted m-0 mt-1">
                 Giá và tồn kho được kiểm tra lại khi bạn đặt hàng.
