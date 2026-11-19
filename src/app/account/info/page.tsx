@@ -6,7 +6,8 @@ import ModalDialog from "@/components/ui/ModalDialog";
 import DetailHeader from "@/features/account/components/DetailHeader";
 import { useAccount } from "@/features/account/account-context";
 import { useAddressBook } from "@/features/account/hooks/use-address-book";
-import { hasDeliveryArea } from "@/lib/services/addresses";
+import { useFeedbackToast } from "@/lib/hooks/use-feedback-toast";
+import { hasDeliveryArea, PHONE_HINT } from "@/lib/services/addresses";
 import AreaPicker from "@/features/account/components/AreaPicker";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 
@@ -26,6 +27,7 @@ function AddressField({
   label,
   value,
   messages,
+  hint,
   multiline = false,
   onChange,
 }: {
@@ -33,6 +35,8 @@ function AddressField({
   label: string;
   value: string;
   messages?: string[];
+  /** Shown under the field while it has no error. */
+  hint?: string;
   multiline?: boolean;
   onChange: (value: string) => void;
 }) {
@@ -49,7 +53,8 @@ function AddressField({
       {label}
       {multiline
         ? <textarea {...inputProps} onChange={(event) => onChange(event.target.value)} rows={3} />
-        : <input {...inputProps} onChange={(event) => onChange(event.target.value)} />}
+        : <input {...inputProps} {...(name === "phone" && { inputMode: "numeric" as const, maxLength: 10 })} onChange={(event) => onChange(event.target.value)} />}
+      {hint && !invalid && <p className="text-xs font-normal text-text-secondary">{hint}</p>}
       {invalid && (
         <div id={`${name}-error`} className="text-sm font-normal text-red-700">
           {messages?.map((message) => <p key={message}>{message}</p>)}
@@ -68,6 +73,7 @@ function AddressField({
 export default function AccountInfoPage() {
   const user = useAccount();
   const book = useAddressBook();
+  useFeedbackToast("error", book.actionError);
 
   return (
     <div className="flex min-h-dvh flex-col bg-neutral-canvas md:min-h-0 md:block md:bg-transparent">
@@ -101,9 +107,6 @@ export default function AccountInfoPage() {
           <p className="font-sans text-body-sm font-bold tracking-badge text-text-muted">SỔ ĐỊA CHỈ</p>
           {book.usage && <span className="text-sm text-text-muted">{book.usage}</span>}
         </div>
-
-        {/* Error from the last edit/delete/set-default action. */}
-        {book.actionError && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{book.actionError}</p>}
 
         {/* Loading, error-with-retry, and empty states for the address list. */}
         {book.listState === "loading" && <SkeletonRows label="Đang tải sổ địa chỉ…" />}
@@ -145,7 +148,7 @@ export default function AccountInfoPage() {
           <form id="address-form" onSubmit={(event) => void book.save(event)} className="flex flex-col gap-3">
             {book.formError && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{book.formError}</p>}
             <AddressField name="receiverName" label="Tên người nhận" value={book.form.receiverName} messages={book.fieldErrors.receiverName} onChange={(value) => book.updateField("receiverName", value)} />
-            <AddressField name="phone" label="Số điện thoại" value={book.form.phone} messages={book.fieldErrors.phone} onChange={(value) => book.updateField("phone", value)} />
+            <AddressField name="phone" label="Số điện thoại" hint={PHONE_HINT} value={book.form.phone} messages={book.fieldErrors.phone} onChange={(value) => book.updateField("phone", value)} />
             <AreaPicker
               value={{ provinceId: book.form.provinceId, districtId: book.form.districtId, wardCode: book.form.wardCode }}
               messages={{ provinceId: book.fieldErrors.provinceId, districtId: book.fieldErrors.districtId, wardCode: book.fieldErrors.wardCode }}

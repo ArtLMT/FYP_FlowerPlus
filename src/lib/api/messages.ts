@@ -12,6 +12,7 @@ export const requestFailed = (status: number) => `Yêu cầu không thành công
 export const COMMON_CODES: Record<string, string> = {
   // Auth
   INVALID_CREDENTIALS: "Email hoặc mật khẩu không đúng.",
+  LOGIN_THROTTLED: "Bạn đã nhập sai mật khẩu quá nhiều lần.",
   EMAIL_ALREADY_EXISTS: "Email này đã được đăng ký.",
   OTP_INVALID: "Mã xác thực không đúng hoặc đã hết hạn.",
   OTP_ATTEMPTS_EXCEEDED: "Bạn đã nhập sai mã quá nhiều lần. Vui lòng yêu cầu mã mới.",

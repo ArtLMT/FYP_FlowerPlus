@@ -33,8 +33,18 @@ export function googleLoginError(code: string | null): string | null {
   return "Đăng nhập bằng Google không thành công. Vui lòng thử lại.";
 }
 
-export const login = (email: string, password: string) =>
-  api<void>("/api/auth/login", { method: "POST", body: { email: email.trim(), password } });
+/** After five wrong passwords the backend refuses sign-in for a while; say how long. */
+export async function login(email: string, password: string): Promise<void> {
+  try {
+    await api<void>("/api/auth/login", { method: "POST", body: { email: email.trim(), password } });
+  } catch (cause) {
+    const error = asApiError(cause);
+    if (error.code === "LOGIN_THROTTLED" && error.retryAfterSeconds > 0) {
+      error.message = `${error.message} Vui lòng thử lại sau ${formatWait(error.retryAfterSeconds)}.`;
+    }
+    throw error;
+  }
+}
 
 export const register = (fullName: string, email: string, password: string) =>
   api<void>("/api/auth/register", {

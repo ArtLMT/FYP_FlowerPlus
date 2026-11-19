@@ -58,9 +58,13 @@ const FIELD_LABELS: Record<string, string> = {
   wardCode: "Phường/Xã",
 };
 
+/** BR-ADDR-10: the backend accepts only a 10-digit Vietnamese number starting with 0. */
+export const PHONE_HINT = "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0.";
+
 function fieldMessage(field: ValidationFieldError) {
   const label = FIELD_LABELS[field.field] ?? "Thông tin";
   if (field.rule === "NotBlank") return `${label} là bắt buộc.`;
+  if (field.field === "phone" && field.rule === "Pattern") return PHONE_HINT;
   if (field.rule === "Pattern") return `${label} không đúng định dạng.`;
   if (field.rule === "Size") return `${label} vượt quá độ dài cho phép.`;
   if (field.rule === "GhnArea") return `${label} không khớp với khu vực đã chọn.`;
