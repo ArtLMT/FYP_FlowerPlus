@@ -2,16 +2,21 @@
 
 import { useState } from "react";
 import Button from "@/components/ui/Button";
+import { useToast } from "@/components/ui/ToastProvider";
+import { useFeedbackToast } from "@/lib/hooks/use-feedback-toast";
 import { useResource } from "@/lib/hooks/use-resource";
 import { asApiError } from "@/lib/api";
 import { assignManagedVoucher, createManagedVoucher, listManagedVouchers, setManagedVoucherActive, updateManagedVoucher, type ManagedVoucher } from "@/lib/services/vouchers";
-import { instantToShopWallTime, shopWallTimeToInstant, voucherLastValidShopDate } from "@/lib/utils";
+import { instantToShopWallTime, shopToday, shopWallTimeToInstant, voucherLastValidShopDate } from "@/lib/utils";
 
 export default function VoucherManager() {
   const resource = useResource(listManagedVouchers, "promotion:managed-vouchers");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const { showToast } = useToast();
+  useFeedbackToast("error", error);
+  useFeedbackToast("success", message);
   const [editing, setEditing] = useState<{ voucher: ManagedVoucher; discountType: string; discountValue: string; minimumOrderAmount: string; activeFrom: string; expiresOn: string; maxRedemptions: string; audience: string } | null>(null);
   const [form, setForm] = useState({ code: "", discountType: "FIXED", discountValue: "", minimumOrderAmount: "0", activeFrom: "", expiresOn: "", maxRedemptions: "", audience: "PUBLIC" });
   async function create(event: React.FormEvent) {
@@ -29,7 +34,7 @@ export default function VoucherManager() {
   }
   async function assign(voucher: ManagedVoucher, email: string) {
     setBusy(true); setError(""); setMessage("");
-    try { const result = await assignManagedVoucher(voucher.id, email); setMessage(result.matched ? `Đã gán mã cho ${result.email}.` : "Không tìm thấy tài khoản Customer đủ điều kiện cho email này."); resource.reload(); }
+    try { const result = await assignManagedVoucher(voucher.id, email); if (result.matched) setMessage(`Đã gán mã cho ${result.email}.`); else showToast("warning", "Không tìm thấy tài khoản Customer đủ điều kiện cho email này."); resource.reload(); }
     catch (cause) { setError(asApiError(cause).message); }
     finally { setBusy(false); }
   }
@@ -55,12 +60,11 @@ export default function VoucherManager() {
   return <div className="space-y-6">
     <form onSubmit={create} className="grid gap-3 rounded-2xl border border-neutral-border bg-white p-5 shadow-sm sm:grid-cols-2 xl:grid-cols-3">
       <h2 className="sm:col-span-2 xl:col-span-3 font-serif text-2xl">Tạo voucher</h2>
-      {fields.map(([key, label, type]) => <label key={key} className="flex flex-col gap-1 text-sm font-semibold text-text-secondary">{label}<input required={!(["activeFrom"].includes(key))} type={type} min={type === "number" ? (key === "maxRedemptions" ? "1" : "0") : undefined} step={type === "number" ? "1" : undefined} value={form[key]} onChange={(event) => setForm({ ...form, [key]: event.target.value })} className="rounded-lg border border-neutral-border px-3 py-2" /></label>)}
+      {fields.map(([key, label, type]) => <label key={key} className="flex flex-col gap-1 text-sm font-semibold text-text-secondary">{label}<input required={!(["activeFrom"].includes(key))} type={type} min={type === "number" ? (key === "maxRedemptions" ? "1" : "0") : key === "expiresOn" ? shopToday() : undefined} step={type === "number" ? "1" : undefined} value={form[key]} onChange={(event) => setForm({ ...form, [key]: event.target.value })} className="rounded-lg border border-neutral-border px-3 py-2" /></label>)}
       <label className="flex flex-col gap-1 text-sm font-semibold text-text-secondary">Loại giảm<select value={form.discountType} onChange={(event) => setForm({ ...form, discountType: event.target.value })} className="rounded-lg border border-neutral-border px-3 py-2"><option value="FIXED">Số tiền</option><option value="PERCENTAGE">Phần trăm</option></select></label>
       <label className="flex flex-col gap-1 text-sm font-semibold text-text-secondary">Đối tượng<select value={form.audience} onChange={(event) => setForm({ ...form, audience: event.target.value })} className="rounded-lg border border-neutral-border px-3 py-2"><option value="PUBLIC">Công khai</option><option value="ASSIGNED">Được gán</option></select></label>
       <div className="flex items-end"><Button disabled={busy} className="min-h-11 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white">Tạo voucher</Button></div>
     </form>
-    {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>}{message && <p role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-800">{message}</p>}
     {resource.error && <p role="alert" className="text-primary">{resource.error.message}</p>}
     <div className="space-y-3">{resource.data?.content.map((voucher) => <article key={voucher.id} className="rounded-2xl border border-neutral-border bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="m-0 text-lg font-bold">{voucher.code}</h3><p className="m-0 mt-1 text-sm text-text-muted">{voucher.discountType === "PERCENTAGE" ? `${voucher.discountValue}%` : `${voucher.discountValue.toLocaleString("vi-VN")} ₫`} · {voucher.state} · {voucher.unreleasedRedemptions}/{voucher.maxRedemptions} lượt đang giữ</p></div><div className="flex gap-2"><Button disabled={busy} onClick={() => editVoucher(voucher)} className="rounded-lg border border-neutral-border px-4 py-2 text-sm font-semibold">Sửa</Button><Button disabled={busy || voucher.state === "EXPIRED"} onClick={() => void toggle(voucher)} className="rounded-lg border border-neutral-border px-4 py-2 text-sm font-semibold">{voucher.status === "ACTIVE" ? "Tắt" : "Kích hoạt"}</Button></div></div>

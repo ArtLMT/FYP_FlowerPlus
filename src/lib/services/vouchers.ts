@@ -54,7 +54,9 @@ function voucherFieldMessage({ field, rule }: ValidationFieldError): string {
     case "maxRedemptions": return "Giới hạn lượt phải lớn hơn 0.";
     case "activeFrom": return "Hãy chọn thời điểm bắt đầu.";
     case "expiresOn":
-      return rule === "AfterStart" ? "Ngày hết hạn phải sau thời điểm bắt đầu." : "Hãy chọn ngày hết hạn.";
+      if (rule === "AfterStart") return "Ngày hết hạn phải sau thời điểm bắt đầu.";
+      if (rule === "NotPast") return "Ngày hết hạn không được ở trong quá khứ.";
+      return "Hãy chọn ngày hết hạn.";
     case "audience": return "Hãy chọn đối tượng áp dụng.";
     case "email": return "Email không hợp lệ.";
     default: return "Một trường thông tin chưa hợp lệ.";
