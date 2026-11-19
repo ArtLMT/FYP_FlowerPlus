@@ -31,6 +31,7 @@ const bodyFont = Be_Vietnam_Pro({
 import { CartProvider } from "@/features/cart/cart-provider";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import ReturnAfterGoogleLogin from "@/features/auth/ReturnAfterGoogleLogin";
+import NumberInputGuard from "@/components/ui/NumberInputGuard";
 
 export const metadata: Metadata = {
   title: "FlowerPlus | Modern Botanical Gifting",
@@ -79,6 +80,7 @@ export default function RootLayout({
         <ToastProvider>
           <CartProvider>
             <ReturnAfterGoogleLogin />
+            <NumberInputGuard />
             {children}
           </CartProvider>
         </ToastProvider>
