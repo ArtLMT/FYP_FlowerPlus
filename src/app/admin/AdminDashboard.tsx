@@ -8,6 +8,7 @@ import AdminDrawer from "@/features/admin/AdminDrawer";
 import AdminOverview from "@/features/admin/AdminOverview";
 import ArrangementTypeManager from "@/features/admin/ArrangementTypeManager";
 import CategoryManager from "@/features/admin/CategoryManager";
+import FinanceReport from "@/features/admin/FinanceReport";
 import InventoryManager from "@/features/admin/InventoryManager";
 import MaterialManager from "@/features/admin/MaterialManager";
 import OrderManager from "@/features/admin/OrderManager";
@@ -190,6 +191,7 @@ export default function AdminDashboard({
         {user && allowedDomains.length > 0 && domain === "materials" && <MaterialManager />}
         {user && allowedDomains.length > 0 && domain === "inventory" && <InventoryManager key={batchMaterialId} receiveRequest={receive} initialMaterialId={batchMaterialId} onStockChanged={stock.reload} />}
         {user && allowedDomains.length > 0 && domain === "transactions" && <TransactionLedger onOpenOrder={showOrder} onOpenBatches={showBatches} />}
+        {user && user.role === "ADMIN" && domain === "finance" && <FinanceReport />}
         {user && user.role === "ADMIN" && domain === "users" && <StaffManager />}
         {user && user.role === "ADMIN" && domain === "addresses" && <AddressLookup />}
       </div>
