@@ -9,6 +9,7 @@ import ConfirmRequestDialog from "@/features/custom-order/ConfirmRequestDialog";
 import MaterialPicker, { MaterialGridSkeleton } from "@/features/custom-order/MaterialPicker";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton";
 import { useCustomBuilder } from "@/features/custom-order/hooks/use-custom-builder";
+import { useFeedbackToast } from "@/lib/hooks/use-feedback-toast";
 import { keepFormOpen } from "@/features/custom-order/hooks/use-material-quantities";
 import { SIGN_IN_MESSAGE } from "@/lib/api";
 import { formatVND } from "@/lib/utils";
@@ -65,6 +66,7 @@ function BuilderSkeleton() {
  */
 export default function CustomBuilder() {
   const b = useCustomBuilder();
+  useFeedbackToast("error", b.error);
 
   if (b.loadError) {
     const signedOut = b.loadError.status === 401;
@@ -141,7 +143,6 @@ export default function CustomBuilder() {
       fee={b.fee}
       estimate={b.estimate}
       missing={b.missing}
-      error={b.error}
       submitting={b.submitting}
       canSubmit={b.canSubmit}
       onSet={b.onSet}

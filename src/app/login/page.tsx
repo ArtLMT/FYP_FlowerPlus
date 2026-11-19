@@ -142,7 +142,6 @@ export default function LoginPage() {
         )}
 
         {/* Login/register error message. */}
-        {form.error && <p role="alert" className="mt-4 text-red-700">{form.error}</p>}
 
         {/* OR divider */}
         <div className="flex items-center gap-4 my-[30px]">

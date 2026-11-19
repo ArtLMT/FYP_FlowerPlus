@@ -6,7 +6,7 @@ import { formatVND } from "@/lib/utils";
  * "Bó hoa của bạn": what is picked, the live estimate and the submit button. Sticky beside the form on
  * large screens and the last block of the page on small ones, where `BouquetBar` links down to it.
  */
-export default function BouquetSummary({ lines, quantities, subtotal, fee, estimate, missing, error, submitting, canSubmit, onSet, onChange, onSettle, onRemove }: {
+export default function BouquetSummary({ lines, quantities, subtotal, fee, estimate, missing, submitting, canSubmit, onSet, onChange, onSettle, onRemove }: {
   lines: { material: Material; quantity: number }[];
   quantities: Record<string, string>;
   subtotal: number;
@@ -14,7 +14,6 @@ export default function BouquetSummary({ lines, quantities, subtotal, fee, estim
   fee: number | null;
   estimate: number;
   missing: string[];
-  error: string | null;
   submitting: boolean;
   canSubmit: boolean;
   onSet: (material: Material, value: string) => void;
@@ -62,7 +61,6 @@ export default function BouquetSummary({ lines, quantities, subtotal, fee, estim
       <p className="m-0 font-bold">Còn thiếu:</p>
       <ul className="m-0 mt-1 list-disc pl-5">{missing.map((item) => <li key={item}>{item}</li>)}</ul>
     </div>}
-    {error && <p role="alert" className="m-0 mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
 
     <Button type="submit" disabled={!canSubmit} className="mt-4 block w-full rounded-full bg-primary-deep py-4 text-center font-sans text-body-sm font-bold tracking-[0.1em] text-white hover:brightness-110">
       {submitting ? "ĐANG GỬI..." : "GỬI YÊU CẦU"}

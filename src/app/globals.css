@@ -111,6 +111,30 @@
   animation: gentle-pulse 1.2s ease-in-out 2;
 }
 
+/* Toast: slides in from the top; errors also shake once so the eye is drawn to them. */ 
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-24px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)      scale(1);    }
+}
+@keyframes toast-shake {
+  0%, 100% { translate: 0 0; }
+  20%      { translate: -8px 0; }
+  40%      { translate: 8px 0; }
+  60%      { translate: -5px 0; }
+  80%      { translate: 5px 0; }
+}
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+.toast-enter { animation: toast-in 280ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.toast-enter-error { animation: toast-in 280ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both, toast-shake 450ms 280ms ease-in-out; }
+.toast-progress { transform-origin: left; animation: toast-progress var(--toast-duration, 6s) linear forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter, .toast-enter-error { animation: none; }
+  .toast-progress { animation: none; }
+}
+
 /* ─────────────────────────────────────────────
    Material Symbols icon font settings
 ───────────────────────────────────────────── */

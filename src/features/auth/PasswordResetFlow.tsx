@@ -44,7 +44,6 @@ export default function PasswordResetFlow({ accountEmail, startWithCode = false,
     toggleShowConfirmPassword,
     resendSeconds,
     emailIsCoolingDown,
-    error,
     busy,
     submitRequest,
     resendCode,
@@ -128,7 +127,6 @@ export default function PasswordResetFlow({ accountEmail, startWithCode = false,
                   className={`${FIELD} ${isAccountReset ? "bg-neutral-surface" : ""}`}
                   placeholder="you@example.com"
                 />
-                {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
                 <Button
                   type="submit"
                   disabled={busy || !email.trim() || (!haveCode && emailIsCoolingDown)}
@@ -221,7 +219,6 @@ export default function PasswordResetFlow({ accountEmail, startWithCode = false,
                   </Button>
                 </div>
 
-                {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
 
                 <Button
                   type="submit"

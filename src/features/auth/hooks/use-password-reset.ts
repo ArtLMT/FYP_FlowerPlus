@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { ApiError } from "@/lib/api";
 import { useAsyncAction } from "@/lib/hooks/use-async-action";
+import { useFeedbackToast } from "@/lib/hooks/use-feedback-toast";
 import { useCountdown } from "@/lib/hooks/use-countdown";
 import { requestPasswordReset, resetPassword } from "@/lib/services/auth";
 
@@ -21,6 +22,7 @@ const normalizeEmail = (email: string) => email.trim().toLowerCase();
  */
 export function usePasswordReset(accountEmail?: string, startWithCode = false, setup = false) {
   const { busy, error, setError, run } = useAsyncAction();
+  useFeedbackToast("error", error);
   const [step, setStep] = useState<PasswordResetStep>(setup ? "reset" : "request");
   const [haveCode, setHaveCode] = useState(startWithCode);
   /** False when the user brought their own code, so the notice does not claim one was just sent. */
@@ -115,7 +117,6 @@ export function usePasswordReset(accountEmail?: string, startWithCode = false, s
     toggleShowConfirmPassword: () => setShowConfirmPassword((visible) => !visible),
     resendSeconds,
     emailIsCoolingDown: resendSeconds > 0 && normalizeEmail(email) === cooldownEmail,
-    error,
     busy,
     submitRequest,
     resendCode,

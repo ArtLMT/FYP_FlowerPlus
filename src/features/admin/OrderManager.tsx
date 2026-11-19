@@ -76,13 +76,13 @@ export default function OrderManager({ stockByOrder, selectedId, onSelect, initi
   return (
     <div className="space-y-4">
       <section className="rounded-xl border border-neutral-border bg-white p-4 shadow-sm sm:p-5" aria-labelledby="orders-heading">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+          <div className="min-w-0 xl:max-w-xs xl:shrink-0">
             <h2 id="orders-heading" className="font-serif text-xl font-semibold text-text-primary">Quản lý đơn hàng</h2>
             <p className="mt-1 text-sm text-text-muted">Xác nhận, chuyển bước hoặc hủy đơn. Nội dung đơn hàng không thể chỉnh sửa.</p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-            <label className="flex min-w-56 flex-col gap-1 text-xs font-semibold text-text-secondary">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end xl:justify-end">
+            <label className="flex flex-col sm:min-w-56 gap-1 text-xs font-semibold text-text-secondary">
               Trạng thái
               <select value={m.status} onChange={(event) => m.setStatus(event.target.value as OrderStatus | "")} className={INPUT}>
                 <option value="">Tất cả trạng thái</option>

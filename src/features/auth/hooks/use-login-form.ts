@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAsyncAction } from "@/lib/hooks/use-async-action";
+import { useFeedbackToast } from "@/lib/hooks/use-feedback-toast";
 import { googleLoginError, login, register } from "@/lib/services/auth";
 import { useCart } from "@/features/cart/cart-provider";
 import { nextFromUrl, rememberReturn, takeReturn } from "@/features/auth/return-after-login";
@@ -17,6 +18,7 @@ export function useLoginForm() {
   const router = useRouter();
   const { refresh: refreshCart } = useCart();
   const { busy, error, setError, run } = useAsyncAction();
+  useFeedbackToast("error", error);
   const [tab, setTab] = useState<LoginTab>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -69,7 +71,6 @@ export function useLoginForm() {
     setConfirmPassword,
     agreed,
     setAgreed,
-    error,
     busy,
     canLogin: !busy && Boolean(email) && Boolean(password),
     canRegister: !busy && Boolean(fullName && email && password && confirmPassword),

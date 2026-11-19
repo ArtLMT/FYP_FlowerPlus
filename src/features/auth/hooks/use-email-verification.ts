@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAsyncAction } from "@/lib/hooks/use-async-action";
+import { useFeedbackToast } from "@/lib/hooks/use-feedback-toast";
 import { useCountdown } from "@/lib/hooks/use-countdown";
 import { resendOtp, verifyEmail } from "@/lib/services/auth";
 import { useCart } from "@/features/cart/cart-provider";
@@ -13,6 +14,7 @@ export function useEmailVerification() {
   const router = useRouter();
   const { refresh: refreshCart } = useCart();
   const { busy, error, setError, run } = useAsyncAction();
+  useFeedbackToast("error", error);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [resendSeconds, startResendCountdown] = useCountdown(RESEND_SECONDS);
@@ -40,7 +42,6 @@ export function useEmailVerification() {
   return {
     email,
     setCode,
-    error,
     busy,
     resendSeconds,
     countdown: `0:${String(resendSeconds).padStart(2, "0")}`,

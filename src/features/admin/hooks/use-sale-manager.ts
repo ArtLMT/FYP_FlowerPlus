@@ -15,7 +15,8 @@ export function useSaleManager() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  async function run(action: () => Promise<unknown>, message: string) {
+  /** Runs a backend action; resolves to true on success, false after showing the error. */
+  async function run(action: () => Promise<unknown>, message: string): Promise<boolean> {
     setBusy(true);
     setError("");
     setSuccess("");
@@ -23,19 +24,24 @@ export function useSaleManager() {
       await action();
       sales.reload();
       setSuccess(message);
+      return true;
     } catch (cause) {
       setError(asApiError(cause).message);
+      return false;
     } finally {
       setBusy(false);
     }
   }
 
-  async function save(input: { productId?: string; discountType: SaleDiscountType; discountValue: number; startsAt: string; endsAt: string }, sale?: Sale) {
+  /** Resolves to true only when the backend saved the sale, so the form can stay open on an error. */
+  async function save(input: { productId?: string; discountType: SaleDiscountType; discountValue: number; startsAt: string; endsAt: string }, sale?: Sale): Promise<boolean> {
     if (sale) {
-      await run(() => updateSale(sale, input), "Đã cập nhật chương trình giảm giá.");
-    } else if (input.productId) {
-      await run(() => createSale({ ...input, productId: input.productId! }), "Đã tạo chương trình giảm giá.");
+      return run(() => updateSale(sale, input), "Đã cập nhật chương trình giảm giá.");
     }
+    if (input.productId) {
+      return run(() => createSale({ ...input, productId: input.productId! }), "Đã tạo chương trình giảm giá.");
+    }
+    return false;
   }
 
   return {

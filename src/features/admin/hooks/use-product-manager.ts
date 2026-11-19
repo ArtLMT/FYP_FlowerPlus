@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { asApiError, type ApiError } from "@/lib/api";
+import { useToast } from "@/components/ui/ToastProvider";
+import { useFeedbackToast } from "@/lib/hooks/use-feedback-toast";
 import { useResource } from "@/lib/hooks/use-resource";
 import {
   activateProduct,
@@ -84,6 +86,8 @@ export function useProductManager() {
 
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
+  const { showToast } = useToast();
+  useFeedbackToast("error", actionError);
   /** Why the last image upload, move or removal failed; shown inside the image controls (U2). */
   const [imageError, setImageError] = useState("");
   const [activationIssues, setActivationIssues] = useState<string[]>([]);
@@ -191,7 +195,7 @@ export function useProductManager() {
       closeDialogs();
       setActivationIssues([]);
       setRefreshRequiredId(null);
-      setActionError("Đã tải lại sản phẩm. Vui lòng xem lại thông tin hiện tại trước khi thử lại.");
+      showToast("warning", "Đã tải lại sản phẩm. Vui lòng xem lại thông tin hiện tại trước khi thử lại.");
     } catch (cause) {
       setActionError(asApiError(cause).message);
     } finally {
@@ -346,7 +350,6 @@ export function useProductManager() {
     // Lifecycle
     busyId,
     isBusy: (product: ManagedProduct | null) => busyId === product?.id || refreshRequiredId !== null,
-    actionError,
     activationIssues,
     refreshRequiredId,
     refreshLifecycleProduct,

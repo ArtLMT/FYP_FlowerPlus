@@ -248,7 +248,6 @@ export default function ProductManager() {
     closeProduct,
     busyId,
     isBusy,
-    actionError,
     activationIssues,
     refreshRequiredId,
     refreshLifecycleProduct,
@@ -286,7 +285,6 @@ export default function ProductManager() {
     <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-text-secondary">
       {Object.values(ACTIVATION_REQUIREMENTS).map((requirement) => <li key={requirement}>{requirement}</li>)}
     </ul>
-    {actionError && <p role="alert" className="mt-4 rounded-xl border border-primary/30 bg-white p-3 text-sm text-primary-deep">{actionError}</p>}
     {activationIssues.length > 0 && <div role="alert" className="mt-4 rounded-xl border border-primary/30 bg-white p-3 text-sm text-primary-deep">
       <p className="font-semibold">Vui lòng kiểm tra các yêu cầu sau:</p>
       <ul className="mt-1 list-inside list-disc">{activationIssues.map((issue) => <li key={issue}>{issue}</li>)}</ul>
@@ -304,7 +302,6 @@ export default function ProductManager() {
     </div>}
   >
     <p className="text-sm text-text-secondary"><strong>{deactivationProduct.name}</strong> sẽ bị ẩn và không thể đặt mua mới. Các dữ liệu hiện có vẫn được giữ lại.</p>
-    {actionError && <p role="alert" className="mt-4 rounded-xl border border-primary/30 bg-white p-3 text-sm text-primary-deep">{actionError}</p>}
   </ModalDialog>;
 
   // Confirmation modal used when moving a Deactivated Product back to Draft.
@@ -317,7 +314,6 @@ export default function ProductManager() {
     </div>}
   >
     <p className="text-sm text-text-secondary"><strong>{draftProduct.name}</strong> vẫn bị ẩn và trở thành bản nháp để chỉnh sửa lại.</p>
-    {actionError && <p role="alert" className="mt-4 rounded-xl border border-primary/30 bg-white p-3 text-sm text-primary-deep">{actionError}</p>}
   </ModalDialog>;
 
   // Edit screen. The form restarts on `editRevision`, not on every version: an image change made
@@ -332,7 +328,6 @@ export default function ProductManager() {
       onDeactivate={askToDeactivate}
       onReturnToDraft={openReturnToDraft}
       imageManager={<>
-        {actionError && <p role="alert" className="rounded-xl border border-primary/30 bg-white px-4 py-3 text-sm text-primary-deep">{actionError}</p>}
         <ProductImageManager
           product={editingProduct}
           busy={isBusy(editingProduct)}
@@ -349,7 +344,6 @@ export default function ProductManager() {
 
   // Detail screen.
   if (view === "detail" && selectedId) return <div className="w-full min-w-0 max-w-full space-y-4">
-    {actionError && <p role="alert" className="rounded-xl border border-primary/30 bg-white px-4 py-3 text-sm text-primary-deep">{actionError}</p>}
     {refreshRequiredId === selectedId && !activationProduct && <Button type="button" disabled={busyId === selectedId} onClick={() => void refreshLifecycleProduct(selectedId)} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Tải lại sản phẩm</Button>}
     <ProductDetail
       key={selectedId}
@@ -403,7 +397,6 @@ export default function ProductManager() {
       </label>
     </div>
 
-    {actionError && <p role="alert" className="rounded-xl border border-primary/30 bg-white px-4 py-3 text-sm text-primary-deep">{actionError}</p>}
     {refreshRequiredId && !activationProduct && <Button type="button" disabled={busyId === refreshRequiredId} onClick={() => void refreshLifecycleProduct(refreshRequiredId)} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Tải lại sản phẩm</Button>}
     {error && <div className="rounded-2xl border border-neutral-border bg-white px-5 py-8 text-center"><p role="alert" className="text-sm text-primary-deep">{error}</p><Button type="button" onClick={reloadProducts} className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Thử lại</Button></div>}
     {!error && loading && <div className="rounded-2xl border border-neutral-border bg-white px-5 py-2"><SkeletonRows label="Đang tải sản phẩm…" /></div>}

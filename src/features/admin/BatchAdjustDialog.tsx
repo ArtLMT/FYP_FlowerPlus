@@ -6,6 +6,7 @@ import ModalDialog from "@/components/ui/ModalDialog";
 import FieldMessages from "@/features/admin/FieldMessages";
 import { MATERIAL_TYPE_LABELS, MATERIAL_UNIT_LABELS } from "@/features/admin/material-labels";
 import { asApiError, type FieldErrors } from "@/lib/api";
+import { useFeedbackToast } from "@/lib/hooks/use-feedback-toast";
 import { useResource } from "@/lib/hooks/use-resource";
 import { adjustBatch, listBatches, type MaterialBatch } from "@/lib/services/inventory";
 import { listMaterials } from "@/lib/services/materials";
@@ -58,6 +59,7 @@ export default function BatchAdjustDialog({ batch: givenBatch, onClose, onAdjust
   const [note, setNote] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState("");
+  useFeedbackToast("error", error);
   const [saving, setSaving] = useState(false);
 
   const unit = batch ? MATERIAL_UNIT_LABELS[batch.unitOfMeasure] : "";
@@ -134,8 +136,6 @@ export default function BatchAdjustDialog({ batch: givenBatch, onClose, onAdjust
           {Number(batch.reservedQuantity) > 0 && <span className="text-text-muted"> · Đã giữ {formatQuantity(batch.reservedQuantity)} {unit} (không điều chỉnh được)</span>}
         </p>
       </div>}
-
-      {error && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
 
       <fieldset className="flex flex-col gap-2 text-xs font-semibold text-text-secondary">
         <legend className="mb-1">Loại điều chỉnh</legend>

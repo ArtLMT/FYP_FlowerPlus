@@ -2,6 +2,7 @@
 
 import Button from "@/components/ui/Button";
 import { useAsyncAction } from "@/lib/hooks/use-async-action";
+import { useFeedbackToast } from "@/lib/hooks/use-feedback-toast";
 import { useResource } from "@/lib/hooks/use-resource";
 import { getManagementTracking, syncManagementTracking } from "@/lib/services/orders";
 import { SHIPMENT_STAGE_LABELS, SHIPMENT_STAGE_STYLES, ghnStatusLabel } from "@/lib/shipment";
@@ -18,6 +19,7 @@ import { formatShopDateTime } from "@/lib/utils";
 export default function GhnJourney({ orderId }: { orderId: string }) {
   const tracking = useResource(() => getManagementTracking(orderId), orderId);
   const sync = useAsyncAction();
+  useFeedbackToast("error", sync.error);
   const data = tracking.data;
 
   async function onSync() {
@@ -39,7 +41,6 @@ export default function GhnJourney({ orderId }: { orderId: string }) {
       </Button>
     </div>
 
-    {sync.error && <p className="mt-2 text-xs text-red-700">{sync.error}</p>}
     {tracking.error && !data && <p className="mt-2 text-xs text-red-700">{tracking.error.message}</p>}
     {tracking.loading && !data && <p className="mt-2 text-xs text-text-muted">Đang tải hành trình GHN…</p>}
     {data?.stale && <p className="mt-2 text-xs text-text-muted">GHN chưa gửi cập nhật nào. Bấm “Đồng bộ” để hỏi GHN ngay.</p>}

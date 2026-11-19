@@ -6,6 +6,7 @@ import Header from "@/components/layout/Header";
 import Notice, { NoticeButton, NoticeLink } from "@/components/ui/Notice";
 import ProductImage from "@/components/ui/ProductImage";
 import { useCartPage } from "@/features/cart/hooks/use-cart-page";
+import { useFeedbackToast } from "@/lib/hooks/use-feedback-toast";
 import type { CartLine } from "@/lib/services/cart";
 import { formatVND } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -30,6 +31,7 @@ import { SkeletonRows } from "@/components/ui/Skeleton";
  */
 export default function CartPage() {
   const page = useCartPage();
+  useFeedbackToast("error", page.error);
   const checkoutLabel = page.shopper === "guest" ? "Đăng nhập để thanh toán"
     : page.shopper === "suspended" ? "Tạm khóa đặt hàng" : "Thanh toán";
   const checkoutHref = page.shopper === "guest" ? "/login?next=/cart" : "/checkout/delivery";
@@ -79,12 +81,7 @@ export default function CartPage() {
       {page.view === "lines" && (
         <div className="md:mx-auto md:w-full md:max-w-[1240px] md:px-10 md:pt-6 lg:grid lg:grid-cols-[1fr_360px] lg:gap-8 lg:items-start">
           <div className="flex flex-col gap-4">
-            {/* Error from the last cart change, and the suspended-account notice. */}
-            {page.error && (
-              <p role="alert" className="mx-5 md:mx-0 rounded-xl border border-primary bg-neutral-surface p-4 font-sans text-body-sm text-primary m-0">
-                {page.error}
-              </p>
-            )}
+            {/* The suspended-account notice (a failed cart change shows as a toast). */}
             {page.shopper === "suspended" && (
               <p className="mx-5 md:mx-0 rounded-xl border border-neutral-border bg-neutral-surface p-4 font-sans text-body-sm text-text-secondary m-0">
                 Tài khoản của bạn đang bị tạm khóa đặt hàng. Bạn vẫn có thể chỉnh sửa giỏ hàng.

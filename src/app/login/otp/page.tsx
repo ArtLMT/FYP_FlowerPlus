@@ -54,7 +54,6 @@ export default function OtpPage() {
           {otp.resendSeconds > 0 && ` — sau ${otp.countdown}`}
         </p>
         {/* Verification error message. */}
-        {otp.error && <p role="alert" className="mt-4 text-red-700">{otp.error}</p>}
       </div>
 
       {/* Verify */}

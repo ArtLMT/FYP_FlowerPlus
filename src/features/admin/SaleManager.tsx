@@ -1,5 +1,6 @@
 "use client";
 
+import { useFeedbackToast } from "@/lib/hooks/use-feedback-toast";
 import { useState } from "react";
 import Button from "@/components/ui/Button";
 import { useSaleManager } from "@/features/admin/hooks/use-sale-manager";
@@ -67,14 +68,15 @@ function Form({ sale, products, busy, onCancel, onSave }: {
 /** Staff/Admin sale schedule screen. Sale rules and current price are always confirmed by the backend. */
 export default function SaleManager() {
   const manager = useSaleManager();
+  useFeedbackToast("error", manager.error);
+  useFeedbackToast("success", manager.success);
   const [formSale, setFormSale] = useState<Sale | null>(null);
   const [creating, setCreating] = useState(false);
 
   return <section className="space-y-4 rounded-2xl border border-neutral-border bg-white p-4 shadow-sm sm:p-6">
     <header className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="m-0 font-serif text-2xl text-text-primary">Chương trình giảm giá</h2><p className="mb-0 mt-1 text-sm text-text-secondary">Lịch giảm giá tự áp dụng khi sản phẩm đang được mở bán.</p></div><Button type="button" onClick={() => { setCreating(true); setFormSale(null); }} className="min-h-11 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white">Tạo chương trình</Button></header>
-    {(manager.error || manager.loadError) && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{manager.error || manager.loadError}</p>}
-    {manager.success && <p role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-800">{manager.success}</p>}
-    {(creating || formSale) && <Form key={formSale?.id ?? "new"} sale={formSale ?? undefined} products={manager.products} busy={manager.busy} onCancel={() => { setCreating(false); setFormSale(null); }} onSave={(input, sale) => void manager.save(input, sale).then(() => { setCreating(false); setFormSale(null); })} />}
+    {manager.loadError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{manager.loadError}</p>}
+    {(creating || formSale) && <Form key={formSale?.id ?? "new"} sale={formSale ?? undefined} products={manager.products} busy={manager.busy} onCancel={() => { setCreating(false); setFormSale(null); }} onSave={(input, sale) => void manager.save(input, sale).then((saved) => { if (saved) { setCreating(false); setFormSale(null); } })} />}
     {manager.productsLoading && <p className="text-sm text-text-muted">Đang tải sản phẩm…</p>}
     {manager.loading ? <SkeletonRows label="Đang tải lịch giảm giá…" /> : manager.sales.length === 0 ? <p className="rounded-xl bg-neutral-surface p-6 text-center text-sm text-text-muted">Chưa có chương trình giảm giá.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b border-neutral-border text-text-muted"><th className="p-3">Sản phẩm</th><th className="p-3">Ưu đãi</th><th className="p-3">Thời gian</th><th className="p-3">Trạng thái</th><th className="p-3">Giá hiện tại</th><th className="p-3">Thao tác</th></tr></thead><tbody>{manager.sales.map((sale) => <tr key={sale.id} className="border-b border-neutral-border last:border-0"><td className="p-3 font-semibold text-text-primary">{sale.productName}</td><td className="p-3">{sale.discountType === "PERCENTAGE" ? `${sale.discountValue}%` : `${formatMoney(sale.discountValue)}₫`}</td><td className="p-3">{new Date(sale.startsAt).toLocaleString("vi-VN")} – {new Date(sale.endsAt).toLocaleString("vi-VN")}</td><td className="p-3">{stateLabels[sale.state]}</td><td className="p-3">{sale.currentSalePrice === null ? "—" : `${formatMoney(sale.currentSalePrice)}₫`}</td><td className="p-3"><div className="flex gap-2">{(sale.state === "UPCOMING" || sale.state === "RUNNING") && <><Button type="button" disabled={manager.busy} onClick={() => { setCreating(false); setFormSale(sale); }} className="rounded-lg border border-neutral-border px-3 py-1.5 text-sm font-semibold">Sửa</Button><Button type="button" disabled={manager.busy} onClick={() => { if (window.confirm(`Kết thúc chương trình giảm giá cho ${sale.productName}?`)) void manager.end(sale); }} className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-semibold text-red-700">Kết thúc</Button></>}</div></td></tr>)}</tbody></table></div>}
   </section>;

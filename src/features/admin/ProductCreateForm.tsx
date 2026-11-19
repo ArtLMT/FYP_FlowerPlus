@@ -7,6 +7,7 @@ import FieldMessages from "@/features/admin/FieldMessages";
 import { takeFiles } from "@/features/admin/file-input";
 import { useProductForm, type ProductFormProps } from "@/features/admin/hooks/use-product-form";
 import { MATERIAL_TYPE_LABELS, MATERIAL_UNIT_LABELS } from "@/features/admin/material-labels";
+import { useFeedbackToast } from "@/lib/hooks/use-feedback-toast";
 import { IMAGE_ACCEPT, MAX_PRODUCT_IMAGES, type ManagedProduct, type ManagedProductType } from "@/lib/services/managed-products";
 import type { MaterialUnit } from "@/lib/services/materials";
 
@@ -90,6 +91,9 @@ export default function ProductCreateForm({
     cancel: cancelCreation,
     submit,
   } = useProductForm(props);
+  // With field errors the summary stays beside the form; an error with none is a plain failure.
+  const hasFieldErrors = Object.keys(fieldErrors).length > 0;
+  useFeedbackToast("error", hasFieldErrors ? "" : error);
 
   return <section className="w-full min-w-0 max-w-full rounded-2xl border border-neutral-border bg-white shadow-sm">
     {/* Form title, explanation, lifecycle shortcuts, and top Cancel action. */}
@@ -113,11 +117,11 @@ export default function ProductCreateForm({
 
     <form onSubmit={(event) => void submit(event)} className="min-w-0 space-y-6 px-4 py-6 sm:px-7">
       <p className="text-xs text-text-muted"><span className="font-bold text-primary-deep" aria-hidden="true">*</span> Trường bắt buộc</p>
-      {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+      {error && hasFieldErrors && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
         <p>{error}</p>
-        {Object.entries(fieldErrors).length > 0 && <ul className="mt-2 list-inside list-disc space-y-1">
+        <ul className="mt-2 list-inside list-disc space-y-1">
           {Object.entries(fieldErrors).flatMap(([field, messages]) => messages.map((message) => <li key={field + message}><strong>{fieldName(field)}:</strong> {message}</li>))}
-        </ul>}
+        </ul>
       </div>}
 
       {/* Product name and type. */}
