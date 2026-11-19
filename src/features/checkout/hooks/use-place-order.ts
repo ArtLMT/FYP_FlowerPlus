@@ -56,8 +56,14 @@ export function usePlaceOrder() {
     setPlaceError(null);
     setPriceChanged(null);
     try {
-      const quote = voucherCode ? await previewVoucher(voucherCode) : null;
-      setVoucherQuote(quote);
+      // Price the order from the quote the customer reviewed on this page, never a fresh one: the server
+      // compares expectedTotal with its current total and refuses with CHECKOUT_PRICE_CHANGED if staff
+      // changed the voucher or a sale meanwhile (PROM-BUG-01). Only preview here if no quote is loaded yet.
+      let quote = voucherQuote;
+      if (voucherCode && !quote) {
+        quote = await previewVoucher(voucherCode);
+        setVoucherQuote(quote);
+      }
       const order = await placeOrder({
         addressId: selection.addressId,
         deliveryDate: selection.deliveryDate ?? undefined,
@@ -78,6 +84,11 @@ export function usePlaceOrder() {
         if ([currentSubtotal, voucherDiscount, shippingFee, payableTotal].every((value) => typeof value === "number")) {
           setPriceChanged({ currentSubtotal: currentSubtotal as number, voucherDiscount: voucherDiscount as number,
             shippingFee: shippingFee as number, payableTotal: payableTotal as number });
+        }
+        // The customer has now seen the new totals: reload the voucher quote so the page and the next
+        // confirm use them.
+        if (voucherCode) {
+          await previewVoucher(voucherCode).then(setVoucherQuote, () => setVoucherQuote(null));
         }
       }
       if (!error.isNetworkError) await refresh();
