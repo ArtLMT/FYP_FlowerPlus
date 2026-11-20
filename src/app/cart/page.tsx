@@ -11,6 +11,7 @@ import type { CartLine } from "@/lib/services/cart";
 import { formatVND } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { previewVoucher, type VoucherPreview } from "@/lib/services/vouchers";
+import { asApiError } from "@/lib/api";
 import { readVoucherCode, saveVoucherCode } from "@/features/checkout/checkout-session";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 
@@ -158,7 +159,15 @@ function VoucherBox() {
     if (!appliedCode) return;
     let live = true;
     void previewVoucher(appliedCode).then((result) => { if (live) setQuote(result); })
-      .catch((cause) => { if (live) { setQuote(null); setError(cause instanceof Error ? cause.message : "Mã không còn áp dụng được."); } });
+      .catch((cause) => {
+        if (!live) return;
+        setQuote(null);
+        setError(cause instanceof Error ? cause.message : "Mã không còn áp dụng được.");
+        // A saved code the server now refuses (expired overnight, turned off) must not follow the customer
+        // into checkout; a network failure keeps it.
+        const status = asApiError(cause).status;
+        if (status >= 400 && status < 500) { setAppliedCode(null); saveVoucherCode(null); }
+      });
     return () => { live = false; };
   }, [appliedCode]);
   async function apply() {

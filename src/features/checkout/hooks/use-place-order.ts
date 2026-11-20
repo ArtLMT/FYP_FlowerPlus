@@ -6,7 +6,7 @@ import { getAddresses, hasDeliveryArea } from "@/lib/services/addresses";
 import { quoteShippingFee } from "@/lib/services/shipping";
 import { placeOrder } from "@/lib/services/orders";
 import { useCart } from "@/features/cart/cart-provider";
-import { isWishOpen, readSelection, readVoucherCode, savePlacedOrder } from "@/features/checkout/checkout-session";
+import { isWishOpen, readSelection, readVoucherCode, savePlacedOrder, saveVoucherCode } from "@/features/checkout/checkout-session";
 import { previewVoucher, type VoucherPreview } from "@/lib/services/vouchers";
 
 /**
@@ -22,15 +22,27 @@ export function usePlaceOrder() {
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
   const [priceChanged, setPriceChanged] = useState<{ currentSubtotal: number; voucherDiscount: number; shippingFee: number; payableTotal: number } | null>(null);
-  const [voucherCode] = useState(readVoucherCode);
+  const [voucherCode, setVoucherCode] = useState(readVoucherCode);
   const [voucherQuote, setVoucherQuote] = useState<VoucherPreview | null>(null);
+  /** A saved code the server refused (expired, turned off, used up): dropped and named on the page. */
+  const [droppedVoucher, setDroppedVoucher] = useState<string | null>(null);
   const cartVersion = cart?.version;
   const cartSubtotal = cart?.subtotal;
   useEffect(() => {
     if (!voucherCode || cartVersion === undefined) return;
     let live = true;
     void previewVoucher(voucherCode).then((quote) => { if (live) setVoucherQuote(quote); })
-      .catch(() => { if (live) setVoucherQuote(null); });
+      .catch((cause) => {
+        if (!live) return;
+        setVoucherQuote(null);
+        // Only a refusal drops the code; a network failure keeps it so the next quote can succeed.
+        const status = asApiError(cause).status;
+        if (status >= 400 && status < 500) {
+          setDroppedVoucher(voucherCode);
+          setVoucherCode(null);
+          saveVoucherCode(null);
+        }
+      });
     return () => { live = false; };
   }, [voucherCode, cartVersion, cartSubtotal]);
 
@@ -107,6 +119,7 @@ export function usePlaceOrder() {
     priceChanged,
     voucherCode,
     voucherQuote,
+    droppedVoucher,
     /** GHN's fee for the chosen address, charged at checkout (0 for an address without a GHN area). */
     shippingEstimate,
     /** Products after voucher, plus the shipping fee once it is known. */

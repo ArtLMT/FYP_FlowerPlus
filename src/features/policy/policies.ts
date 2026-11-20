@@ -219,7 +219,12 @@ export const POLICIES: Record<PolicySlug, Policy> = {
       },
       {
         heading: "Phí giao hàng",
-        paragraphs: ["Cửa hàng không tính phí giao hàng trong khu vực giao."],
+        // shipping.md rule 4 (since 18 Nov 2026): the fee is GHN's quote, charged with the order.
+        items: [
+          "Đơn hàng được giao qua Giao Hàng Nhanh (GHN). Phí giao hàng là phí GHN báo cho kiện hàng của bạn đến địa chỉ đã chọn.",
+          "Phí giao hàng hiện ở bước xác nhận, trong \"Tổng cộng\", trước khi bạn đặt hàng, và được thu cùng tiền hàng khi nhận hoa.",
+          "Địa chỉ chưa chọn phường/xã theo danh sách của GHN được giao miễn phí. Đơn thiết kế riêng hiện chưa tính phí giao hàng.",
+        ],
       },
       {
         heading: "Thanh toán khi nhận hàng",

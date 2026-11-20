@@ -36,7 +36,7 @@ export default function ConfirmPage() {
  * the bottom. Submit logic lives in `features/checkout/hooks/use-place-order.ts`.
  */
 function ConfirmView() {
-  const { cart, selection, address, needsNewSelection, placing, error, priceChanged, submit, voucherCode, voucherQuote, shippingEstimate, payableTotal } = usePlaceOrder();
+  const { cart, selection, address, needsNewSelection, placing, error, priceChanged, submit, voucherCode, voucherQuote, droppedVoucher, shippingEstimate, payableTotal } = usePlaceOrder();
 
   // Delivery choices are missing or stale: ask the customer to pick them again.
   if (needsNewSelection || !selection) {
@@ -83,7 +83,11 @@ function ConfirmView() {
                     <div className="font-serif font-medium text-[20px] text-text-primary">{line.name}</div>
                     <div className="font-sans text-body-sm text-text-muted mt-[2px]">SL: {line.quantity}</div>
                   </div>
-                  <div className="font-sans font-bold text-[18px] text-primary">{formatVND(line.basePrice)}</div>
+                  {/* The line as the subtotal counts it: sale price × quantity, full price struck through. */}
+                  <div className="flex flex-col items-end">
+                    <span className="font-sans font-bold text-[18px] text-primary">{formatVND(line.lineTotal)}</span>
+                    {line.effectivePrice < line.basePrice && <span className="font-sans text-sm text-text-muted line-through">{formatVND(line.basePrice * line.quantity)}</span>}
+                  </div>
                 </div>
               ))}
             </div>
@@ -164,6 +168,9 @@ function ConfirmView() {
               <span className="font-sans text-[16px]">Mã {voucherCode}</span>
               <span className="font-sans text-[16px]">−{formatVND(voucherQuote?.discountAmount ?? 0)}</span>
             </div>}
+            {droppedVoucher && <p role="status" className="font-sans text-body-sm text-primary mt-0 mb-3">
+              Mã {droppedVoucher} không còn áp dụng được nên đã được bỏ khỏi đơn.
+            </p>}
             <div className="h-px bg-neutral-border mt-2 mb-4" />
             <div className="flex items-baseline justify-between">
               <span className="font-serif font-semibold text-[26px]">Tổng cộng</span>
