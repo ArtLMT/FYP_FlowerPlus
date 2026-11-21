@@ -1,5 +1,5 @@
-import type { Notification, Voucher } from "@/lib/types";
-import { notifications, vouchers } from "@/lib/mock-data";
+import type { Voucher } from "@/lib/types";
+import { vouchers } from "@/lib/mock-data";
 
 /**
  * Account screens that have no backend yet. Returns mock data from lib/mock-data.
@@ -8,8 +8,4 @@ import { notifications, vouchers } from "@/lib/mock-data";
 
 export async function getVouchers(): Promise<Voucher[]> {
   return vouchers;
-}
-
-export async function getNotifications(): Promise<Notification[]> {
-  return notifications;
 }

@@ -3,8 +3,11 @@ import Button from "@/components/ui/Button";
 
 import { useEffect, useRef } from "react";
 
-/** success = it worked · warning = it worked or was refused, but the user should look · error = it failed. */
-export type ToastKind = "success" | "warning" | "error";
+/**
+ * success = it worked · warning = it worked or was refused, but the user should look · error = it failed
+ * · info = news the user did not ask for, such as a new notification.
+ */
+export type ToastKind = "success" | "warning" | "error" | "info";
 
 export interface ToastMessage {
   id: number;
@@ -38,12 +41,18 @@ const STYLES: Record<ToastKind, {
     close: "text-white hover:bg-red-700", bar: "bg-white/70",
     label: "Thất bại", duration: 12000, enter: "toast-enter-error",
   },
+  info: {
+    box: "border-primary bg-white text-text-primary",
+    icon: "notifications", iconBox: "bg-primary text-white",
+    close: "text-text-secondary hover:bg-neutral-surface", bar: "bg-primary",
+    label: "Thông báo mới", duration: 8000, enter: "toast-enter",
+  },
 };
 
 /**
  * Toast banner: top-centre on every screen, for customers and staff alike.
- * Three kinds, deliberately loud — success (white, green), warning (amber), error (solid red,
- * shakes once) — each closes by itself (errors stay longest) or via its Close button.
+ * Four kinds, deliberately loud — success (white, green), info (white, brand colour), warning (amber),
+ * error (solid red, shakes once) — each closes by itself (errors stay longest) or via its Close button.
  *
  * It is a manual popover, so it is drawn in the browser's top layer: above modal <dialog>s and
  * their dimmed backdrop, which a plain z-index cannot beat.
@@ -72,7 +81,7 @@ export default function Toast({ toast, onClose }: ToastProps) {
   if (!toast) return null;
 
   const style = STYLES[toast.kind];
-  const urgent = toast.kind !== "success";
+  const urgent = toast.kind === "warning" || toast.kind === "error";
 
   return (
     <div

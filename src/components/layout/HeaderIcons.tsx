@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import { useCart } from "@/features/cart/cart-provider";
+import NotificationBell from "@/features/notifications/components/NotificationBell";
 
 /**
- * Header cart + account icons. Client Component so the cart badge reflects the
- * live cart count. Used by the (server) Header on both mobile and desktop.
+ * Header notification bell (signed-in only), cart and account icons. Client Component so the badges
+ * reflect the live unread and cart counts. Used by the Header on both mobile and desktop.
  */
 export default function HeaderIcons() {
   const { count } = useCart();
 
   return (
     <div className="flex gap-[10px]">
+      {/* Notification bell with unread badge and the latest-notices panel. */}
+      <NotificationBell />
       {/* Cart icon with live item-count badge. */}
       <Link
         href="/cart"

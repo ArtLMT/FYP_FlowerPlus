@@ -29,6 +29,7 @@ const bodyFont = Be_Vietnam_Pro({
 });
 
 import { CartProvider } from "@/features/cart/cart-provider";
+import { NotificationsProvider } from "@/features/notifications/notifications-provider";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import ReturnAfterGoogleLogin from "@/features/auth/ReturnAfterGoogleLogin";
 import NumberInputGuard from "@/components/ui/NumberInputGuard";
@@ -76,12 +77,14 @@ export default function RootLayout({
         <style>{"input::-ms-reveal,input::-ms-clear{display:none}"}</style>
       </head>
       <body className="bg-neutral-canvas text-text-primary font-sans overflow-x-hidden">
-        {/* App-wide providers: the toast banner and cart state are available on every page. */}
+        {/* App-wide providers: the toast banner, cart state and unread notifications are available on every page. */}
         <ToastProvider>
           <CartProvider>
-            <ReturnAfterGoogleLogin />
-            <NumberInputGuard />
-            {children}
+            <NotificationsProvider>
+              <ReturnAfterGoogleLogin />
+              <NumberInputGuard />
+              {children}
+            </NotificationsProvider>
           </CartProvider>
         </ToastProvider>
       </body>

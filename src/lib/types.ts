@@ -18,7 +18,7 @@ export interface FeaturedItem {
   imageUrl: string;
 }
 
-/* ── Vouchers & notifications ────────────────────── */
+/* ── Vouchers ────────────────────────────────────── */
 
 export type VoucherState = "active" | "used" | "expired";
 
@@ -44,16 +44,4 @@ export interface Voucher {
   value: number;
   /** Minimum subtotal (VND) required to apply the voucher. */
   minSubtotal?: number;
-}
-
-export type NotificationKind = "order" | "voucher" | "account";
-export interface Notification {
-  id: string;
-  kind: NotificationKind;
-  /** Uppercase category label */
-  cat: string;
-  title: string;
-  body: string;
-  time: string;
-  unread: boolean;
 }

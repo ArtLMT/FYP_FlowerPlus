@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { useAccount } from "@/features/account/account-context";
 import { useSignOut } from "@/features/account/hooks/use-sign-out";
-import { ACCOUNT_SECTIONS } from "@/features/account/sections";
+import { ACCOUNT_SECTIONS, NOTIFICATIONS_HREF } from "@/features/account/sections";
+import UnreadPill from "@/features/notifications/components/UnreadPill";
 
 /**
  * AccountSidebar — the persistent left rail of the desktop account dashboard.
@@ -54,6 +55,7 @@ export default function AccountSidebar() {
                 {icon}
               </span>
               {label}
+              {href === NOTIFICATIONS_HREF && <UnreadPill inverted={active} />}
             </Link>
           );
         })}
